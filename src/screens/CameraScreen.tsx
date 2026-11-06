@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { Glass } from '../components/Glass';
 import { FlashIcon } from '../components/Icons';
-import { colors, fonts } from '../theme';
+import { brand, colors, fonts } from '../theme';
 
 type Props = { onCapture: (photoUri: string) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string };
 
@@ -24,7 +24,7 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
     return (
       <SafeAreaView style={[styles.fill, styles.permission]}>
         <Text style={styles.permissionTitle}>Camera needed</Text>
-        <Text style={styles.permissionText}>Sugar Hunter reads food and drink labels with your camera.</Text>
+        <Text style={styles.permissionText}>{brand.name} reads food and drink labels with your camera.</Text>
         <Pressable style={styles.permissionButton} onPress={requestPermission}>
           <Text style={styles.permissionButtonText}>Allow camera</Text>
         </Pressable>
@@ -71,7 +71,7 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
                   accessibilityLabel={torch ? 'Turn flash off' : 'Turn flash on'}
                   style={[styles.flash, torch && styles.flashOn]}
                 >
-                  <FlashIcon on={torch} size={20} color={torch ? colors.bad : "#FFFFFF"} />
+                  <FlashIcon on={torch} size={20} color={torch ? '#FFD24A' : '#FFFFFF'} />
                 </Pressable>
               }
             />
@@ -79,14 +79,14 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
         />
 
         <View style={styles.middle} pointerEvents="none">
+          {/* The scan frame borrows the Nutrition Facts panel: heavy top bar, hairline sides, a medium base rule. */}
           <View style={styles.frame}>
-            <View style={[styles.corner, styles.tl]} />
-            <View style={[styles.corner, styles.tr]} />
-            <View style={[styles.corner, styles.bl]} />
-            <View style={[styles.corner, styles.br]} />
+            <View style={styles.frameTop} />
+            <Text style={styles.frameLabel}>Ingredients</Text>
+            <View style={styles.frameBase} />
           </View>
           <Glass variant="clear" style={styles.hint}>
-            <Text style={styles.hintText}>Fit the ingredient list here</Text>
+            <Text style={styles.hintText}>Fit the ingredient list in the panel</Text>
           </Glass>
         </View>
 
@@ -123,19 +123,26 @@ function Shutter({ onPress, disabled, busy }: { onPress: () => void; disabled: b
   );
 }
 
-const BRACKET = 34;
 const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: colors.background },
   // Sits on top of the live camera, so it must stay see-through.
   overlay: { flex: 1 },
   middle: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 40 },
-  frame: { width: '74%', aspectRatio: 1.45 },
-  // Rounded corner brackets, like the iOS document scanner.
-  corner: { position: 'absolute', width: BRACKET, height: BRACKET, borderColor: '#FFFFFF' },
-  tl: { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: 20 },
-  tr: { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 20 },
-  bl: { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 20 },
-  br: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 20 },
+  frame: { width: '80%', aspectRatio: 1.3, borderWidth: 1, borderColor: 'rgba(255,255,255,0.92)' },
+  frameTop: { position: 'absolute', left: -1, right: -1, top: -1, height: 10, backgroundColor: '#FFFFFF' },
+  frameBase: { position: 'absolute', left: -1, right: -1, bottom: -1, height: 5, backgroundColor: '#FFFFFF' },
+  frameLabel: {
+    position: 'absolute',
+    left: 10,
+    top: 16,
+    fontFamily: fonts.black,
+    fontSize: 20,
+    letterSpacing: -0.4,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
   hint: { marginTop: 18, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9 },
   hintText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.text },
   flash: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
@@ -145,15 +152,15 @@ const styles = StyleSheet.create({
   shutter: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center' },
   shutterInner: { width: 66, height: 66, borderRadius: 33, backgroundColor: '#FFFFFF' },
   shutterBusy: { opacity: 0.55 },
-  permission: { alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
-  permissionTitle: { fontFamily: fonts.bold, fontSize: 22, color: colors.text },
-  permissionText: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center' },
+  permission: { alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12, backgroundColor: colors.paper },
+  permissionTitle: { fontFamily: fonts.black, fontSize: 30, letterSpacing: -1, color: colors.ink },
+  permissionText: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 25, color: colors.inkMuted, textAlign: 'center' },
   permissionButton: {
     marginTop: 12,
-    backgroundColor: colors.clean,
+    backgroundColor: colors.ink,
     borderRadius: 999,
     paddingHorizontal: 28,
     paddingVertical: 14,
   },
-  permissionButtonText: { fontFamily: fonts.semibold, fontSize: 16, color: colors.background },
+  permissionButtonText: { fontFamily: fonts.bold, fontSize: 16, color: colors.paper },
 });

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { gramsLine, lookup } from './glossary.ts';
+import { addedAmount, gramsLine, lookup } from './glossary.ts';
 
 test('aliases reveal sugar with a specific line', () => {
   const e = lookup('Evaporated Cane Juice', 'added');
@@ -30,4 +30,10 @@ test('grams line converts to teaspoons', () => {
   assert.equal(gramsLine(['1 g added per serving']), '1 g added per serving · under ½ teaspoon');
   assert.equal(gramsLine(['2 g added per serving']), '2 g added per serving · about ½ teaspoon');
   assert.equal(gramsLine(['Honey']), null);
+});
+
+
+test('addedAmount splits grams and teaspoons for the panel', () => {
+  assert.deepEqual(addedAmount(['cane sugar', '6 g added per serving']), { grams: '6 g', amount: 'about 1½ teaspoons' });
+  assert.equal(addedAmount(['cane sugar']), null);
 });

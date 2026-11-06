@@ -68,7 +68,7 @@ export function SignInScreen() {
   return (
     <SafeAreaView style={styles.fill}>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <Header />
+        <Header ink />
         <View style={styles.body}>
           <View style={styles.character}>
             <CharacterView mood="idle" size={170} />
@@ -77,6 +77,7 @@ export function SignInScreen() {
           {sentTo ? (
             <>
               <Text style={styles.title}>Enter your code</Text>
+              <View style={styles.titleRule} />
               <Text style={styles.subtitle}>We sent a 6-digit code to {sentTo}</Text>
               <TextInput
                 style={[styles.input, styles.codeInput]}
@@ -91,7 +92,7 @@ export function SignInScreen() {
                 autoComplete="sms-otp"
                 maxLength={6}
                 placeholder="••••••"
-                placeholderTextColor={colors.textFaint}
+                placeholderTextColor="rgba(14,14,12,0.35)"
                 autoFocus
               />
               <PrimaryButton label="Verify" onPress={() => verify(code)} busy={busy} disabled={code.length !== 6} />
@@ -109,6 +110,7 @@ export function SignInScreen() {
           ) : (
             <>
               <Text style={styles.title}>Sign in with your phone</Text>
+              <View style={styles.titleRule} />
               <Text style={styles.subtitle}>We'll text you a code. No password needed.</Text>
               <TextInput
                 style={styles.input}
@@ -119,7 +121,7 @@ export function SignInScreen() {
                 textContentType="telephoneNumber"
                 autoComplete="tel"
                 placeholder="+1 555 123 4567"
-                placeholderTextColor={colors.textFaint}
+                placeholderTextColor="rgba(14,14,12,0.35)"
                 autoFocus
               />
               <PrimaryButton label="Send code" onPress={submitPhone} busy={busy} disabled={phone.trim().length < 8} />
@@ -128,7 +130,7 @@ export function SignInScreen() {
 
           {error && <Text style={styles.error}>{error}</Text>}
         </View>
-        <Footer />
+        <Footer ink />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -141,42 +143,43 @@ function PrimaryButton({ label, onPress, busy, disabled }: { label: string; onPr
       disabled={busy || disabled}
       style={({ pressed }) => [styles.button, (disabled || busy) && styles.buttonDisabled, pressed && styles.buttonPressed]}
     >
-      {busy ? <ActivityIndicator color={colors.background} /> : <Text style={styles.buttonText}>{label}</Text>}
+      {busy ? <ActivityIndicator color={colors.paper} /> : <Text style={styles.buttonText}>{label}</Text>}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1, backgroundColor: colors.background },
-  body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 14 },
+  fill: { flex: 1, backgroundColor: colors.paper },
+  body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 12 },
   character: { alignSelf: 'center', marginBottom: 4 },
-  title: { fontFamily: fonts.bold, fontSize: 26, color: colors.text, textAlign: 'center' },
-  subtitle: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginBottom: 8 },
+  title: { fontFamily: fonts.black, fontSize: 30, lineHeight: 33, letterSpacing: -1.1, color: colors.ink },
+  titleRule: { height: 10, backgroundColor: colors.rule, marginTop: -4 },
+  subtitle: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 24, color: colors.inkMuted, marginBottom: 6 },
   input: {
     height: 58,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1.5,
+    borderColor: colors.ink,
+    backgroundColor: colors.paperRaised,
     paddingHorizontal: 18,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.semibold,
     fontSize: 19,
-    color: colors.text,
+    color: colors.ink,
   },
   codeInput: { textAlign: 'center', letterSpacing: 10, fontSize: 24 },
   button: {
     height: 58,
     borderRadius: 29,
-    backgroundColor: colors.clean,
+    backgroundColor: colors.ink,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
   },
-  buttonDisabled: { opacity: 0.45 },
+  buttonDisabled: { opacity: 0.35 },
   buttonPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  buttonText: { fontFamily: fonts.semibold, fontSize: 18, color: colors.background },
+  buttonText: { fontFamily: fonts.bold, fontSize: 18, color: colors.paper },
   links: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 6, marginTop: 4 },
-  link: { fontFamily: fonts.medium, fontSize: 15, color: colors.clean },
-  linkDisabled: { color: colors.textFaint },
-  error: { fontFamily: fonts.medium, fontSize: 14, color: colors.ugly, textAlign: 'center' },
+  link: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },
+  linkDisabled: { color: colors.inkFaint, textDecorationLine: 'none' },
+  error: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ugly },
 });

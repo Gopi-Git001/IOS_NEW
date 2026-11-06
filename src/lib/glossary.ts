@@ -86,7 +86,8 @@ export function lookup(ingredient: string, kind: Kind): GlossaryEntry {
 }
 
 /** "6 g added per serving · about 1½ teaspoons" (4 g of sugar is about one teaspoon). Null when grams aren't known. */
-export function gramsLine(addedSugars: string[]): string | null {
+/** Added grams and the teaspoon amount, for the panel's right column: { grams: '6 g', amount: 'about 1½ teaspoons' }. */
+export function addedAmount(addedSugars: string[]): { grams: string; amount: string } | null {
   const m = addedSugars.map((s) => s.match(/^(\d+(?:\.\d+)?) g added per serving$/i)).find(Boolean);
   if (!m) return null;
   const g = Number(m[1]);
@@ -95,5 +96,10 @@ export function gramsLine(addedSugars: string[]): string | null {
   const whole = Math.floor(tsp);
   const half = tsp - whole === 0.5;
   const amount = g < 2 ? 'under ½ teaspoon' : `about ${whole > 0 ? whole : ''}${half ? '½' : ''} teaspoon${tsp > 1 ? 's' : ''}`;
-  return `${m[1]} g added per serving · ${amount}`;
+  return { grams: `${m[1]} g`, amount };
+}
+
+export function gramsLine(addedSugars: string[]): string | null {
+  const a = addedAmount(addedSugars);
+  return a ? `${a.grams} added per serving · ${a.amount}` : null;
 }

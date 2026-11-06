@@ -21,27 +21,30 @@ type Props = {
   /** Native only: the glass reacts to touch (primary buttons). */
   interactive?: boolean;
   pointerEvents?: 'auto' | 'none' | 'box-none' | 'box-only';
+  /** 'dark' over photos and the camera; 'light' on the bone paper screens. */
+  tone?: 'dark' | 'light';
 };
 
-export function Glass({ children, style, variant = 'regular', interactive, pointerEvents }: Props) {
+export function Glass({ children, style, variant = 'regular', interactive, pointerEvents, tone = 'dark' }: Props) {
+  const light = tone === 'light';
   if (nativeGlass) {
     return (
-      <GlassView glassEffectStyle={variant} isInteractive={interactive} colorScheme="dark" style={style} pointerEvents={pointerEvents}>
+      <GlassView glassEffectStyle={variant} isInteractive={interactive} colorScheme={light ? 'light' : 'dark'} style={style} pointerEvents={pointerEvents}>
         {children}
       </GlassView>
     );
   }
   if (Platform.OS === 'web') {
     return (
-      <View style={[styles.web, variant === 'clear' ? styles.webClear : styles.webRegular, style]} pointerEvents={pointerEvents}>
+      <View style={[styles.web, light ? styles.webLight : variant === 'clear' ? styles.webClear : styles.webRegular, style]} pointerEvents={pointerEvents}>
         <LinearGradient pointerEvents="none" colors={['rgba(255,255,255,0.16)', 'rgba(255,255,255,0)']} style={styles.webSheen} />
         {children}
       </View>
     );
   }
   return (
-    <View style={[styles.fallback, style]} pointerEvents={pointerEvents}>
-      <BlurView intensity={variant === 'clear' ? 30 : 50} tint="dark" style={StyleSheet.absoluteFill} />
+    <View style={[styles.fallback, light && styles.fallbackLight, style]} pointerEvents={pointerEvents}>
+      <BlurView intensity={variant === 'clear' ? 30 : 50} tint={light ? 'light' : 'dark'} style={StyleSheet.absoluteFill} />
       {children}
     </View>
   );
@@ -65,6 +68,11 @@ const styles = StyleSheet.create({
   },
   webRegular: webGlass('rgba(38,38,44,0.42)', 22),
   webClear: webGlass('rgba(255,255,255,0.10)', 14),
+  webLight: {
+    ...webGlass('rgba(255,255,255,0.62)', 22),
+    borderColor: 'rgba(14,14,12,0.08)',
+    boxShadow: 'inset 0px 1px 0px rgba(255,255,255,0.9), 0px 4px 16px rgba(14,14,12,0.10)',
+  } as ViewStyle,
   // Specular highlight across the top half.
   webSheen: { position: 'absolute', top: 0, left: 0, right: 0, height: '55%' },
   fallback: {
@@ -73,4 +81,5 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.25)',
     backgroundColor: 'rgba(30,30,36,0.35)',
   },
+  fallbackLight: { borderColor: 'rgba(14,14,12,0.1)', backgroundColor: 'rgba(255,255,255,0.5)' },
 });

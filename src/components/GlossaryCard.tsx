@@ -1,11 +1,12 @@
-// "Catch Me If You Can": tap an ingredient chip to see what it really is.
+// "Catch Me If You Can": tap an ingredient row to see what it really is. Set as a bone-paper label card.
 import { useEffect, useRef } from 'react';
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type Kind, lookup } from '../lib/glossary';
 import { colors, fonts } from '../theme';
 
-export const kindColor: Record<Kind, string> = { added: '#FBBF24', sweetener: '#60A5FA', natural: '#34D399' };
+export const kindColor: Record<Kind, string> = { added: colors.ugly, sweetener: colors.bad, natural: colors.clean };
+export const kindTag: Record<Kind, string> = { added: 'Sugar', sweetener: 'Sweetener', natural: 'Natural' };
 const kindLabel: Record<Kind, string> = { added: 'Added sugar', sweetener: 'Sweetener', natural: 'Natural sugar' };
 
 export type Pick = { name: string; kind: Kind } | null;
@@ -29,18 +30,20 @@ export function GlossaryCard({ pick, onClose }: { pick: Pick; onClose: () => voi
     <Modal transparent visible animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
       <Animated.View style={[styles.card, { marginBottom: insets.bottom + 8, transform: [{ translateY }] }]} accessibilityViewIsModal>
-        <View style={styles.grabber} />
-        <View style={[styles.tag, { backgroundColor: `${color}26` }]}>
-          <Text style={[styles.tagText, { color }]}>{kindLabel[pick.kind]}</Text>
+        <View style={styles.top}>
+          <Text style={styles.kind}>{kindLabel[pick.kind]}</Text>
+          <View style={styles.tag}>
+            <Text style={styles.tagText}>{kindTag[pick.kind]}</Text>
+          </View>
         </View>
+        <View style={styles.rule10} />
         <Text style={styles.name}>{pick.name}</Text>
         <Text style={[styles.reveal, { color }]} accessibilityRole="header">
           {entry.reveal}
         </Text>
         <Text style={styles.blurb}>{entry.blurb}</Text>
-        <View style={styles.effect}>
-          <Text style={styles.effectText}>{entry.effect}</Text>
-        </View>
+        <View style={styles.rule5} />
+        <Text style={styles.effectText}>{entry.effect}</Text>
         <Pressable onPress={onClose} accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
           <Text style={styles.buttonText}>Got it</Text>
         </Pressable>
@@ -56,24 +59,24 @@ const styles = StyleSheet.create({
     left: 8,
     right: 8,
     bottom: 0,
-    borderRadius: 34,
-    backgroundColor: 'rgba(28,28,32,0.98)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 24,
-    paddingTop: 10,
-    paddingBottom: 18,
-    boxShadow: '0px -6px 30px rgba(0,0,0,0.45)',
+    borderRadius: 30,
+    backgroundColor: colors.paper,
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 16,
+    boxShadow: '0px -6px 30px rgba(0,0,0,0.4)',
   },
-  grabber: { alignSelf: 'center', width: 38, height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.25)', marginBottom: 18 },
-  tag: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  tagText: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase' },
-  name: { fontFamily: fonts.semibold, fontSize: 17, color: colors.textMuted, marginTop: 14 },
-  reveal: { fontFamily: fonts.extrabold, fontSize: 30, lineHeight: 36, marginTop: 4, letterSpacing: -0.4 },
-  blurb: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 23, color: colors.cardText, marginTop: 10 },
-  effect: { marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
-  effectText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.cardText },
-  button: { marginTop: 20, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
-  buttonText: { fontFamily: fonts.semibold, fontSize: 17, color: colors.text },
-  pressed: { opacity: 0.75 },
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  kind: { fontFamily: fonts.black, fontSize: 22, letterSpacing: -0.6, color: colors.ink },
+  tag: { borderWidth: 1, borderColor: colors.ink, borderRadius: 3, paddingHorizontal: 6, paddingVertical: 2 },
+  tagText: { fontFamily: fonts.bold, fontSize: 10.5, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.ink },
+  rule10: { height: 10, backgroundColor: colors.rule, marginTop: 8, marginBottom: 12 },
+  rule5: { height: 5, backgroundColor: colors.rule, marginTop: 14, marginBottom: 10 },
+  name: { fontFamily: fonts.semibold, fontSize: 15, color: colors.inkMuted },
+  reveal: { fontFamily: fonts.black, fontSize: 36, lineHeight: 40, marginTop: 2, letterSpacing: -1.2 },
+  blurb: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 25, color: '#33312D', marginTop: 6 },
+  effectText: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink },
+  button: { marginTop: 18, height: 52, borderRadius: 26, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  buttonText: { fontFamily: fonts.bold, fontSize: 17, color: colors.paper },
+  pressed: { opacity: 0.8 },
 });

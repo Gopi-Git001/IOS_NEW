@@ -1,27 +1,35 @@
+// Reallabel: the verdict set like a Nutrition Facts panel. Bone paper, black rules, one colored word.
+// Libre Franklin (the panel's grotesque, up to 900) for everything set; Newsreader italic for the voice.
+export const brand = { name: 'Reallabel', tagline: 'Read the fine print.' };
+
 export const colors = {
-  clean: '#34D399',
-  bad: '#FBBF24',
-  ugly: '#FB7185',
-  background: '#0B0B0F',
+  // Verdict inks, tuned for bone paper (each at least 4.5:1 on #F3F1EC).
+  clean: '#1E7A46',
+  bad: '#9A5B00',
+  ugly: '#C8321C',
+  // Paper and ink.
+  paper: '#F3F1EC',
+  paperRaised: '#FBFAF6',
+  ink: '#0E0E0C',
+  inkMuted: '#5F5B53',
+  inkFaint: '#736E65',
+  rule: '#0E0E0C',
+  hairline: 'rgba(14,14,12,0.14)',
+  // Over the camera and photos.
+  background: '#0E0E0C',
   text: '#FFFFFF',
-  textMuted: 'rgba(255,255,255,0.72)',
-  textFaint: 'rgba(255,255,255,0.55)',
-  glass: 'rgba(22,22,28,0.55)',
+  textMuted: 'rgba(255,255,255,0.8)',
+  textFaint: 'rgba(255,255,255,0.62)',
   glassBorder: 'rgba(255,255,255,0.18)',
-  divider: 'rgba(255,255,255,0.14)',
-  // Dark cards: the result panel, the header profile button, Settings groups.
-  card: 'rgba(16,16,20,0.88)',
-  cardBorder: 'rgba(255,255,255,0.08)',
-  cardText: '#F4F4F5',
-  cardTextMuted: 'rgba(244,244,245,0.7)',
-  // Opaque cards on the dark list screens (Profile, Menu).
-  surface: '#16161C',
 };
 
 export const fonts = {
-  regular: 'Inter_400Regular',
-  medium: 'Inter_500Medium',
-  semibold: 'Inter_600SemiBold',
-  bold: 'Inter_700Bold',
-  extrabold: 'Inter_800ExtraBold',
+  regular: 'LibreFranklin_400Regular',
+  medium: 'LibreFranklin_500Medium',
+  semibold: 'LibreFranklin_600SemiBold',
+  bold: 'LibreFranklin_700Bold',
+  extrabold: 'LibreFranklin_800ExtraBold',
+  black: 'LibreFranklin_900Black',
+  serif: 'Newsreader_400Regular_Italic',
+  serifMedium: 'Newsreader_500Medium_Italic',
 };

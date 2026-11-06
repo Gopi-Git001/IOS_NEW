@@ -1,9 +1,10 @@
-// Shared pieces of the dark grouped-list screens (Profile, Menu): a full-screen sheet, groups and rows.
+// Shared pieces of the bone-paper grouped-list screens (Profile, Menu): a full-screen sheet, groups and rows.
 import { ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Linking, Modal, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { notify } from '../lib/confirm';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { colors, fonts } from '../theme';
 import { Glass } from './Glass';
 
@@ -12,17 +13,19 @@ export function Sheet({ visible, title, onBack, backLabel, children }: { visible
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onBack} statusBarTranslucent navigationBarTranslucent>
       <SafeAreaProvider>
+        <StatusBar style="dark" />
         <SafeAreaView style={listStyles.screen} edges={['top', 'bottom']}>
           <View style={listStyles.topBar}>
             <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel={backLabel}>
-              <Glass style={listStyles.back}>
-                <ChevronLeft size={24} color={colors.cardText} strokeWidth={2.5} />
+              <Glass tone="light" style={listStyles.back}>
+                <ChevronLeft size={24} color={colors.ink} strokeWidth={2.5} />
               </Glass>
             </Pressable>
           </View>
           <Text style={listStyles.title} accessibilityRole="header">
             {title}
           </Text>
+          <View style={listStyles.titleRule} />
           {children}
         </SafeAreaView>
       </SafeAreaProvider>
@@ -52,7 +55,7 @@ type RowProps = {
 
 /** 52 px row: icon, label (+ one-line detail), then a value, a toggle or a chevron. */
 export function Row({ icon: Icon, label, detail, value, danger, chevron, onPress, toggle }: RowProps) {
-  const ink = danger ? colors.ugly : colors.cardText;
+  const ink = danger ? colors.ugly : colors.ink;
   return (
     <Pressable
       onPress={toggle ? () => toggle.onChange(!toggle.value) : onPress}
@@ -61,7 +64,7 @@ export function Row({ icon: Icon, label, detail, value, danger, chevron, onPress
       accessibilityState={toggle ? { checked: toggle.value } : undefined}
       style={({ pressed }) => [listStyles.row, pressed && listStyles.rowPressed]}
     >
-      <Icon size={20} color={danger ? colors.ugly : colors.cardTextMuted} strokeWidth={2} />
+      <Icon size={20} color={danger ? colors.ugly : colors.ink} strokeWidth={1.75} />
       <View style={listStyles.rowText}>
         <Text style={[listStyles.rowLabel, { color: ink }]}>{label}</Text>
         {detail && <Text style={listStyles.rowDetail}>{detail}</Text>}
@@ -71,12 +74,13 @@ export function Row({ icon: Icon, label, detail, value, danger, chevron, onPress
         <Switch
           value={toggle.value}
           onValueChange={toggle.onChange}
-          trackColor={{ false: 'rgba(255,255,255,0.18)', true: colors.clean }}
+          trackColor={{ false: 'rgba(14,14,12,0.16)', true: colors.ink }}
           thumbColor="#FFFFFF"
-          ios_backgroundColor="rgba(255,255,255,0.18)"
+          {...({ activeThumbColor: '#FFFFFF' } as object) /* react-native-web: keep the thumb white when on */}
+          ios_backgroundColor="rgba(14,14,12,0.16)"
         />
       )}
-      {chevron && <ChevronRight size={18} color={colors.textFaint} />}
+      {chevron && <ChevronRight size={18} color={colors.inkFaint} />}
     </Pressable>
   );
 }
@@ -88,23 +92,24 @@ export function openLink(url: string) {
 export const demoAlert = () => notify('Demo mode', 'The backend is not connected yet, so results are fake and there is no account.');
 
 export const listStyles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  screen: { flex: 1, backgroundColor: colors.paper },
   topBar: { flexDirection: 'row', alignItems: 'center', height: 56, paddingHorizontal: 14 },
   back: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', paddingRight: 2 },
-  // iOS large title.
-  title: { fontFamily: fonts.extrabold, fontSize: 34, lineHeight: 40, letterSpacing: -0.6, color: colors.cardText, paddingHorizontal: 20, marginTop: 2, marginBottom: 4 },
+  // iOS large title, set like the top of a Nutrition Facts panel.
+  title: { fontFamily: fonts.black, fontSize: 36, lineHeight: 40, letterSpacing: -1.4, color: colors.ink, paddingHorizontal: 20, marginTop: 2 },
+  titleRule: { height: 10, backgroundColor: colors.rule, marginHorizontal: 20, marginTop: 6, marginBottom: 4 },
   content: { paddingHorizontal: 16, paddingBottom: 32 },
-  group: { marginTop: 20 },
+  group: { marginTop: 22 },
   groupTitle: {
     fontFamily: fonts.bold,
     fontSize: 12,
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: colors.textFaint,
+    color: colors.inkMuted,
     marginBottom: 8,
     marginLeft: 16,
   },
-  groupCard: { backgroundColor: '#1C1C1E', borderRadius: 16, overflow: 'hidden' },
+  groupCard: { backgroundColor: colors.paperRaised, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.hairline },
   row: {
     minHeight: 52,
     flexDirection: 'row',
@@ -113,15 +118,15 @@ export const listStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.cardBorder,
+    borderTopColor: colors.hairline,
     marginTop: -StyleSheet.hairlineWidth, // hides the first row's top line
   },
-  rowPressed: { backgroundColor: 'rgba(255,255,255,0.05)' },
+  rowPressed: { backgroundColor: 'rgba(14,14,12,0.05)' },
   rowText: { flex: 1 },
-  rowLabel: { fontFamily: fonts.medium, fontSize: 16, color: colors.cardText },
-  rowDetail: { fontFamily: fonts.regular, fontSize: 13, color: colors.cardTextMuted, marginTop: 2 },
-  rowValue: { fontFamily: fonts.medium, fontSize: 15, color: colors.cardTextMuted },
-  version: { fontFamily: fonts.regular, fontSize: 13, color: colors.textFaint, textAlign: 'center', marginTop: 28 },
-  badge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  badgeText: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase' },
+  rowLabel: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },
+  rowDetail: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, color: colors.inkMuted, marginTop: 2 },
+  rowValue: { fontFamily: fonts.medium, fontSize: 15, color: colors.inkMuted },
+  version: { fontFamily: fonts.serif, fontSize: 15, color: colors.inkFaint, textAlign: 'center', marginTop: 28 },
+  badge: { borderRadius: 3, paddingHorizontal: 6, paddingVertical: 2 },
+  badgeText: { fontFamily: fonts.black, fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase' },
 });

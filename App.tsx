@@ -1,11 +1,13 @@
 import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  Inter_800ExtraBold,
+  LibreFranklin_400Regular,
+  LibreFranklin_500Medium,
+  LibreFranklin_600SemiBold,
+  LibreFranklin_700Bold,
+  LibreFranklin_800ExtraBold,
+  LibreFranklin_900Black,
   useFonts,
-} from '@expo-google-fonts/inter';
+} from '@expo-google-fonts/libre-franklin';
+import { Newsreader_400Regular_Italic, Newsreader_500Medium_Italic } from '@expo-google-fonts/newsreader';
 import type { Session } from '@supabase/supabase-js';
 import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
@@ -46,7 +48,16 @@ const verdictHaptic: Record<Verdict, Haptics.NotificationFeedbackType> = {
 };
 
 export default function App() {
-  const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold });
+  const [fontsLoaded] = useFonts({
+    LibreFranklin_400Regular,
+    LibreFranklin_500Medium,
+    LibreFranklin_600SemiBold,
+    LibreFranklin_700Bold,
+    LibreFranklin_800ExtraBold,
+    LibreFranklin_900Black,
+    Newsreader_400Regular_Italic,
+    Newsreader_500Medium_Italic,
+  });
   const [session, setSession] = useState<Session | null | undefined>(isConfigured ? undefined : null);
   const [scan, setScan] = useState<Scan | null>(null);
   const scanId = useRef(0);
@@ -126,7 +137,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
+      <StatusBar style={isConfigured && !session ? 'dark' : 'light'} />
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         {ready &&
           (isConfigured && !session ? (

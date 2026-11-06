@@ -11,7 +11,7 @@ import { isConfigured } from '../lib/supabase';
 import { confirmSignOut } from './ProfileScreen';
 import { clearHistory, useHistory } from '../lib/history';
 import { type Prefs, setPref, usePrefs } from '../lib/prefs';
-import { colors, fonts } from '../theme';
+import { brand, colors, fonts } from '../theme';
 
 type Page = 'menu' | 'history' | 'methodology';
 const titles: Record<Page, string> = { menu: 'Menu', history: 'Scan history', methodology: 'How verdicts work' };
@@ -63,10 +63,10 @@ function MenuList({ open }: { open: (p: Page) => void }) {
 
       <Group title="About">
         <Row icon={BookOpen} label="How verdicts work" onPress={() => open('methodology')} chevron />
-        <Row icon={Mail} label="Help & support" onPress={() => openLink(`mailto:${links.supportEmail}?subject=Sugar%20Hunter%20support`)} chevron />
+        <Row icon={Mail} label="Help & support" onPress={() => openLink(`mailto:${links.supportEmail}?subject=Reallabel%20support`)} chevron />
         <Row icon={Lock} label="Privacy policy" onPress={() => openLink(links.privacy)} chevron />
         <Row icon={FileText} label="Terms" onPress={() => openLink(links.terms)} chevron />
-        <Row icon={Star} label="Rate Sugar Hunter" onPress={() => openLink(Platform.OS === 'ios' ? links.appStore : links.playStore)} chevron />
+        <Row icon={Star} label={`Rate ${brand.name}`} onPress={() => openLink(Platform.OS === 'ios' ? links.appStore : links.playStore)} chevron />
       </Group>
 
       {isConfigured && (
@@ -75,7 +75,7 @@ function MenuList({ open }: { open: (p: Page) => void }) {
         </Group>
       )}
 
-      <Text style={listStyles.version}>Sugar Hunter {Constants.expoConfig?.version ?? ''}</Text>
+      <Text style={listStyles.version}>{brand.name} {Constants.expoConfig?.version ?? ''} · {brand.tagline}</Text>
     </ScrollView>
   );
 }
@@ -100,7 +100,7 @@ function HistoryList() {
         const color = verdictColor[result.verdict];
         return (
           <View style={[styles.historyRow, index === 0 && styles.first, index === history.length - 1 && styles.last]}>
-            <View style={[listStyles.badge, styles.historyBadge, { backgroundColor: `${color}29` }]}>
+            <View style={[listStyles.badge, styles.historyBadge, { backgroundColor: `${color}1F` }]}>
               <Text style={[listStyles.badgeText, { color }]}>{result.verdict}</Text>
             </View>
             <View style={listStyles.rowText}>
@@ -136,12 +136,12 @@ function Methodology() {
   return (
     <ScrollView contentContainerStyle={listStyles.content}>
       <Text style={styles.paragraph}>
-        Sugar Hunter reads the ingredient list and the nutrition panel from your photo. Fixed rules then decide the verdict, so the same label
+        {brand.name} reads the ingredient list and the nutrition panel from your photo. Fixed rules then decide the verdict, so the same label
         always gets the same answer.
       </Text>
       {rules.map((r) => (
         <View key={r.verdict} style={styles.ruleCard}>
-          <View style={[listStyles.badge, { backgroundColor: `${verdictColor[r.verdict]}29`, alignSelf: 'flex-start' }]}>
+          <View style={[listStyles.badge, { backgroundColor: `${verdictColor[r.verdict]}1F`, alignSelf: 'flex-start' }]}>
             <Text style={[listStyles.badgeText, { color: verdictColor[r.verdict] }]}>{r.verdict}</Text>
           </View>
           <Text style={styles.ruleText}>{r.text}</Text>
@@ -154,7 +154,7 @@ function Methodology() {
       <Text style={styles.paragraph}>
         With Strict mode off, a product whose only sweetener is stevia, monk fruit or a similar plant sweetener shows as CLEAN.
       </Text>
-      <Text style={styles.muted}>Not medical advice. Sugar Hunter doesn't check allergens.</Text>
+      <Text style={styles.muted}>Not medical advice. {brand.name} doesn't check allergens.</Text>
     </ScrollView>
   );
 }
@@ -167,17 +167,20 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.paperRaised,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: colors.hairline,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.cardBorder,
+    borderTopColor: colors.hairline,
   },
-  first: { marginTop: 16, borderTopLeftRadius: 14, borderTopRightRadius: 14, borderTopWidth: 0 },
-  last: { borderBottomLeftRadius: 14, borderBottomRightRadius: 14 },
+  first: { marginTop: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderTopWidth: 1, borderTopColor: colors.hairline },
+  last: { borderBottomLeftRadius: 16, borderBottomRightRadius: 16, borderBottomWidth: 1, borderBottomColor: colors.hairline },
   historyBadge: { width: 58, alignItems: 'center' }, // same width, so the text column lines up
-  historyDate: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 16, color: colors.cardTextMuted, textAlign: 'right' },
-  empty: { fontFamily: fonts.regular, fontSize: 15, color: colors.cardTextMuted, textAlign: 'center', marginTop: 48 },
-  paragraph: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.cardText, marginTop: 16 },
-  ruleCard: { backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginTop: 12, gap: 8 },
-  ruleText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.cardText },
-  muted: { fontFamily: fonts.regular, fontSize: 13, color: colors.textFaint, marginTop: 24 },
+  historyDate: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 16, color: colors.inkMuted, textAlign: 'right' },
+  empty: { fontFamily: fonts.regular, fontSize: 15, color: colors.inkMuted, textAlign: 'center', marginTop: 48 },
+  paragraph: { fontFamily: fonts.serif, fontSize: 17, lineHeight: 24, color: colors.ink, marginTop: 16 },
+  ruleCard: { backgroundColor: colors.paperRaised, borderWidth: 1, borderColor: colors.hairline, borderRadius: 16, padding: 16, marginTop: 12, gap: 8 },
+  ruleText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.ink },
+  muted: { fontFamily: fonts.regular, fontSize: 13, color: colors.inkFaint, marginTop: 24 },
 });

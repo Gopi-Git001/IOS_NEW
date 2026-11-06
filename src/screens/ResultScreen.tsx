@@ -6,7 +6,7 @@ import { Character, type Mood, moodForVerdict } from '../components/Character';
 import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { Glass } from '../components/Glass';
 import { GlossaryCard, type Pick } from '../components/GlossaryCard';
-import { ResultSheet, VerdictContent, verdictColor } from '../components/VerdictPanel';
+import { ResultSheet, VerdictContent } from '../components/VerdictPanel';
 import { colors, fonts } from '../theme';
 import type { ScanResult } from '../types';
 
@@ -40,15 +40,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
   const sheetMax = window.height - sheetBottom - headerBottom - CUBE + PERCH - 8;
   const doneMood = (verdict: keyof typeof moodForVerdict): Mood => (gentle && verdict === 'UGLY' ? 'bad' : moodForVerdict[verdict]);
 
-  const action =
-    state.status === 'done'
-      ? {
-          label: 'Scan another',
-          color: verdictColor[state.result.verdict],
-          ink: state.result.verdict === 'UGLY' ? '#FFFFFF' : colors.background,
-          onPress: onScanAnother,
-        }
-      : { label: 'Try again', color: '#FFFFFF', ink: colors.background, onPress: onScanAnother };
+  const action = { label: state.status === 'done' ? 'Scan another' : 'Try again', onPress: onScanAnother };
 
   return (
     <View style={styles.fill}>
@@ -76,12 +68,13 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
 
       {state.status !== 'reading' && (
         <>
-          <ResultSheet key={state.status} action={action} footer={<Footer />} maxHeight={sheetMax} bottom={sheetBottom} onHeight={setSheetHeight}>
+          <ResultSheet key={state.status} action={action} footer={<Footer ink />} maxHeight={sheetMax} bottom={sheetBottom} onHeight={setSheetHeight}>
             {state.status === 'done' ? (
               <VerdictContent result={state.result} listsPending={state.listsPending} onPick={setPick} />
             ) : (
               <>
                 <Text style={styles.errorTitle}>No verdict</Text>
+                <View style={styles.errorRule} />
                 <Text style={styles.errorText}>{state.message}</Text>
               </>
             )}
@@ -114,7 +107,7 @@ function Shimmer({ height }: { height: number }) {
   return (
     <Animated.View pointerEvents="none" style={[styles.shimmer, { transform: [{ translateY }] }]}>
       <LinearGradient
-        colors={['rgba(96,165,250,0)', 'rgba(147,197,253,0.28)', 'rgba(255,255,255,0.5)', 'rgba(147,197,253,0.28)', 'rgba(96,165,250,0)']}
+        colors={['rgba(243,241,236,0)', 'rgba(243,241,236,0.22)', 'rgba(255,255,255,0.55)', 'rgba(243,241,236,0.22)', 'rgba(243,241,236,0)']}
         style={StyleSheet.absoluteFill}
       />
     </Animated.View>
@@ -126,7 +119,8 @@ const styles = StyleSheet.create({
   shimmer: { position: 'absolute', left: 0, right: 0, top: 0, height: 160 },
   pillSlot: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingBottom: 60 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 22, height: 54, borderRadius: 27 },
-  pillText: { fontFamily: fonts.semibold, fontSize: 17, color: colors.text },
-  errorTitle: { fontFamily: fonts.extrabold, fontSize: 28, lineHeight: 34, color: colors.text, letterSpacing: -0.3 },
-  errorText: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 23, color: colors.cardTextMuted, marginTop: 6 },
+  pillText: { fontFamily: fonts.serifMedium, fontSize: 19, color: colors.text },
+  errorTitle: { fontFamily: fonts.black, fontSize: 30, lineHeight: 32, color: colors.ink, letterSpacing: -1 },
+  errorRule: { height: 10, backgroundColor: colors.rule, marginTop: 8, marginBottom: 10 },
+  errorText: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 25, color: '#33312D' },
 });

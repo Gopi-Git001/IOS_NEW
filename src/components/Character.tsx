@@ -173,6 +173,7 @@ export function Character({ mood, bottom, size, right }: { mood: Mood; bottom: n
 const styles = StyleSheet.create({
   corner: { position: 'absolute' },
   left: { left: 4 },
-  shadow: { position: 'absolute', height: 14, borderRadius: 7, backgroundColor: 'rgba(0,0,0,0.35)' },
+  // Soft contact shadow; light enough not to read as a handle when the cube hops on the paper sheet.
+  shadow: { position: 'absolute', height: 10, borderRadius: 5, backgroundColor: 'rgba(14,14,12,0.14)', boxShadow: '0px 0px 8px 2px rgba(14,14,12,0.12)' },
   glint: { position: 'absolute' },
 });

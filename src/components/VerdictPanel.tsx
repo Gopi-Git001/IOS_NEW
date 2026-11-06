@@ -1,17 +1,19 @@
-// The result sheet: an inset bottom card that springs up over the frozen photo. Solid, not glass,
-// because it is content (Apple: glass is for controls). The cube perches on its top edge.
+// The result sheet: an inset bone-paper card that springs up over the frozen photo, set like a
+// Nutrition Facts panel ("Verdict Facts"). Solid, not glass, because it is content (Apple: glass is
+// for controls). The cube perches on its top edge.
 import * as Haptics from 'expo-haptics';
 import { type ReactNode, useEffect, useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ingredientNames } from '../lib/display';
-import { gramsLine, type Kind } from '../lib/glossary';
+import { addedAmount, type Kind } from '../lib/glossary';
 import { getPrefs } from '../lib/prefs';
 import { colors, fonts } from '../theme';
 import type { ScanResult, Verdict } from '../types';
-import { kindColor, type Pick } from './GlossaryCard';
+import { kindColor, kindTag, type Pick } from './GlossaryCard';
 import { CameraIcon } from './Icons';
 
 export const verdictColor: Record<Verdict, string> = { CLEAN: colors.clean, BAD: colors.bad, UGLY: colors.ugly };
+export const verdictWord: Record<Verdict, string> = { CLEAN: 'Clean', BAD: 'Bad', UGLY: 'Ugly' };
 
 const SECTIONS: { kind: Kind; title: string; key: 'addedSugars' | 'sweeteners' | 'naturalSugars' }[] = [
   { kind: 'added', title: 'Added sugars', key: 'addedSugars' },
@@ -21,15 +23,14 @@ const SECTIONS: { kind: Kind; title: string; key: 'addedSugars' | 'sweeteners' |
 
 type SheetProps = {
   children: ReactNode;
-  /** Button label and color. */
-  action: { label: string; color: string; ink: string; onPress: () => void };
+  action: { label: string; onPress: () => void };
   footer: ReactNode;
   maxHeight: number;
   bottom: number;
   onHeight?: (h: number) => void;
 };
 
-/** The inset sheet shell: content, then a full-width action button and the footer. */
+/** The inset sheet shell: content, then a full-width ink button and the footer. */
 export function ResultSheet({ children, action, footer, maxHeight, bottom, onHeight }: SheetProps) {
   const rise = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -42,28 +43,31 @@ export function ResultSheet({ children, action, footer, maxHeight, bottom, onHei
       style={[styles.sheet, { maxHeight, bottom, transform: [{ translateY }] }]}
       onLayout={(e) => onHeight?.(e.nativeEvent.layout.height)}
     >
-      <View style={styles.grabber} />
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} showsVerticalScrollIndicator={false} bounces={false}>
         {children}
       </ScrollView>
-      <Pressable
-        onPress={action.onPress}
-        accessibilityRole="button"
-        style={({ pressed }) => [styles.button, { backgroundColor: action.color }, pressed && styles.buttonPressed]}
-      >
-        <CameraIcon color={action.ink} size={24} />
-        <Text style={[styles.buttonText, { color: action.ink }]}>{action.label}</Text>
+      <Pressable onPress={action.onPress} accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}>
+        <CameraIcon color={colors.paper} size={22} />
+        <Text style={styles.buttonText}>{action.label}</Text>
       </Pressable>
       {footer}
     </Animated.View>
   );
 }
 
-/** Verdict, why, grams in teaspoons, then tappable ingredient chips grouped by kind. */
+/** Rules of the panel: 10 pt under the title, 5 pt between blocks, hairlines between rows. */
+const Rule = ({ h }: { h: 10 | 5 }) => <View style={[styles.rule, { height: h }, h === 10 ? styles.rule10 : styles.rule5]} />;
+
+/**
+ * "Verdict Facts": the verdict word and added grams where Calories sit on a real panel,
+ * the reason in italics, then every sugar and sweetener as an indented, tappable row.
+ */
 export function VerdictContent({ result, listsPending, onPick }: { result: ScanResult; listsPending?: boolean; onPick: (p: Pick) => void }) {
   const color = verdictColor[result.verdict];
-  const grams = gramsLine(result.addedSugars);
   const sections = SECTIONS.map((s) => ({ ...s, items: ingredientNames(result[s.key]) })).filter((s) => s.items.length > 0);
+  const added = addedAmount(result.addedSugars);
+  const noAdded = !listsPending && ingredientNames(result.addedSugars).length === 0;
+  const amount = added ?? (noAdded ? { grams: '0 g', amount: '' } : null);
 
   const pick = (name: string, kind: Kind) => {
     if (getPrefs().haptics) Haptics.selectionAsync().catch(() => {});
@@ -72,38 +76,61 @@ export function VerdictContent({ result, listsPending, onPick }: { result: ScanR
 
   return (
     <>
-      <Text style={[styles.verdict, { color }]} accessibilityRole="header" accessibilityLabel={`${result.verdict}. ${result.headline}`}>
-        {result.verdict}
-      </Text>
-      <Text style={styles.headline}>{result.headline}</Text>
-      {grams && <Text style={styles.grams}>{grams}</Text>}
+      <Text style={styles.title}>Verdict Facts</Text>
+      <Rule h={10} />
+      <View style={styles.amtRow}>
+        <Text style={styles.amt}>Your label</Text>
+        <Text style={styles.amt}>per serving</Text>
+      </View>
+      <Rule h={5} />
+
+      <View style={styles.verdictRow} accessible accessibilityRole="header" accessibilityLabel={`${verdictWord[result.verdict]}. ${result.headline}${added ? `. ${added.grams} added sugar, ${added.amount}` : ''}`}>
+        <Text style={[styles.verdict, { color }]} numberOfLines={1} adjustsFontSizeToFit>
+          {verdictWord[result.verdict]}
+        </Text>
+        {amount && (
+          <View style={styles.grams}>
+            <Text style={styles.gramsBig}>{amount.grams}</Text>
+            <Text style={styles.gramsSmall}>added sugar</Text>
+            {amount.amount !== '' && <Text style={styles.gramsSmall}>{amount.amount}</Text>}
+          </View>
+        )}
+      </View>
+      <Text style={styles.why}>{result.headline}</Text>
       {result.note && <Text style={styles.note}>{result.note}</Text>}
 
-      {sections.map((s) => (
-        <View key={s.kind} style={styles.section}>
-          <Text style={[styles.label, { color: kindColor[s.kind] }]}>{s.title}</Text>
-          <View style={styles.chips}>
-            {s.items.map((item) => (
-              <Pressable
-                key={item}
-                onPress={() => pick(item, s.kind)}
-                accessibilityRole="button"
-                accessibilityLabel={`${item}, what is it?`}
-                style={({ pressed }) => [styles.chip, { borderColor: `${kindColor[s.kind]}55`, backgroundColor: `${kindColor[s.kind]}1A` }, pressed && styles.chipPressed]}
-              >
-                <View style={[styles.dot, { backgroundColor: kindColor[s.kind] }]} />
-                <Text style={styles.chipText}>{item}</Text>
-              </Pressable>
-            ))}
+      {sections.length > 0 && <Rule h={5} />}
+      {sections.map((s, i) => (
+        <View key={s.kind} style={i === sections.length - 1 && styles.lastSection}>
+          <View style={styles.row}>
+            <Text style={styles.rowHead}>{s.title}</Text>
+            <Text style={styles.rowCount}>{s.items.length} found</Text>
           </View>
+          {s.items.map((item) => (
+            <Pressable
+              key={item}
+              onPress={() => pick(item, s.kind)}
+              accessibilityRole="button"
+              accessibilityLabel={`${item}, what is it?`}
+              style={({ pressed }) => [styles.row, styles.rowIn, pressed && styles.rowPressed]}
+            >
+              <Text style={[styles.alias, { color: kindColor[s.kind] }]} numberOfLines={2}>
+                {item}
+              </Text>
+              <View style={styles.tag}>
+                <Text style={styles.tagText}>{kindTag[s.kind]}</Text>
+              </View>
+            </Pressable>
+          ))}
         </View>
       ))}
-      {sections.length > 0 && <Text style={styles.hint}>Tap an ingredient to see what it really is</Text>}
+
+      {sections.length > 0 && <Text style={styles.hint}>Tap a name to see what it really is.</Text>}
 
       {/* Jev's verdict is in; Claude is still listing the ingredients. */}
       {listsPending && (
         <View style={styles.pending}>
-          <ActivityIndicator size="small" color={colors.cardTextMuted} />
+          <ActivityIndicator size="small" color={colors.inkMuted} />
           <Text style={styles.pendingText}>Listing the sugars...</Text>
         </View>
       )}
@@ -116,40 +143,58 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 8,
     right: 8,
-    borderRadius: 34,
-    backgroundColor: 'rgba(22,22,26,0.94)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.09)',
-    paddingTop: 8,
-    boxShadow: '0px -8px 32px rgba(0,0,0,0.4)',
+    borderRadius: 30,
+    backgroundColor: colors.paper,
+    paddingTop: 20,
+    boxShadow: '0px -10px 40px rgba(0,0,0,0.32)',
     overflow: 'hidden',
   },
-  grabber: { alignSelf: 'center', width: 38, height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.22)' },
   body: { flexGrow: 0, flexShrink: 1 },
-  bodyContent: { paddingHorizontal: 22, paddingTop: 12, paddingBottom: 16 },
-  verdict: { fontFamily: fonts.extrabold, fontSize: 38, lineHeight: 44, letterSpacing: -0.5 },
-  headline: { fontFamily: fonts.semibold, fontSize: 18, lineHeight: 24, color: colors.cardText, marginTop: 2 },
-  grams: { fontFamily: fonts.medium, fontSize: 14, lineHeight: 19, color: colors.cardTextMuted, marginTop: 6 },
-  note: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 19, color: colors.cardTextMuted, marginTop: 6 },
-  section: { marginTop: 16 },
-  label: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 0.7, textTransform: 'uppercase', marginBottom: 8 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 999, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 7 },
-  chipPressed: { opacity: 0.7, transform: [{ scale: 0.97 }] },
-  dot: { width: 7, height: 7, borderRadius: 4 },
-  chipText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.cardText },
-  hint: { fontFamily: fonts.regular, fontSize: 12.5, color: colors.textFaint, marginTop: 12 },
-  pending: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
-  pendingText: { fontFamily: fonts.medium, fontSize: 14, color: colors.cardTextMuted },
+  bodyContent: { paddingHorizontal: 22, paddingBottom: 14 },
+  title: { fontFamily: fonts.black, fontSize: 30, lineHeight: 32, letterSpacing: -1, color: colors.ink },
+  rule: { backgroundColor: colors.rule },
+  rule10: { marginTop: 8, marginBottom: 6 },
+  rule5: { marginVertical: 6 },
+  amtRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  amt: { fontFamily: fonts.semibold, fontSize: 12, color: colors.ink },
+  verdictRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 4 },
+  verdict: { flexShrink: 1, fontFamily: fonts.black, fontSize: 72, lineHeight: 72, letterSpacing: -3.2, includeFontPadding: false },
+  grams: { alignItems: 'flex-end', paddingBottom: 6 },
+  gramsBig: { fontFamily: fonts.black, fontSize: 32, lineHeight: 34, letterSpacing: -1, color: colors.ink },
+  gramsSmall: { fontFamily: fonts.semibold, fontSize: 11.5, lineHeight: 15, color: colors.inkMuted, textAlign: 'right' },
+  why: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 24, color: '#33312D', marginTop: 8, marginBottom: 2 },
+  note: { fontFamily: fonts.serif, fontSize: 15, lineHeight: 21, color: colors.inkMuted, marginTop: 4 },
+  row: {
+    minHeight: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rule,
+  },
+  rowIn: { minHeight: 44, paddingLeft: 16 },
+  rowPressed: { backgroundColor: 'rgba(14,14,12,0.05)' },
+  lastSection: { borderBottomWidth: 4, borderBottomColor: colors.rule },
+  rowHead: { fontFamily: fonts.extrabold, fontSize: 15, color: colors.ink },
+  rowCount: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink },
+  alias: { flex: 1, fontFamily: fonts.bold, fontSize: 15, lineHeight: 20 },
+  tag: { borderWidth: 1, borderColor: colors.ink, borderRadius: 3, paddingHorizontal: 5, paddingVertical: 1 },
+  tagText: { fontFamily: fonts.bold, fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.ink },
+  hint: { fontFamily: fonts.serif, fontSize: 15, color: colors.inkMuted, marginTop: 10 },
+  pending: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 },
+  pendingText: { fontFamily: fonts.serif, fontSize: 16, color: colors.inkMuted },
   button: {
     height: 56,
     marginHorizontal: 14,
     borderRadius: 28,
+    backgroundColor: colors.ink,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
   },
   buttonPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  buttonText: { fontFamily: fonts.semibold, fontSize: 18 },
+  buttonText: { fontFamily: fonts.bold, fontSize: 17, color: colors.paper },
 });
