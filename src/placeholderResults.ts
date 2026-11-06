@@ -21,8 +21,8 @@ export const placeholderResults: ScanResult[] = [
   {
     verdict: 'UGLY',
     headline: 'Too much sugar',
-    naturalSugars: ['Fruit juice concentrate'],
-    addedSugars: ['Sucrose', 'Glucose syrup'],
+    naturalSugars: [],
+    addedSugars: ['Sucrose', 'Glucose syrup', 'Fruit juice concentrate', '12 g added per serving'],
     sweeteners: ['Aspartame'],
   },
 ];

@@ -48,3 +48,13 @@ test('old OKAY answers or garbage are unavailable', () => {
 test('missing API key skips the call', async () => {
   assert.deepEqual(await askJev('x', undefined), { status: 'unavailable', reason: 'TYPESAFE_API_KEY not set' });
 });
+
+test('blurry text comes back as unreadable, not a verdict', () => {
+  const body = answer('CLEAN', 0.9);
+  (body.answers as Record<string, unknown>).is_legible = { type: 'noul', noul: 0.2 };
+  assert.deepEqual(readJevResponse(body), { status: 'unreadable', model: 'jev-1.14.0' });
+});
+
+test('the request asks whether the text is legible', () => {
+  assert.equal(buildJevRequest('X', 'r').questions.is_legible.type, 'noul');
+});

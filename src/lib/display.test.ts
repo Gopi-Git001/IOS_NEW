@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { ScanResult } from '../types.ts';
-import { addToHistory, applyStrictMode, HISTORY_LIMIT, ingredientNames, ingredientSummary, initials, maskPhone, percent } from './display.ts';
+import { addToHistory, applyStrictMode, HISTORY_LIMIT, ingredientNames, reasonLine, ingredientSummary, initials, maskPhone, percent } from './display.ts';
 
 const result = (over: Partial<ScanResult>): ScanResult => ({
   verdict: 'BAD',
@@ -67,4 +67,9 @@ test('percent rounds and handles no scans', () => {
   assert.equal(percent(1, 3), 33);
   assert.equal(percent(2, 3), 67);
   assert.equal(percent(0, 0), 0);
+});
+
+test('reasonLine adds the added-sugar grams to the headline when known', () => {
+  assert.equal(reasonLine(result({ headline: 'Too much sugar', addedSugars: ['Cane Sugar', '6 g added per serving'] })), 'Too much sugar · 6 g added per serving');
+  assert.equal(reasonLine(result({ headline: 'Contains sweeteners' })), 'Contains sweeteners');
 });

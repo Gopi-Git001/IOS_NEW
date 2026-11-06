@@ -17,4 +17,5 @@ export type JevVerdict =
   | { status: 'decided'; verdict: Verdict; confidence: number; model: string }
   | { status: 'unsure'; verdict: Verdict | null; confidence: number | null; model: string }
   | { status: 'not_a_label'; model: string }
+  | { status: 'unreadable'; model: string }
   | { status: 'unavailable'; reason: string };

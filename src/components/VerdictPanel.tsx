@@ -1,7 +1,7 @@
 import { ChevronDown } from 'lucide-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ingredientNames } from '../lib/display';
+import { ingredientNames, reasonLine } from '../lib/display';
 import { colors, fonts } from '../theme';
 import type { ScanResult, Verdict } from '../types';
 import { CubeIcon, DropIcon, LeafIcon } from './Icons';
@@ -15,8 +15,8 @@ const SECTION_ICON = 14;
 let collapsedThisSession = false;
 
 /**
- * Top-right dark status card: the verdict word, then the sugar names that apply (names only; no reason, grams or hints).
- * The reason is read out by screen readers only. Scrolls inside if taller than `maxHeight`.
+ * Top-right dark status card: the verdict word, a one-line reason (with added grams when known),
+ * then the sugar names that apply. Scrolls inside if taller than `maxHeight`.
  */
 export function VerdictPanel({ result, maxHeight, listsPending = false }: { result: ScanResult; maxHeight: number; listsPending?: boolean }) {
   const [collapsed, setCollapsed] = useState(collapsedThisSession);
@@ -51,6 +51,8 @@ export function VerdictPanel({ result, maxHeight, listsPending = false }: { resu
           </Pressable>
         )}
       </View>
+
+      <Text style={styles.reason}>{reasonLine(result)}</Text>
 
       {!collapsed && sections.length > 0 && (
         <ScrollView style={styles.body} showsVerticalScrollIndicator={false} bounces={false}>
@@ -99,6 +101,7 @@ const styles = StyleSheet.create({
   section: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.cardBorder, gap: 4 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
   label: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase' },
+  reason: { fontFamily: fonts.medium, fontSize: 13, lineHeight: 17, color: colors.cardTextMuted, marginTop: 2 },
   pending: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   pendingText: { fontFamily: fonts.medium, fontSize: 13, color: colors.cardTextMuted },
   item: { fontFamily: fonts.semibold, fontSize: 14, lineHeight: 19, color: colors.cardText },

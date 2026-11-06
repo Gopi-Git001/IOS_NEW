@@ -65,3 +65,12 @@ export function initials(name: string | null | undefined) {
 
 /** Whole-number percentage of `part` in `total` (0 when there are no scans). */
 export const percent = (part: number, total: number) => (total > 0 ? Math.round((part / total) * 100) : 0);
+
+/**
+ * The one-line reason under the verdict, e.g. "Too much sugar · 6 g added per serving".
+ * The grams come from the server's "N g added per serving" entry, which the name lists leave out.
+ */
+export function reasonLine(result: ScanResult) {
+  const grams = result.addedSugars.map((s) => s.match(/^(\d+(?:\.\d+)?) g added per serving$/i)).find(Boolean);
+  return grams ? `${result.headline} · ${grams[1]} g added per serving` : result.headline;
+}

@@ -27,7 +27,7 @@ export default {
     const jev = await askJev(image, env('TYPESAFE_API_KEY'));
     const ms = Date.now() - started;
     if (jev.status === 'unavailable') console.warn('jev unavailable', { reason: jev.reason, ms });
-    else console.log('jev', { status: jev.status, ms, ...(jev.status !== 'not_a_label' ? { verdict: jev.verdict, confidence: jev.confidence } : {}) });
+    else console.log('jev', { status: jev.status, ms, ...((jev.status === 'decided' || jev.status === 'unsure') ? { verdict: jev.verdict, confidence: jev.confidence } : {}) });
 
     return json({ jev });
   }),

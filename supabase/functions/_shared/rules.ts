@@ -12,6 +12,8 @@ export type Verdict = 'CLEAN' | 'BAD' | 'UGLY';
 /** What Claude reads off the label (see LABEL_SCHEMA in scan-label). */
 export type LabelReading = {
   is_food_label: boolean;
+  /** False when the ingredient text is too blurry, dark or cut off to read. */
+  is_readable?: boolean;
   natural_sugars: string[];
   added_sugars: string[];
   artificial_sweeteners: string[];

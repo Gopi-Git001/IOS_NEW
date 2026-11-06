@@ -14,6 +14,8 @@ const TIMEOUT_MS = 6000;
 export const MIN_CONFIDENCE = 0.45;
 /** Below this probability that the photo is a food label, we say so instead of guessing. */
 export const MIN_LABEL_PROBABILITY = 0.5;
+/** Below this probability that the ingredient text is legible, we ask for a clearer photo. */
+export const MIN_LEGIBLE_PROBABILITY = 0.5;
 
 export type JevVerdict =
   | {
@@ -25,6 +27,7 @@ export type JevVerdict =
     }
   | { status: 'unsure'; verdict: Verdict | null; confidence: number | null; model: string }
   | { status: 'not_a_label'; model: string }
+  | { status: 'unreadable'; model: string }
   | { status: 'unavailable'; reason: string };
 
 const VERDICT_CRITERIA = {
@@ -64,6 +67,12 @@ export function buildJevRequest(imageBase64: string, ref: string) {
         type: 'noul',
         instructions: 'Does `label_photo` show the ingredient list or nutrition panel of a food or drink?',
       },
+      is_legible: {
+        type: 'noul',
+        instructions:
+          'Is the ingredient list text in `label_photo` sharp and readable word by word? ' +
+          'Answer low if it is blurry, out of focus, too dark, washed out by glare, cut off, or too small to read.',
+      },
       verdict: { type: 'choice', instructions: INSTRUCTIONS, criteria: VERDICT_CRITERIA },
     },
   };
@@ -77,6 +86,7 @@ export function readJevResponse(body: unknown): JevVerdict {
     model?: unknown;
     answers?: {
       is_food_label?: { noul?: unknown };
+      is_legible?: { noul?: unknown };
       verdict?: { choice?: unknown; confidence?: unknown; probabilities?: unknown };
     };
   };
@@ -86,6 +96,8 @@ export function readJevResponse(body: unknown): JevVerdict {
   const choice = v?.choice;
   if (!VERDICTS.includes(choice as Verdict)) return { status: 'unavailable', reason: 'unexpected response shape' };
   if (typeof label === 'number' && label < MIN_LABEL_PROBABILITY) return { status: 'not_a_label', model };
+  const legible = b?.answers?.is_legible?.noul;
+  if (typeof legible === 'number' && legible < MIN_LEGIBLE_PROBABILITY) return { status: 'unreadable', model };
 
   const confidence = typeof v?.confidence === 'number' ? v.confidence : null;
   if (confidence === null || confidence < MIN_CONFIDENCE) {

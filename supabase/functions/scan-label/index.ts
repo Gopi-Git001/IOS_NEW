@@ -19,11 +19,12 @@ const LABEL_SCHEMA = {
   type: 'object',
   additionalProperties: false,
   required: [
-    'is_food_label', 'natural_sugars', 'added_sugars', 'artificial_sweeteners',
+    'is_food_label', 'is_readable', 'natural_sugars', 'added_sugars', 'artificial_sweeteners',
     'sugar_alcohols', 'other_sweeteners', 'contains_alcohol', 'added_sugar_grams',
   ],
   properties: {
     is_food_label: { type: 'boolean' },
+    is_readable: { type: 'boolean' },
     natural_sugars: list,
     added_sugars: list,
     artificial_sweeteners: list,
@@ -45,8 +46,12 @@ Find the ingredient list (and the nutrition panel if it is visible) and sort eve
 - contains_alcohol: true only if the product contains drinking alcohol (beer, wine, spirits, or an ABV is shown).
 - added_sugar_grams: grams of ADDED sugar per serving, e.g. from "Includes 6g Added Sugars". Use null if it is not shown. Do not guess from total sugars.
 
+- is_readable: true only if you can clearly read the words of the ingredient list. Set it to false if the text is blurry, out of focus, too dark, washed out by glare, cut off, or too small to read with confidence. Never guess ingredients you cannot read.
+
 Use the ingredient names as printed, in title case, without percentages.
 Only report what you can actually read. If the photo is not a food or drink label, set is_food_label to false and leave the lists empty.`;
+
+export const UNREADABLE = "The photo isn't clear enough to read. Hold steady, move closer to the ingredient list, and try again.";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
@@ -98,7 +103,13 @@ export default {
       return json({ error: "That doesn't look like a food label. Fit the ingredient list in the box." }, 422);
     }
 
+    if (!reading.is_readable) {
+      console.log('label unreadable');
+      return json({ error: UNREADABLE, code: 'unreadable' }, 422);
+    }
+
     const result = decide(reading);
+    console.log('label read', { verdict: result.verdict, natural: result.naturalSugars.length, added: result.addedSugars.length, sweeteners: result.sweeteners.length });
 
     return json({ result });
   }),

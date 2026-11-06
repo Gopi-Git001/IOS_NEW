@@ -1,5 +1,5 @@
 import type { JevVerdict, ScanResult } from '../types';
-import { preparePhoto, quickVerdict, readLabel } from './api';
+import { preparePhoto, quickVerdict, readLabel, UnreadableError } from './api';
 import { combine, type ScanUpdate } from './combine';
 
 export type { ScanUpdate };
@@ -14,11 +14,12 @@ export async function runScan(photoUri: string, onUpdate: (u: ScanUpdate) => voi
   let reading: ScanResult | null = null;
   let readingFailed = false;
   let readingError = '';
+  let readingUnreadable = false;
   let last: string | null = null;
 
   const push = () => {
-    let u = combine(jev, reading, readingFailed);
-    if (u?.status === 'error' && readingError && (jev as JevVerdict | null)?.status !== 'not_a_label') u = { status: 'error', message: readingError };
+    let u = combine(jev, reading, readingFailed, readingUnreadable);
+    if (u?.status === 'error' && !readingUnreadable && readingError && !['not_a_label', 'unreadable'].includes((jev as JevVerdict | null)?.status ?? '')) u = { status: 'error', message: readingError };
     if (!u) return;
     const key = JSON.stringify(u);
     if (key !== last) {
@@ -39,6 +40,7 @@ export async function runScan(photoUri: string, onUpdate: (u: ScanUpdate) => voi
       },
       (e) => {
         readingFailed = true;
+        readingUnreadable = e instanceof UnreadableError;
         readingError = e instanceof Error ? e.message : '';
         push();
       },

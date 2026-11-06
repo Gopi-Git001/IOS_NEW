@@ -3,20 +3,37 @@ import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import type { JevVerdict, ScanResult } from '../types';
 import { supabase } from './supabase';
 
-/** Reads the error message our Edge Functions send back, or a fallback. */
-async function messageFrom(error: unknown, fallback: string) {
+/** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
+async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string }> {
   if (error instanceof FunctionsHttpError) {
     try {
-      const body = await error.context.json();
-      if (typeof body?.error === 'string') return body.error;
+      const body = await error.context.clone().json();
+      if (typeof body?.error === 'string') return { message: body.error, code: typeof body.code === 'string' ? body.code : undefined };
     } catch {}
   }
-  return fallback;
+  return { message: fallback };
 }
 
-/** Shrinks the photo once (Jev accepts 280–1568 px per side) and returns it as base64 JPEG. */
+async function messageFrom(error: unknown, fallback: string) {
+  return (await errorFrom(error, fallback)).message;
+}
+
+/** Thrown by readLabel when the photo is too blurry, dark or cut off to read. */
+export class UnreadableError extends Error {}
+
+const MAX_SIDE = 1280;
+
+/**
+ * Shrinks the photo once so its LONGEST side is 1280 px (Jev rejects any side over 1568 px, and
+ * portrait phone photos resized by width alone came out 1280x1707) and returns it as base64 JPEG.
+ */
 export async function preparePhoto(photoUri: string): Promise<string> {
-  const rendered = await ImageManipulator.manipulate(photoUri).resize({ width: 1280 }).renderAsync();
+  const original = await ImageManipulator.manipulate(photoUri).renderAsync();
+  const portrait = original.height > original.width;
+  const longest = Math.max(original.width, original.height);
+  const ctx = ImageManipulator.manipulate(photoUri);
+  if (longest > MAX_SIDE) ctx.resize(portrait ? { height: MAX_SIDE } : { width: MAX_SIDE });
+  const rendered = await ctx.renderAsync();
   const { base64 } = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.7, base64: true });
   if (!base64) throw new Error('Could not prepare the photo.');
   return base64;
@@ -32,7 +49,10 @@ export async function quickVerdict(image: string): Promise<JevVerdict> {
 /** Detail path: Claude lists the sugars, and the rules give a backstop verdict. */
 export async function readLabel(image: string): Promise<ScanResult> {
   const { data, error } = await supabase.functions.invoke<{ result: ScanResult }>('quickgob-scan-label', { body: { image } });
-  if (error || !data?.result) throw new Error(await messageFrom(error, "Couldn't read the label. Try again."));
+  if (error || !data?.result) {
+    const e = await errorFrom(error, "Couldn't read the label. Try again.");
+    throw e.code === 'unreadable' ? new UnreadableError(e.message) : new Error(e.message);
+  }
   return data.result;
 }
 
