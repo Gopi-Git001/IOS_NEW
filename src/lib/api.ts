@@ -24,20 +24,20 @@ export async function preparePhoto(photoUri: string): Promise<string> {
 
 /** Fast path: Jev makes the CLEAN / BAD / UGLY call straight from the photo. Never throws. */
 export async function quickVerdict(image: string): Promise<JevVerdict> {
-  const { data, error } = await supabase.functions.invoke<{ jev: JevVerdict }>('quick-verdict', { body: { image } });
+  const { data, error } = await supabase.functions.invoke<{ jev: JevVerdict }>('quickgob-quick-verdict', { body: { image } });
   if (error || !data?.jev) return { status: 'unavailable', reason: await messageFrom(error, 'quick-verdict failed') };
   return data.jev;
 }
 
 /** Detail path: Claude lists the sugars, and the rules give a backstop verdict. */
 export async function readLabel(image: string): Promise<ScanResult> {
-  const { data, error } = await supabase.functions.invoke<{ result: ScanResult }>('scan-label', { body: { image } });
+  const { data, error } = await supabase.functions.invoke<{ result: ScanResult }>('quickgob-scan-label', { body: { image } });
   if (error || !data?.result) throw new Error(await messageFrom(error, "Couldn't read the label. Try again."));
   return data.result;
 }
 
 export async function deleteAccount() {
-  const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
+  const { error } = await supabase.functions.invoke('quickgob-delete-account', { method: 'POST' });
   if (error) throw new Error(await messageFrom(error, 'Could not delete account. Try again.'));
   // The account is gone; drop the local session too.
   await supabase.auth.signOut({ scope: 'local' });
