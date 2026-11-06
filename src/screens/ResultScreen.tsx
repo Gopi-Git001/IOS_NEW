@@ -50,7 +50,11 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
 
       <SafeAreaView style={styles.fill} edges={['top']} pointerEvents="box-none">
         <View onLayout={(e) => setHeaderBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}>
-          <Header tagline={tagline} right={<ProfileButton onOpen={onOpenSheet} />} />
+          <Header
+            tagline={tagline}
+            mark={state.status === 'reading' ? 'scanning' : state.status === 'done' ? state.result.verdict : 'idle'}
+            right={<ProfileButton onOpen={onOpenSheet} />}
+          />
         </View>
       </SafeAreaView>
 

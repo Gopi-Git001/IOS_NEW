@@ -1,10 +1,11 @@
 // Shared screen chrome: the top header, the profile button, the photo fades and the disclaimer footer.
 import { LinearGradient } from 'expo-linear-gradient';
 import { Menu, User } from 'lucide-react-native';
-import type { ReactNode } from 'react';
-import { type DimensionValue, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Animated, type DimensionValue, Easing, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useProfile } from '../lib/account';
 import { initials } from '../lib/display';
+import type { Verdict } from '../types';
 import { brand, colors, fonts } from '../theme';
 import { Glass } from './Glass';
 
@@ -43,20 +44,108 @@ export function ProfileButton({ onOpen, leading }: { onOpen: (sheet: Sheet) => v
 
 const ICON = require('../../assets/brand-icon.png');
 
-/** The brand mark: the glass lens cube with a sugar crystal inside. Replaces the spelled-out name in headers. */
-export function Wordmark({ size = 44 }: { ink?: boolean; size?: number }) {
+export type MarkState = 'idle' | 'scanning' | Verdict;
+
+const MARK_GLOW: Record<Verdict, string> = { CLEAN: colors.clean, BAD: colors.bad, UGLY: colors.ugly };
+
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduced).catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduced);
+    return () => sub.remove();
+  }, []);
+  return reduced;
+}
+
+/**
+ * The brand mark: the clear glass cube with refracted label lines. Replaces the spelled-out name in headers.
+ * Idle: a slow float and a light sweep across the glass. Scanning: a quick pulse and a faster sweep.
+ * Verdict: a small pop and a glow in the verdict color. Static when the system asks for reduced motion.
+ */
+export function Wordmark({ size = 44, state = 'idle' }: { ink?: boolean; size?: number; state?: MarkState }) {
+  const reduced = useReducedMotion();
+  const float = useRef(new Animated.Value(0)).current;
+  const sweep = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0)).current;
+  const pop = useRef(new Animated.Value(1)).current;
+  const scanning = state === 'scanning';
+  const verdict = state !== 'idle' && state !== 'scanning' ? state : null;
+
+  useEffect(() => {
+    if (reduced) return;
+    const loops = [
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(float, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(float, { toValue: 0, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ]),
+      ),
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(sweep, { toValue: 1, duration: scanning ? 900 : 1400, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+          Animated.delay(scanning ? 150 : 3200),
+          Animated.timing(sweep, { toValue: 0, duration: 0, useNativeDriver: true }),
+        ]),
+      ),
+    ];
+    if (scanning) {
+      loops.push(
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(pulse, { toValue: 1, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+            Animated.timing(pulse, { toValue: 0, duration: 420, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          ]),
+        ),
+      );
+    } else pulse.setValue(0);
+    loops.forEach((l) => l.start());
+    return () => loops.forEach((l) => l.stop());
+  }, [reduced, scanning, float, sweep, pulse]);
+
+  useEffect(() => {
+    if (!verdict || reduced) return;
+    pop.setValue(0.82);
+    Animated.spring(pop, { toValue: 1, friction: 4, tension: 140, useNativeDriver: true }).start();
+  }, [verdict, reduced, pop]);
+
+  const radius = size * 0.27;
+  const translateY = float.interpolate({ inputRange: [0, 1], outputRange: [0, -2.5] });
+  const scale = Animated.multiply(pop, pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.07] }));
+  const translateX = sweep.interpolate({ inputRange: [0, 1], outputRange: [-size * 1.2, size * 1.2] });
+  const glow = verdict ? MARK_GLOW[verdict] : scanning ? 'rgba(120,230,220,0.9)' : null;
+
   return (
-    <View style={[styles.mark, { width: size, height: size, borderRadius: size * 0.27 }]} accessible accessibilityRole="header" accessibilityLabel={brand.name}>
+    <Animated.View
+      style={[
+        styles.mark,
+        { width: size, height: size, borderRadius: radius, transform: [{ translateY }, { scale }] },
+        glow ? ({ borderColor: glow, boxShadow: `0px 0px 16px ${glow}, inset 0px 1px 0px rgba(255,255,255,0.4)` } as object) : null,
+      ]}
+      accessible
+      accessibilityRole="header"
+      accessibilityLabel={brand.name}
+    >
       <Image source={ICON} style={{ width: size, height: size }} resizeMode="cover" />
-    </View>
+      {!reduced && (
+        <Animated.View pointerEvents="none" style={[styles.sweep, { width: size * 0.5, height: size * 2, top: -size / 2, transform: [{ translateX }, { rotate: '20deg' }] }]}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0)']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+      )}
+    </Animated.View>
   );
 }
 
-export function Header({ right, tagline, ink }: { right?: ReactNode; tagline?: string; ink?: boolean }) {
+export function Header({ right, tagline, ink, mark }: { right?: ReactNode; tagline?: string; ink?: boolean; mark?: MarkState }) {
   return (
     <View style={styles.header}>
       <View style={styles.brandRow}>
-        <Wordmark ink={ink} />
+        <Wordmark ink={ink} state={mark} />
         {tagline ? <Text style={[styles.tagline, ink && styles.taglineInk]}>{tagline}</Text> : null}
       </View>
       <View style={styles.actions}>{right}</View>
@@ -119,6 +208,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.28)',
     boxShadow: 'inset 0px 1px 0px rgba(255,255,255,0.4), 0px 6px 18px rgba(0,0,0,0.4)',
   },
+  sweep: { position: 'absolute', left: '25%' },
   glow: { position: 'absolute', borderRadius: 999, ...(Platform.OS === 'web' ? ({ filter: 'blur(70px)' } as object) : {}) },
   glowTeal: { width: 360, height: 360, top: -90, left: -120, backgroundColor: 'rgba(31,181,168,0.30)' },
   glowIndigo: { width: 420, height: 420, top: '38%', right: -200, backgroundColor: 'rgba(76,99,230,0.26)' },
