@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Footer, Header } from '../components/Chrome';
-import { supabase } from '../lib/supabase';
+import { sendPhoneCode, verifyPhoneCode } from '../lib/api';
 import { colors, fonts } from '../theme';
 
 const RESEND_SECONDS = 60;
@@ -41,9 +41,9 @@ export function SignInScreen() {
   const sendCode = async (number: string) => {
     setBusy(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithOtp({ phone: number });
+    const error = await sendPhoneCode(number);
     setBusy(false);
-    if (error) return setError(error.message);
+    if (error) return setError(error);
     setSentTo(number);
     setCode('');
     setCooldown(RESEND_SECONDS);
@@ -59,10 +59,10 @@ export function SignInScreen() {
     if (!sentTo || token.length !== 6) return;
     setBusy(true);
     setError(null);
-    const { error } = await supabase.auth.verifyOtp({ phone: sentTo, token, type: 'sms' });
+    const error = await verifyPhoneCode(sentTo, token);
     setBusy(false);
     // On success the auth listener in App.tsx switches to the camera.
-    if (error) setError(error.message);
+    if (error) setError(error);
   };
 
   return (

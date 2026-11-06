@@ -2,13 +2,14 @@
 // Signed-in users only. Claude vision lists the sugars on the label and the rules give a backstop
 // verdict. Runs alongside quick-verdict (Jev), which makes the actual CLEAN / BAD / UGLY call.
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0';
+import { env } from '../_shared/env.ts';
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
 import { decide, type LabelReading } from '../_shared/rules.ts';
 
-const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
+const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY') });
 
 // Override with the CLAUDE_MODEL secret, e.g. a faster model if the lists feel slow.
-const CLAUDE_MODEL = Deno.env.get('CLAUDE_MODEL') ?? 'claude-opus-5-5';
+const CLAUDE_MODEL = env('CLAUDE_MODEL') ?? 'claude-opus-5-5';
 
 const MAX_IMAGE_BASE64 = 6_000_000; // ~4.5 MB JPEG; the app sends ~0.3 MB
 

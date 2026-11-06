@@ -4,6 +4,7 @@
 // shows the verdict as soon as this one answers.
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
 import { askJev } from '../_shared/jev.ts';
+import { env } from '../_shared/env.ts';
 
 const MAX_IMAGE_BASE64 = 6_000_000;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
@@ -23,7 +24,7 @@ export default {
     }
 
     const started = Date.now();
-    const jev = await askJev(image, Deno.env.get('TYPESAFE_API_KEY'));
+    const jev = await askJev(image, env('TYPESAFE_API_KEY'));
     const ms = Date.now() - started;
     if (jev.status === 'unavailable') console.warn('jev unavailable', { reason: jev.reason, ms });
     else console.log('jev', { status: jev.status, ms, ...(jev.status !== 'not_a_label' ? { verdict: jev.verdict, confidence: jev.confidence } : {}) });
