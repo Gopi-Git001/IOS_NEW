@@ -85,7 +85,7 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
             <Text style={styles.frameLabel}>Ingredients</Text>
             <View style={styles.frameBase} />
           </View>
-          <Glass variant="clear" style={styles.hint}>
+          <Glass style={styles.hint}>
             <Text style={styles.hintText}>Fit the ingredient list in the panel</Text>
           </Glass>
         </View>
