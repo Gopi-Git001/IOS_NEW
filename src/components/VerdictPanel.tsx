@@ -1,12 +1,19 @@
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { ComponentProps, ReactNode } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, StyleSheet, Text, View } from 'react-native';
 import { colors, fonts } from '../theme';
 import type { ScanResult, Verdict } from '../types';
-import { CubeIcon, DropIcon, LeafIcon, VerdictIcon } from './Icons';
+import { CubeIcon, DropIcon, LeafIcon } from './Icons';
 
 export const verdictColor: Record<Verdict, string> = { CLEAN: colors.clean, BAD: colors.bad, UGLY: colors.ugly };
-const verdictIcon = { CLEAN: 'check', BAD: 'dash', UGLY: 'cross' } as const;
+// Glossy balloon-letter verdict words (assets/glossy/word-*.webp) with their width/height ratios.
+const verdictWord = {
+  CLEAN: { src: require('../../assets/glossy/word-clean.webp'), ratio: 734 / 260 },
+  BAD: { src: require('../../assets/glossy/word-bad.webp'), ratio: 549 / 260 },
+  UGLY: { src: require('../../assets/glossy/word-ugly.webp'), ratio: 529 / 260 },
+} as const;
+const WORD_HEIGHT = 64;
 
 type BlurTarget = ComponentProps<typeof BlurView>['blurTarget'];
 
@@ -28,16 +35,28 @@ export function VerdictPanel({ result, blurTarget, listsPending = false }: { res
         blurMethod="dimezisBlurViewSdk31Plus"
         style={StyleSheet.absoluteFill}
       />
+      {/* Glossy finish: verdict-tinted glass, a bright sheen across the top, a soft glow under the word. */}
+      <LinearGradient
+        colors={[color + '59', 'rgba(11,11,15,0.35)', 'rgba(11,11,15,0.55)']}
+        locations={[0, 0.45, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={['rgba(255,255,255,0.55)', 'rgba(255,255,255,0.16)', 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0)']}
+        locations={[0, 0.35, 0.36, 1]}
+        style={styles.sheen}
+        pointerEvents="none"
+      />
       <View style={styles.verdictRow}>
-        <View style={glyphShadow}>
-          <VerdictIcon kind={verdictIcon[result.verdict]} color={color} size={46} />
-        </View>
-        <View style={styles.verdictText}>
-          <Text style={[styles.verdict, { color }]}>{result.verdict}</Text>
-          <Text style={[styles.headline, { color }]} numberOfLines={2}>
-            {result.headline}
-          </Text>
-        </View>
+        <Image
+          source={verdictWord[result.verdict].src}
+          accessibilityLabel={result.verdict}
+          resizeMode="contain"
+          style={[styles.word, { width: Math.min(WORD_HEIGHT * verdictWord[result.verdict].ratio, 270) }]}
+        />
+        <Text style={[styles.headline, textShadow]} numberOfLines={2}>
+          {result.headline}
+        </Text>
       </View>
 
       {sections.map((s) => (
@@ -83,22 +102,29 @@ const styles = StyleSheet.create({
   panel: {
     position: 'absolute',
     right: 12,
-    width: '54%',
-    minWidth: 210,
-    maxWidth: 320,
-    backgroundColor: 'rgba(11,11,15,0.55)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    borderRadius: 20,
+    width: '60%',
+    minWidth: 220,
+    maxWidth: 340,
+    backgroundColor: 'rgba(11,11,15,0.25)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.38)',
+    borderRadius: 28,
     overflow: 'hidden',
     // 16 on every side: the verdict row already adds 16 on top, the last section adds 12 at the bottom.
     paddingHorizontal: 16,
     paddingBottom: 4,
   },
-  verdictRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 16 },
-  verdictText: { flex: 1 },
-  verdict: { fontFamily: fonts.extrabold, fontSize: 30, letterSpacing: 0.5, lineHeight: 34, ...textShadow },
-  headline: { fontFamily: fonts.medium, fontSize: 14.5, marginTop: 1, ...textShadow },
+  sheen: { position: 'absolute', top: 0, left: 0, right: 0, height: 96, borderTopLeftRadius: 28, borderTopRightRadius: 28 },
+  verdictRow: { alignItems: 'flex-start', gap: 6, paddingTop: 14, paddingBottom: 14 },
+  word: { height: WORD_HEIGHT, marginLeft: -4 },
+  headline: {
+    fontFamily: fonts.display,
+    fontSize: 22,
+    lineHeight: 26,
+    color: colors.text,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
   section: {
     flexDirection: 'row',
     gap: 10,

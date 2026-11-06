@@ -17,4 +17,5 @@ export const fonts = {
   semibold: 'Inter_600SemiBold',
   bold: 'Inter_700Bold',
   extrabold: 'Inter_800ExtraBold',
+  display: 'Anton_400Regular', // tall condensed headline face
 };

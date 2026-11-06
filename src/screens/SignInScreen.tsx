@@ -1,4 +1,3 @@
-import LottieView from 'lottie-react-native';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CharacterView } from '../components/Character';
 import { Footer, Header } from '../components/Chrome';
 import { sendPhoneCode, verifyPhoneCode } from '../lib/api';
 import { colors, fonts } from '../theme';
@@ -70,7 +70,9 @@ export function SignInScreen() {
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Header />
         <View style={styles.body}>
-          <LottieView source={require('../../assets/lottie/idle.json')} autoPlay loop style={styles.character} />
+          <View style={styles.character}>
+            <CharacterView mood="idle" height={230} />
+          </View>
 
           {sentTo ? (
             <>
@@ -147,8 +149,8 @@ function PrimaryButton({ label, onPress, busy, disabled }: { label: string; onPr
 const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: colors.background },
   body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 14 },
-  character: { width: 170, height: 170, alignSelf: 'center', marginBottom: 4 },
-  title: { fontFamily: fonts.bold, fontSize: 26, color: colors.text, textAlign: 'center' },
+  character: { alignSelf: 'center', marginBottom: 10 },
+  title: { fontFamily: fonts.display, fontSize: 40, lineHeight: 46, color: colors.text, textAlign: 'center', textTransform: 'uppercase' },
   subtitle: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginBottom: 8 },
   input: {
     height: 58,
