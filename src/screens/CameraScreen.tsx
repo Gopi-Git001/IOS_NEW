@@ -2,11 +2,13 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Footer, Header, MenuButton, Scrims } from '../components/Chrome';
+import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { FlashIcon } from '../components/Icons';
 import { colors, fonts } from '../theme';
 
-export function CameraScreen({ onCapture, tagline }: { onCapture: (photoUri: string) => void; tagline?: string }) {
+type Props = { onCapture: (photoUri: string) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string };
+
+export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const camera = useRef<CameraView>(null);
   const [torch, setTorch] = useState(false);
@@ -60,7 +62,7 @@ export function CameraScreen({ onCapture, tagline }: { onCapture: (photoUri: str
               <Pressable hitSlop={12} onPress={() => setTorch((t) => !t)} accessibilityLabel="Toggle flash">
                 <FlashIcon on={torch} />
               </Pressable>
-              <MenuButton />
+              <ProfileButton onOpen={onOpenSheet} />
             </>
           }
         />

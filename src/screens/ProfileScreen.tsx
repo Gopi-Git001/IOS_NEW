@@ -1,0 +1,221 @@
+import { LogOut, Phone, Trash2, User } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { demoAlert, Group, listStyles, Row, Sheet } from '../components/ListUI';
+import { verdictColor } from '../components/VerdictPanel';
+import { deleteAccountAndData, saveDisplayName, signOut, type Stats, syncProfile, syncStats, useProfile } from '../lib/account';
+import { initials, maskPhone, percent } from '../lib/display';
+import { isConfigured } from '../lib/supabase';
+import { colors, fonts } from '../theme';
+
+type Props = { visible: boolean; onClose: () => void; phone?: string; onChangePhone: () => void };
+
+/** The person screen: name, phone, stats, sign out and delete account. */
+export function ProfileScreen({ visible, onClose, phone, onChangePhone }: Props) {
+  const { displayName, stats } = useProfile();
+
+  // Fresh name, settings and stats each time the screen opens; the local copy shows meanwhile.
+  useEffect(() => {
+    if (!visible) return;
+    syncProfile();
+    syncStats();
+  }, [visible]);
+
+  return (
+    <Sheet visible={visible} title="Profile" onBack={onClose} backLabel="Close profile">
+      <ScrollView contentContainerStyle={listStyles.content} keyboardShouldPersistTaps="handled">
+        <NameCard displayName={displayName} />
+
+        <Group title="Account">
+          <Row
+            icon={Phone}
+            label="Phone number"
+            value={isConfigured ? maskPhone(phone) : 'Demo mode'}
+            onPress={isConfigured ? onChangePhone : demoAlert}
+            chevron
+          />
+        </Group>
+
+        <Group title="My stats">
+          <StatsCard stats={stats} />
+        </Group>
+
+        <Group title="Session">
+          <Row icon={LogOut} label="Sign out" onPress={confirmSignOut} />
+          <Row icon={Trash2} label="Delete account" danger onPress={confirmDelete} />
+        </Group>
+      </ScrollView>
+    </Sheet>
+  );
+}
+
+// ---------- Name ----------
+
+function NameCard({ displayName }: { displayName: string | null }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [saving, setSaving] = useState(false);
+  const letters = initials(displayName);
+
+  const start = () => {
+    if (!isConfigured) return demoAlert();
+    setDraft(displayName ?? '');
+    setEditing(true);
+  };
+  const save = async () => {
+    setSaving(true);
+    try {
+      await saveDisplayName(draft);
+      setEditing(false);
+    } catch (e) {
+      Alert.alert('Not saved', e instanceof Error ? e.message : 'Try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <View style={styles.nameCard}>
+      <View style={styles.avatar} accessibilityLabel={displayName ? `Profile picture, ${displayName}` : 'Profile picture'}>
+        {letters ? <Text style={styles.avatarText}>{letters}</Text> : <User size={32} color={colors.cardText} strokeWidth={2} />}
+      </View>
+
+      {editing ? (
+        <View style={styles.editor}>
+          <TextInput
+            value={draft}
+            onChangeText={setDraft}
+            autoFocus
+            maxLength={40}
+            placeholder="Your name"
+            placeholderTextColor={colors.textFaint}
+            returnKeyType="done"
+            onSubmitEditing={save}
+            style={styles.input}
+            accessibilityLabel="Display name"
+          />
+          <View style={styles.editorButtons}>
+            <Pressable onPress={() => setEditing(false)} style={styles.secondaryButton} accessibilityRole="button">
+              <Text style={styles.secondaryButtonText}>Cancel</Text>
+            </Pressable>
+            <Pressable onPress={save} disabled={saving} style={styles.primaryButton} accessibilityRole="button">
+              {saving ? <ActivityIndicator color={colors.background} /> : <Text style={styles.primaryButtonText}>Save</Text>}
+            </Pressable>
+          </View>
+        </View>
+      ) : (
+        <>
+          <Text style={[styles.name, !displayName && styles.namePlaceholder]}>{displayName ?? 'No name yet'}</Text>
+          <Pressable onPress={start} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.editLink}>Edit name</Text>
+          </Pressable>
+        </>
+      )}
+    </View>
+  );
+}
+
+// ---------- Stats ----------
+
+function StatsCard({ stats }: { stats: Stats | null }) {
+  if (!stats) {
+    return (
+      <View style={styles.statsCard}>
+        <ActivityIndicator color={colors.cardTextMuted} />
+      </View>
+    );
+  }
+  const parts = [
+    { label: 'CLEAN', count: stats.clean, color: verdictColor.CLEAN },
+    { label: 'BAD', count: stats.bad, color: verdictColor.BAD },
+    { label: 'UGLY', count: stats.ugly, color: verdictColor.UGLY },
+  ] as const;
+
+  return (
+    <View style={styles.statsCard}>
+      <Text style={styles.total}>
+        {stats.total} <Text style={styles.totalLabel}>{stats.total === 1 ? 'scan' : 'scans'}</Text>
+      </Text>
+      {stats.total > 0 ? (
+        <>
+          <View style={styles.bar}>
+            {parts.map((p) => (p.count > 0 ? <View key={p.label} style={{ flex: p.count, backgroundColor: p.color }} /> : null))}
+          </View>
+          <View style={styles.legend}>
+            {parts.map((p) => (
+              <View key={p.label} style={styles.legendItem} accessible accessibilityLabel={`${p.label} ${percent(p.count, stats.total)} percent`}>
+                <Text style={[styles.legendPercent, { color: p.color }]}>{percent(p.count, stats.total)}%</Text>
+                <Text style={styles.legendLabel}>{p.label}</Text>
+              </View>
+            ))}
+          </View>
+        </>
+      ) : (
+        <Text style={styles.noScans}>Scan a label to start your stats.</Text>
+      )}
+    </View>
+  );
+}
+
+// ---------- Sign out / delete ----------
+
+function confirmSignOut() {
+  if (!isConfigured) return demoAlert();
+  Alert.alert('Sign out?', 'You can sign back in with your phone number.', [
+    { text: 'Cancel', style: 'cancel' },
+    { text: 'Sign out', onPress: () => signOut().catch(() => Alert.alert('Sign out failed', 'Try again.')) },
+  ]);
+}
+
+function confirmDelete() {
+  if (!isConfigured) return demoAlert();
+  Alert.alert('Delete account?', 'This permanently deletes your Sugar Hunter account and all of your scan history. It cannot be undone.', [
+    { text: 'Cancel', style: 'cancel' },
+    {
+      text: 'Delete',
+      style: 'destructive',
+      onPress: () => deleteAccountAndData().catch((e: Error) => Alert.alert('Delete failed', e.message)),
+    },
+  ]);
+}
+
+const styles = StyleSheet.create({
+  nameCard: { backgroundColor: colors.surface, borderRadius: 14, padding: 20, marginTop: 12, alignItems: 'center', gap: 8 },
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  avatarText: { fontFamily: fonts.bold, fontSize: 26, color: colors.cardText },
+  name: { fontFamily: fonts.bold, fontSize: 20, color: colors.cardText },
+  namePlaceholder: { color: colors.cardTextMuted },
+  editLink: { fontFamily: fonts.semibold, fontSize: 15, color: colors.clean },
+  editor: { alignSelf: 'stretch', gap: 12 },
+  input: {
+    height: 48,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    color: colors.cardText,
+    fontFamily: fonts.medium,
+    fontSize: 16,
+  },
+  editorButtons: { flexDirection: 'row', gap: 10 },
+  secondaryButton: { flex: 1, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.08)' },
+  secondaryButtonText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.cardText },
+  primaryButton: { flex: 1, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.clean },
+  primaryButtonText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.background },
+  statsCard: { padding: 16, gap: 12, minHeight: 52, justifyContent: 'center' },
+  total: { fontFamily: fonts.extrabold, fontSize: 28, color: colors.cardText },
+  totalLabel: { fontFamily: fonts.medium, fontSize: 16, color: colors.cardTextMuted },
+  bar: { flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden', gap: 2 },
+  legend: { flexDirection: 'row' },
+  legendItem: { flex: 1 },
+  legendPercent: { fontFamily: fonts.bold, fontSize: 18 },
+  legendLabel: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 0.6, color: colors.cardTextMuted, marginTop: 2 },
+  noScans: { fontFamily: fonts.regular, fontSize: 14, color: colors.cardTextMuted },
+});

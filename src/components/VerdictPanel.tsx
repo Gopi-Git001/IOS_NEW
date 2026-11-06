@@ -1,191 +1,105 @@
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import type { ComponentProps, ReactNode } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
+import { ChevronDown } from 'lucide-react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ingredientNames } from '../lib/display';
 import { colors, fonts } from '../theme';
 import type { ScanResult, Verdict } from '../types';
-import { CubeIcon, DropIcon, LeafIcon, VerdictIcon } from './Icons';
+import { CubeIcon, DropIcon, LeafIcon } from './Icons';
 
 export const verdictColor: Record<Verdict, string> = { CLEAN: colors.clean, BAD: colors.bad, UGLY: colors.ugly };
-const verdictIcon = { CLEAN: 'check', BAD: 'dash', UGLY: 'cross' } as const;
-const TIERS: Verdict[] = ['CLEAN', 'BAD', 'UGLY'];
 
-type BlurTarget = ComponentProps<typeof BlurView>['blurTarget'];
+const sectionColor = { natural: '#34D399', added: '#FBBF24', sweeteners: '#60A5FA' };
+const SECTION_ICON = 14;
+
+// Collapsed or not, remembered until the app is closed.
+let collapsedThisSession = false;
 
 /**
- * Top-right glass HUD card, laid out like a gamer profile:
- * badge + verdict "rank", a 3-step sugar level bar, stat counters, then the ingredient loadout.
+ * Top-right dark status card: the verdict word, then the sugar names that apply (names only; no reason, grams or hints).
+ * The reason is read out by screen readers only. Scrolls inside if taller than `maxHeight`.
  */
-export function VerdictPanel({ result, blurTarget, listsPending = false }: { result: ScanResult; blurTarget: BlurTarget; listsPending?: boolean }) {
+export function VerdictPanel({ result, maxHeight, listsPending = false }: { result: ScanResult; maxHeight: number; listsPending?: boolean }) {
+  const [collapsed, setCollapsed] = useState(collapsedThisSession);
   const color = verdictColor[result.verdict];
-  const level = TIERS.indexOf(result.verdict) + 1;
-  const stats: { label: string; items: string[]; icon: ReactNode }[] = [
-    { label: 'Natural', items: result.naturalSugars, icon: <LeafIcon color={colors.textMuted} size={14} /> },
-    { label: 'Added', items: result.addedSugars, icon: <CubeIcon color={colors.textMuted} size={14} /> },
-    { label: 'Sweet', items: result.sweeteners, icon: <DropIcon color={colors.textMuted} size={14} /> },
-  ];
-  const loadout = [
-    { title: 'Natural sugars', items: result.naturalSugars },
-    { title: 'Added sugars', items: result.addedSugars },
-    { title: 'Sweeteners', items: result.sweeteners },
+  const sections = [
+    { title: 'Natural sugars', items: ingredientNames(result.naturalSugars), color: sectionColor.natural, Icon: LeafIcon },
+    { title: 'Added sugars', items: ingredientNames(result.addedSugars), color: sectionColor.added, Icon: CubeIcon },
+    { title: 'Sweeteners', items: ingredientNames(result.sweeteners), color: sectionColor.sweeteners, Icon: DropIcon },
   ].filter((s) => s.items.length > 0);
 
+  const toggle = () => {
+    collapsedThisSession = !collapsed;
+    setCollapsed(collapsedThisSession);
+  };
+
   return (
-    <View style={[styles.panel, { borderColor: `${color}55` }]}>
-      <BlurView intensity={28} tint="dark" blurTarget={blurTarget} blurMethod="dimezisBlurViewSdk31Plus" style={StyleSheet.absoluteFill} />
-      {/* glass sheen on the top edge */}
-      <LinearGradient colors={['rgba(255,255,255,0.16)', 'rgba(255,255,255,0)']} style={styles.sheen} pointerEvents="none" />
-      <Corners color={color} />
-
-      {/* profile header */}
-      <View style={styles.profile}>
-        <View style={[styles.badge, { borderColor: color, backgroundColor: `${color}22` }, glow(color)]}>
-          <View style={styles.badgeIcon}>
-            <VerdictIcon kind={verdictIcon[result.verdict]} color={color} size={30} />
-          </View>
-        </View>
-        <View style={styles.profileText}>
-          <Text style={styles.kicker}>SUGAR RANK</Text>
-          <Text style={[styles.verdict, { color }, textGlow(color)]}>{result.verdict}</Text>
-        </View>
-      </View>
-      <Text style={styles.headline} numberOfLines={2}>
-        {result.headline}
-      </Text>
-
-      {/* sugar level bar */}
-      <View style={styles.levelRow}>
-        <Text style={styles.kicker}>SUGAR LVL</Text>
-        <Text style={[styles.levelValue, { color }]}>
-          {level}/{TIERS.length}
+    <View style={[styles.card, { maxHeight }]}>
+      <View style={styles.verdictRow}>
+        <Text style={[styles.verdict, { color }]} accessibilityRole="header" accessibilityLabel={`${result.verdict}. ${result.headline}`}>
+          {result.verdict}
         </Text>
-      </View>
-      <View style={styles.levelBar}>
-        {TIERS.map((t, i) => (
-          <View key={t} style={[styles.levelSeg, i < level ? { backgroundColor: color, ...glow(color) } : styles.levelSegOff]} />
-        ))}
-      </View>
-
-      {/* stat counters */}
-      <View style={styles.stats}>
-        {stats.map((s, i) => (
-          <View key={s.label} style={[styles.stat, i > 0 && styles.statDivider]}>
-            <View style={styles.statLabelRow}>
-              {s.icon}
-              <Text style={[styles.statValue, s.items.length > 0 && s.label !== 'Natural' && { color }]}>{s.items.length}</Text>
-            </View>
-            <Text style={styles.statLabel}>{s.label.toUpperCase()}</Text>
-          </View>
-        ))}
+        <View style={styles.spacer} />
+        {sections.length > 0 && (
+          <Pressable
+            onPress={toggle}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel={collapsed ? 'Show details' : 'Hide details'}
+            style={collapsed && styles.chevronCollapsed}
+          >
+            <ChevronDown size={20} color={colors.cardTextMuted} strokeWidth={2.5} />
+          </Pressable>
+        )}
       </View>
 
-      {/* ingredient loadout */}
-      {loadout.map((s) => (
-        <View key={s.title} style={styles.section}>
-          <Text style={styles.kicker}>{s.title.toUpperCase()}</Text>
-          <View style={styles.chips}>
-            {s.items.map((item) => (
-              <View key={item} style={styles.chip}>
-                <Text style={styles.chipText}>{item}</Text>
+      {!collapsed && sections.length > 0 && (
+        <ScrollView style={styles.body} showsVerticalScrollIndicator={false} bounces={false}>
+          {sections.map((s) => (
+            <View key={s.title} style={styles.section}>
+              <View style={styles.labelRow}>
+                <s.Icon size={SECTION_ICON} color={s.color} />
+                <Text style={[styles.label, { color: s.color }]}>{s.title}</Text>
               </View>
-            ))}
-          </View>
-        </View>
-      ))}
+              {s.items.map((item) => (
+                <Text key={item} style={styles.item}>
+                  {item}
+                </Text>
+              ))}
+            </View>
+          ))}
 
-      {listsPending && (
-        <View style={[styles.section, styles.pendingRow]}>
-          <ActivityIndicator size="small" color={colors.textMuted} />
-          <Text style={styles.chipText}>Listing the sugars...</Text>
-        </View>
+        </ScrollView>
       )}
 
-      {result.note && (
-        <View style={styles.noteRow}>
-          <Text style={[styles.note, { color }]}>{'> '}{result.note}</Text>
+      {/* Jev's verdict is in; Claude is still listing the ingredients. */}
+      {listsPending && (
+        <View style={[styles.section, styles.pending]}>
+          <ActivityIndicator size="small" color={colors.cardTextMuted} />
+          <Text style={styles.pendingText}>Listing the sugars...</Text>
         </View>
       )}
     </View>
   );
 }
 
-/** HUD corner brackets in the verdict color. */
-function Corners({ color }: { color: string }) {
-  const b = { borderColor: color, position: 'absolute' as const, width: 14, height: 14 };
-  return (
-    <>
-      <View pointerEvents="none" style={[b, { top: 6, left: 6, borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 4 }]} />
-      <View pointerEvents="none" style={[b, { top: 6, right: 6, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 4 }]} />
-      <View pointerEvents="none" style={[b, { bottom: 6, left: 6, borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 4 }]} />
-      <View pointerEvents="none" style={[b, { bottom: 6, right: 6, borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 4 }]} />
-    </>
-  );
-}
-
-const glow = (color: string) =>
-  Platform.select({
-    ios: { shadowColor: color, shadowOpacity: 0.7, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } },
-    android: { elevation: 0 },
-    default: { boxShadow: `0 0 8px ${color}99` },
-  }) as object;
-
-const textGlow = (color: string) => ({ textShadowColor: `${color}AA`, textShadowRadius: 10, textShadowOffset: { width: 0, height: 0 } });
-const textShadow = { textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 2, textShadowOffset: { width: 0, height: 1 } };
-
 const styles = StyleSheet.create({
-  panel: {
-    position: 'absolute',
-    right: 12,
-    width: '58%',
-    minWidth: 220,
-    maxWidth: 330,
-    backgroundColor: 'rgba(10,12,18,0.42)',
-    borderWidth: 1,
+  card: {
+    backgroundColor: colors.card,
     borderRadius: 16,
-    overflow: 'hidden',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    boxShadow: '0px 6px 20px rgba(0,0,0,0.4)',
   },
-  sheen: { position: 'absolute', left: 0, right: 0, top: 0, height: 56 },
-  profile: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  badge: { width: 46, height: 46, borderRadius: 12, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '45deg' }] },
-  badgeIcon: { transform: [{ rotate: '-45deg' }] },
-  profileText: { flex: 1, marginLeft: 4 },
-  kicker: { fontFamily: fonts.semibold, fontSize: 10.5, letterSpacing: 1.6, color: colors.textFaint, ...textShadow },
-  verdict: { fontFamily: fonts.extrabold, fontSize: 30, lineHeight: 34, letterSpacing: 1 },
-  headline: { fontFamily: fonts.medium, fontSize: 14.5, color: colors.text, marginTop: 8, ...textShadow },
-  levelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 14 },
-  levelValue: { fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1 },
-  levelBar: { flexDirection: 'row', gap: 4, marginTop: 6 },
-  levelSeg: { flex: 1, height: 7, borderRadius: 2, transform: [{ skewX: '-20deg' }] },
-  levelSegOff: { backgroundColor: 'rgba(255,255,255,0.14)' },
-  stats: {
-    flexDirection: 'row',
-    marginTop: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.divider,
-  },
-  stat: { flex: 1, alignItems: 'center', gap: 3 },
-  statDivider: { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: colors.divider },
-  statValue: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.text, ...textShadow },
-  statLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  statLabel: { fontFamily: fonts.semibold, fontSize: 9.5, letterSpacing: 1.2, color: colors.textMuted },
-  section: { paddingTop: 12, gap: 7 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: {
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 7,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.22)',
-  },
-  chipText: { fontFamily: fonts.medium, fontSize: 13, color: colors.text, ...textShadow },
-  pendingRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  noteRow: { marginTop: 12, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider },
-  note: { fontFamily: fonts.semibold, fontSize: 13.5, ...textShadow },
+  verdictRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  verdict: { fontFamily: fonts.extrabold, fontSize: 22, lineHeight: 26 },
+  spacer: { flex: 1 },
+  chevronCollapsed: { transform: [{ rotate: '180deg' }] },
+  body: { flexGrow: 0 },
+  section: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.cardBorder, gap: 4 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
+  label: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase' },
+  pending: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  pendingText: { fontFamily: fonts.medium, fontSize: 13, color: colors.cardTextMuted },
+  item: { fontFamily: fonts.semibold, fontSize: 14, lineHeight: 19, color: colors.cardText },
 });

@@ -14,7 +14,7 @@ export const placeholderResults: ScanResult[] = [
     verdict: 'BAD',
     headline: 'A little added sugar',
     naturalSugars: ['Fructose'],
-    addedSugars: ['Honey (3 g)'],
+    addedSugars: ['Honey'],
     sweeteners: [],
     note: 'Fine now and then',
   },

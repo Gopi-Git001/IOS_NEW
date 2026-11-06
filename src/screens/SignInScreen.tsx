@@ -71,7 +71,7 @@ export function SignInScreen() {
         <Header />
         <View style={styles.body}>
           <View style={styles.character}>
-            <CharacterView mood="idle" height={200} />
+            <CharacterView mood="idle" size={170} />
           </View>
 
           {sentTo ? (

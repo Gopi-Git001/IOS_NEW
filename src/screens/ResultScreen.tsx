@@ -1,9 +1,9 @@
 import { BlurTargetView, BlurView } from 'expo-blur';
-import { type ComponentRef, type RefObject, useRef } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { type ComponentRef, type RefObject, useRef, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Character, moodForVerdict } from '../components/Character';
-import { Footer, Header, MenuButton, Scrims } from '../components/Chrome';
+import { Character, characterSize, type Mood, moodForVerdict } from '../components/Character';
+import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { CameraIcon } from '../components/Icons';
 import { VerdictPanel, verdictColor } from '../components/VerdictPanel';
 import { colors, fonts } from '../theme';
@@ -11,31 +11,47 @@ import type { ScanResult } from '../types';
 
 const BUTTON_HEIGHT = 66;
 const FOOTER_HEIGHT = 46;
+const PANEL_GAP = 8; // between the panel and the header above / the character below
 
 export type ScanState =
   | { status: 'reading' }
   | { status: 'done'; result: ScanResult; listsPending?: boolean }
   | { status: 'error'; message: string };
 
-type Props = { photoUri: string; state: ScanState; onScanAnother: () => void; tagline?: string };
+type Props = {
+  photoUri: string;
+  state: ScanState;
+  onScanAnother: () => void;
+  onOpenSheet: (sheet: Sheet) => void;
+  /** Gentle mode: for UGLY, the character shows its calm reaction instead of crying. */
+  gentle?: boolean;
+  tagline?: string;
+};
 
 /** The captured photo frozen full screen, with the verdict panel and character on top. */
-export function ResultScreen({ photoUri, state, onScanAnother, tagline }: Props) {
+export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gentle, tagline }: Props) {
   const insets = useSafeAreaInsets();
+  const window = useWindowDimensions();
+  const [headerBottom, setHeaderBottom] = useState(insets.top + 56);
   const blurTarget = useRef<ComponentRef<typeof View>>(null);
   const bottomBar = insets.bottom + FOOTER_HEIGHT + BUTTON_HEIGHT;
   const buttonColor = state.status === 'done' ? verdictColor[state.result.verdict] : '#FFFFFF';
   const buttonInk = state.status === 'done' && state.result.verdict === 'UGLY' ? '#FFFFFF' : colors.background;
+  const panelTop = headerBottom + PANEL_GAP;
+  const characterTop = window.height - bottomBar - characterSize(window.width);
+  const doneMood = (verdict: keyof typeof moodForVerdict): Mood => (gentle && verdict === 'UGLY' ? 'bad' : moodForVerdict[verdict]);
 
   return (
     <View style={styles.fill}>
       <BlurTargetView ref={blurTarget} style={StyleSheet.absoluteFill}>
         <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
       </BlurTargetView>
-      <Scrims />
+      <Scrims topHeight="22%" />
 
       <SafeAreaView style={styles.fill} edges={['top', 'bottom']}>
-        <Header tagline={tagline} right={<MenuButton />} />
+        <View onLayout={(e) => setHeaderBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}>
+          <Header tagline={tagline} right={<ProfileButton onOpen={onOpenSheet} />} />
+        </View>
         <View style={styles.fill} />
         {state.status !== 'reading' && (
           <View>
@@ -55,10 +71,10 @@ export function ResultScreen({ photoUri, state, onScanAnother, tagline }: Props)
 
       {state.status === 'done' && (
         <>
-          <View style={[styles.panelSlot, { top: insets.top + 64 }]} pointerEvents="box-none">
-            <VerdictPanel result={state.result} blurTarget={blurTarget} listsPending={state.listsPending} />
+          <View style={[styles.panelSlot, { top: panelTop }]} pointerEvents="box-none">
+            <VerdictPanel result={state.result} listsPending={state.listsPending} maxHeight={characterTop - PANEL_GAP - panelTop} />
           </View>
-          <Character mood={moodForVerdict[state.result.verdict]} bottom={bottomBar} />
+          <Character mood={doneMood(state.result.verdict)} bottom={bottomBar} />
         </>
       )}
       {state.status === 'reading' && (
@@ -96,7 +112,7 @@ function GlassPill({ children, blurTarget, wide }: { children: React.ReactNode; 
 
 const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: 'transparent' },
-  panelSlot: { position: 'absolute', left: 0, right: 0 },
+  panelSlot: { position: 'absolute', right: 12, width: '58%' },
   button: {
     height: BUTTON_HEIGHT,
     marginHorizontal: 20,
