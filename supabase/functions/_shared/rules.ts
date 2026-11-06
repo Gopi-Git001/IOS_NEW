@@ -1,4 +1,4 @@
-// QuickGAB sugar rules (CLEAN / BAD / UGLY). Pure functions: no network, no Deno APIs, so they run under Node tests too.
+// Sugar Hunter sugar rules (CLEAN / BAD / UGLY). Pure functions: no network, no Deno APIs, so they run under Node tests too.
 //
 //   UGLY  = artificial sweeteners, alcohol, or over 4 g added sugar
 //   BAD   = sugar alcohols, plant sweeteners, or 1–4 g added sugar (or added sugar, grams not shown)

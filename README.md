@@ -1,4 +1,4 @@
-# SUG_SCAN — QuickGAB
+# SUG_SCAN — Sugar Hunter
 
 Point the phone at a food label, get one sugar verdict: **CLEAN**, **BAD** or **UGLY**.
 Expo app (iOS + Android) with a Supabase backend. Full brief: [CLAUDE.md](CLAUDE.md).

@@ -1,4 +1,4 @@
-# QuickGAB
+# Sugar Hunter
 
 Expo (React Native, TypeScript) app for iOS + Android with a Supabase backend.
 User scans a food/drink label; the app gives one sugar verdict — CLEAN, BAD or UGLY — and a

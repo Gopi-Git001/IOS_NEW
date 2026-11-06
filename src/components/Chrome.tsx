@@ -20,7 +20,7 @@ function showAccountMenu() {
 }
 
 function confirmDelete() {
-  Alert.alert('Delete account?', 'This permanently deletes your QuickGAB account. It cannot be undone.', [
+  Alert.alert('Delete account?', 'This permanently deletes your Sugar Hunter account. It cannot be undone.', [
     { text: 'Cancel', style: 'cancel' },
     {
       text: 'Delete',
@@ -43,7 +43,7 @@ export function Header({ right, tagline = 'Scan. Know. Choose better.' }: { righ
   return (
     <View style={styles.header}>
       <View>
-        <Text style={styles.brand}>QuickGAB</Text>
+        <Text style={styles.brand}>Sugar Hunter</Text>
         <Text style={styles.tagline}>{tagline}</Text>
       </View>
       <View style={styles.actions}>{right}</View>

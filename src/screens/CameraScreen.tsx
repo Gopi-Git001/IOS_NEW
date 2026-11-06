@@ -19,7 +19,7 @@ export function CameraScreen({ onCapture, tagline }: { onCapture: (photoUri: str
     return (
       <SafeAreaView style={[styles.fill, styles.permission]}>
         <Text style={styles.permissionTitle}>Camera needed</Text>
-        <Text style={styles.permissionText}>QuickGAB reads food and drink labels with your camera.</Text>
+        <Text style={styles.permissionText}>Sugar Hunter reads food and drink labels with your camera.</Text>
         <Pressable style={styles.permissionButton} onPress={requestPermission}>
           <Text style={styles.permissionButtonText}>Allow camera</Text>
         </Pressable>
