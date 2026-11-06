@@ -71,7 +71,7 @@ export function SignInScreen() {
         <Header />
         <View style={styles.body}>
           <View style={styles.character}>
-            <CharacterView mood="idle" height={230} />
+            <CharacterView mood="idle" height={200} />
           </View>
 
           {sentTo ? (
@@ -149,8 +149,8 @@ function PrimaryButton({ label, onPress, busy, disabled }: { label: string; onPr
 const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: colors.background },
   body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 14 },
-  character: { alignSelf: 'center', marginBottom: 10 },
-  title: { fontFamily: fonts.display, fontSize: 40, lineHeight: 46, color: colors.text, textAlign: 'center', textTransform: 'uppercase' },
+  character: { alignSelf: 'center', marginBottom: 4 },
+  title: { fontFamily: fonts.bold, fontSize: 26, color: colors.text, textAlign: 'center' },
   subtitle: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginBottom: 8 },
   input: {
     height: 58,

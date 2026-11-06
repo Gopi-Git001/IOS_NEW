@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
   },
-  brand: { fontFamily: fonts.display, fontSize: 28, lineHeight: 34, color: colors.text, textTransform: 'uppercase', letterSpacing: 0.3 },
+  brand: { fontFamily: fonts.bold, fontSize: 24, color: colors.text, letterSpacing: -0.3 },
   tagline: { fontFamily: fonts.regular, fontSize: 12.5, color: colors.textMuted, marginTop: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 22 },
   footer: {

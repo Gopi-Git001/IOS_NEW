@@ -2,21 +2,21 @@ import { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, useWindowDimensions } from 'react-native';
 import type { Verdict } from '../types';
 
-// The glossy inflatable sugarcane character (assets/glossy/cane-*.webp).
-// Motion is done in code so it feels like a balloon toy: it inflates in, then squishes and bounces.
+// The crystal-glass sugarcane character (assets/glass/cane-*.webp).
+// Motion is done in code: it springs in, then hops, sways or shudders per mood.
 const images = {
-  idle: require('../../assets/glossy/cane-idle.webp'),
-  scanning: require('../../assets/glossy/cane-scanning.webp'),
-  clean: require('../../assets/glossy/cane-clean.webp'),
-  bad: require('../../assets/glossy/cane-bad.webp'),
-  ugly: require('../../assets/glossy/cane-ugly.webp'),
+  idle: require('../../assets/glass/cane-idle.webp'),
+  scanning: require('../../assets/glass/cane-scanning.webp'),
+  clean: require('../../assets/glass/cane-clean.webp'),
+  bad: require('../../assets/glass/cane-bad.webp'),
+  ugly: require('../../assets/glass/cane-ugly.webp'),
 };
 
 export type Mood = keyof typeof images;
 
 export const moodForVerdict: Record<Verdict, Mood> = { CLEAN: 'clean', BAD: 'bad', UGLY: 'ugly' };
 
-const ASPECT = 0.51; // width / height of the cane images
+const ASPECT = 0.392; // width / height of the cane images
 
 const ease = Easing.inOut(Easing.sin);
 const t = (v: Animated.Value, toValue: number, duration: number) =>
@@ -54,7 +54,7 @@ function moodLoop(mood: Mood, v: { y: Animated.Value; s: Animated.Value; r: Anim
           Animated.parallel([t(v.s, 1, 600), t(v.y, 0, 600)]),
         ]),
       );
-    case 'ugly': // recoil shudder, like a balloon losing a little air
+    case 'ugly': // recoil shudder
       return Animated.loop(
         Animated.sequence([
           ...[4, -4, 3, -3, 2, 0].map((x) => t(v.x, x, 60)),
@@ -100,7 +100,7 @@ function useInflatable(mood: Mood) {
     { translateX: v.x },
     { translateY: v.y },
     { rotate: v.r.interpolate({ inputRange: [-10, 10], outputRange: ['-10deg', '10deg'] }) },
-    // Squash: taller means thinner, like a real balloon.
+    // Squash: taller means thinner.
     { scaleX: Animated.multiply(grow, v.s.interpolate({ inputRange: [0.8, 1.2], outputRange: [1.12, 0.9] })) },
     { scaleY: Animated.multiply(grow, v.s) },
   ];

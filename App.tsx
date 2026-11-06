@@ -6,7 +6,6 @@ import {
   Inter_800ExtraBold,
   useFonts,
 } from '@expo-google-fonts/inter';
-import { Anton_400Regular } from '@expo-google-fonts/anton';
 import type { Session } from '@supabase/supabase-js';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
@@ -32,7 +31,7 @@ const demoScan = () =>
 type Scan = { photoUri: string; state: ScanState };
 
 export default function App() {
-  const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold, Anton_400Regular });
+  const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold });
   const [session, setSession] = useState<Session | null | undefined>(isConfigured ? undefined : null);
   const [scan, setScan] = useState<Scan | null>(null);
   const scanId = useRef(0);
