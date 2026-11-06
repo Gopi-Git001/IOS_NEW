@@ -1,4 +1,4 @@
-// Shared pieces of the bone-paper grouped-list screens (Profile, Menu): a full-screen sheet, groups and rows.
+// Shared pieces of the glass grouped-list screens (Profile, Menu): a full-screen sheet, groups and rows.
 import { ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Linking, Modal, Pressable, StyleSheet, Switch, Text, View } from 'react-native';

@@ -1,6 +1,5 @@
-// The result sheet: an inset bone-paper card that springs up over the frozen photo, set like a
-// Nutrition Facts panel ("Verdict Facts"). Solid, not glass, because it is content (Apple: glass is
-// for controls). The cube perches on its top edge.
+// The result sheet: a frosted glass card that springs up over the frozen photo, set like a
+// Nutrition Facts panel ("Verdict Facts"). The cube perches on its top edge.
 import * as Haptics from 'expo-haptics';
 import { type ReactNode, useEffect, useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
