@@ -34,7 +34,7 @@ sugarcane character reacts.
   photo straight to Jev as an image asset and asks one Choice question (CLEAN / BAD / UGLY) plus
   a "is this a food label?" Noul. One fast request, no text generation.
 - At the same time the `scan-label` Edge Function has Claude vision list the sugars by name, and
-  the rules (`_shared/rules.ts`) compute a backstop verdict.
+  the rules (`_shared/rules.ts`, staged pipeline documented in RULES.md) compute a backstop verdict.
 - The app fires both calls at once and shows Jev's verdict + character as soon as it lands; the
   ingredient lists fill in when Claude finishes.
 - Jev's verdict wins. The rules verdict is used only when Jev is unavailable or its confidence is

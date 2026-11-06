@@ -1,94 +1,68 @@
 // Run with: npm run test:rules
+// The adapter that maps the policy Evaluation onto the ScanResult the app renders.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { decide, type LabelReading } from './rules.ts';
+import { decide, type LiteralLabel } from './rules.ts';
 
-const label = (over: Partial<LabelReading> = {}): LabelReading => ({
-  is_food_label: true,
-  natural_sugars: [],
-  added_sugars: [],
-  artificial_sweeteners: [],
-  sugar_alcohols: [],
-  other_sweeteners: [],
-  contains_alcohol: false,
-  added_sugar_grams: null,
-  ...over,
+const label = (ingredients_text: string | null, over: Partial<LiteralLabel> = {}): LiteralLabel => ({
+  is_food_label: true, is_readable: true, ingredients_text, ingredients_complete: true, total_sugars_g: null,
+  added_sugars_g: null, quantity_basis: 'unknown', serving_size_text: null, abv_text: null, ...over,
 });
 
-test('no added sugar or sweeteners is CLEAN', () => {
-  const r = decide(label({ natural_sugars: ['Lactose', 'Fructose'], added_sugar_grams: 0 }));
+const done = (l: LiteralLabel) => {
+  const d = decide(l);
+  assert.equal(d.status, 'decided', d.status === 'unresolved' ? d.message : '');
+  return (d as Extract<typeof d, { status: 'decided' }>).result;
+};
+
+test('CLEAN lists natural sugar sources as printed', () => {
+  const r = done(label('Whole Milk, Live and Active Cultures, Strawberries'));
   assert.equal(r.verdict, 'CLEAN');
-  assert.deepEqual(r.naturalSugars, ['Lactose', 'Fructose']);
+  assert.equal(r.headline, 'No added sugar');
+  assert.deepEqual(r.naturalSugars, ['Whole Milk', 'Strawberries']);
+  assert.equal(r.analysis?.ruleId, 'C1-nothing-sweet-added');
 });
 
-test('any added sugar is UGLY, even 1 g', () => {
-  assert.equal(decide(label({ added_sugars: ['Sugar'], added_sugar_grams: 4.5 })).verdict, 'UGLY');
-  assert.equal(decide(label({ added_sugars: ['Honey'], added_sugar_grams: 1 })).verdict, 'UGLY');
-  assert.equal(decide(label({ added_sugar_grams: 0.5 })).verdict, 'UGLY');
-});
-
-test('added sugar with unknown grams is UGLY and asks for the panel', () => {
-  const r = decide(label({ added_sugars: ['Cane sugar'] }));
+test('added sugar with unknown grams asks for the panel', () => {
+  const r = done(label('Oats, Cane Sugar'));
   assert.equal(r.verdict, 'UGLY');
   assert.equal(r.headline, 'Added sugar');
   assert.equal(r.note, 'Scan the nutrition panel to see the grams');
+  assert.deepEqual(r.addedSugars, ['Cane Sugar']);
 });
 
-test('fruit juice concentrate counts as added sugar', () => {
-  assert.equal(decide(label({ added_sugars: ['Apple juice concentrate'], added_sugar_grams: 0 })).verdict, 'UGLY');
+test('per-serving grams are shown; per-100 g grams are not relabeled as per serving', () => {
+  assert.deepEqual(done(label('Sucrose', { added_sugars_g: 39, quantity_basis: 'per_serving' })).addedSugars, ['Sucrose', '39 g added per serving']);
+  assert.deepEqual(done(label('Sucrose', { added_sugars_g: 12, quantity_basis: 'per_100g' })).addedSugars, ['Sucrose']);
 });
 
-test('artificial sweeteners are UGLY even with no sugar', () => {
-  assert.equal(decide(label({ artificial_sweeteners: ['Sucralose'], added_sugar_grams: 0 })).verdict, 'UGLY');
+test('sweeteners never appear as added sugars', () => {
+  const r = done(label('Sucrose, Aspartame, Maltitol'));
+  assert.deepEqual(r.addedSugars, ['Sucrose']);
+  assert.deepEqual(r.sweeteners, ['Aspartame', 'Maltitol (sugar alcohol)']);
 });
 
-test('alcohol is UGLY', () => {
-  assert.equal(decide(label({ contains_alcohol: true })).verdict, 'UGLY');
-});
-
-test('erythritol and xylitol are UGLY', () => {
-  const r = decide(label({ sugar_alcohols: ['Erythritol'] }));
+test('erythritol headline names it', () => {
+  const r = done(label('Erythritol'));
   assert.equal(r.verdict, 'UGLY');
   assert.equal(r.headline, 'Contains erythritol');
   assert.deepEqual(r.sweeteners, ['Erythritol (sugar alcohol)']);
-  assert.equal(decide(label({ sugar_alcohols: ['Xylitol'] })).verdict, 'UGLY');
-});
-
-test('other sugar alcohols alone are BAD', () => {
-  assert.equal(decide(label({ sugar_alcohols: ['Sorbitol'] })).verdict, 'BAD');
-});
-
-test('aspartame misfiled as added sugar moves to Sweeteners and makes it UGLY', () => {
-  const r = decide(label({ added_sugars: ['Sucrose', 'Aspartame'] }));
-  assert.equal(r.verdict, 'UGLY');
-  assert.deepEqual(r.addedSugars, ['Sucrose']);
-  assert.deepEqual(r.sweeteners, ['Aspartame']);
-});
-
-test('sugar alcohol misfiled as added sugar moves to Sweeteners', () => {
-  const r = decide(label({ added_sugars: ['Maltitol'] }));
-  assert.equal(r.verdict, 'BAD');
-  assert.deepEqual(r.addedSugars, []);
-  assert.deepEqual(r.sweeteners, ['Maltitol (sugar alcohol)']);
-});
-
-test('grams are shown in the Added sugars list', () => {
-  const r = decide(label({ added_sugars: ['Sucrose'], added_sugar_grams: 39 }));
-  assert.deepEqual(r.addedSugars, ['Sucrose', '39 g added per serving']);
-});
-
-test('nonsense grams are ignored', () => {
-  assert.equal(decide(label({ added_sugar_grams: -3 })).verdict, 'CLEAN');
 });
 
 test('stevia, monk fruit and allulose alone are BAD with the gentle note', () => {
-  for (const s of ['Stevia leaf extract', 'Monk fruit extract', 'Allulose']) {
-    const r = decide(label({ other_sweeteners: [s] }));
+  for (const s of ['Stevia Leaf Extract', 'Monk Fruit Extract', 'Allulose']) {
+    const r = done(label(`Water, ${s}`));
     assert.equal(r.verdict, 'BAD');
     assert.equal(r.note, 'The gentlest option, but still a sweetener');
+    assert.deepEqual(r.sweeteners, [s]);
   }
 });
 
-test('stevia plus added sugar is UGLY', () => {
-  assert.equal(decide(label({ other_sweeteners: ['Stevia'], added_sugars: ['Sugar'] })).verdict, 'UGLY');
+test('unresolved: retake for photo problems, plain message otherwise', () => {
+  const cut = decide(label('Water, Salt', { ingredients_complete: false }));
+  assert.equal(cut.status, 'unresolved');
+  assert.equal(cut.status === 'unresolved' && cut.retake, true);
+  const unknown = decide(label('Water, Yacon Syrup'));
+  assert.equal(unknown.status === 'unresolved' && unknown.retake, false);
+  assert.match(unknown.status === 'unresolved' ? unknown.message : '', /Yacon Syrup/);
 });

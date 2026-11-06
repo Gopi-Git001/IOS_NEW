@@ -54,9 +54,10 @@ const VERDICT_CRITERIA = {
 
 const INSTRUCTIONS =
   'Read the ingredient list (and the nutrition panel, if visible) in `label_photo` and rate the product for sugar. ' +
-  'Sugar hides under many names: cane sugar, sucrose, dextrose, glucose or corn syrup, maltodextrin, fruit juice concentrate, ' +
+  'Sugar hides under many names: cane sugar, sucrose, dextrose, glucose or corn syrup, fruit juice concentrate, ' +
   'honey, agave, molasses, rice syrup, barley malt and more all count as added sugar. There is no gram threshold: any ' +
-  'added sugar at all makes the product UGLY. Sugars naturally present in whole fruit, milk or plain yogurt are fine.';
+  'added sugar at all makes the product UGLY. Sugars naturally present in whole fruit, milk or plain yogurt are fine. ' +
+  'Maltodextrin, resistant maltodextrin, starches and fibers are not sugars and are not sweeteners.';
 
 /** Builds the System One request. `ref` is the per-request image reference (a UUID). */
 export function buildJevRequest(imageBase64: string, ref: string) {
