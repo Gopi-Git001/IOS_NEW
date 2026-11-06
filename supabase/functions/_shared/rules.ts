@@ -1,8 +1,12 @@
 // Sugar Hunter sugar rules (CLEAN / BAD / UGLY). Pure functions: no network, no Deno APIs, so they run under Node tests too.
 //
-//   UGLY  = artificial sweeteners, alcohol, or over 4 g added sugar
-//   BAD   = sugar alcohols, plant sweeteners, or 1–4 g added sugar (or added sugar, grams not shown)
-//   CLEAN = no added sugar and no sweeteners
+// Rules v2 (Nov 2026). No gram cutoff: any added sugar at all is UGLY.
+//   UGLY  = any added sugar (incl. honey, syrups, fruit juice concentrate), any artificial sweetener,
+//           erythritol or xylitol, or drinking alcohol
+//   BAD   = no added sugar, but stevia, monk fruit, allulose or another sugar alcohol (sorbitol, maltitol...)
+//   CLEAN = no added sugar and no sweetener of any kind (sugars naturally in fruit or milk are fine)
+// Basis: the 2025-2030 Dietary Guidelines say no amount of added sugar or non-nutritive sweetener is
+// recommended; erythritol and xylitol are linked to clotting and heart events in NIH-funded studies.
 //
 // Jev makes the fast call straight from the photo (see _shared/jev.ts). These rules are the
 // backstop: they decide when Jev is unavailable or unsure, and they check Jev's call afterwards.
@@ -37,6 +41,8 @@ export type ScanResult = {
 
 const ARTIFICIAL = ['aspartame', 'sucralose', 'acesulfame', 'saccharin', 'neotame', 'advantame', 'cyclamate', 'e950', 'e951', 'e952', 'e954', 'e955', 'e961', 'e962', 'e969'];
 const SUGAR_ALCOHOLS = ['erythritol', 'xylitol', 'sorbitol', 'maltitol', 'mannitol', 'isomalt', 'lactitol', 'e420', 'e421', 'e953', 'e965', 'e966', 'e967', 'e968'];
+/** Sugar alcohols with the strongest heart-risk signal; these make a product UGLY. */
+const RISKY_SUGAR_ALCOHOLS = ['erythritol', 'xylitol', 'e967', 'e968'];
 const OTHER_SWEETENERS = ['stevia', 'steviol', 'rebaudioside', 'monk fruit', 'luo han guo', 'mogroside', 'allulose', 'thaumatin', 'e960'];
 
 const matches = (item: string, words: string[]) => {
@@ -95,18 +101,20 @@ export function decide(input: LabelReading): ScanResult {
 
   const base = { naturalSugars: r.natural_sugars, addedSugars, sweeteners };
 
+  const risky = r.sugar_alcohols.filter((s) => matches(s, RISKY_SUGAR_ALCOHOLS));
+  const panelNote = grams === null ? 'Scan the nutrition panel to see the grams' : undefined;
+
   // UGLY
-  if (grams !== null && grams > 4) return { ...base, verdict: 'UGLY', headline: 'Too much sugar' };
+  if (hasAddedSugar) return { ...base, verdict: 'UGLY', headline: 'Added sugar', note: panelNote };
   if (r.artificial_sweeteners.length > 0) return { ...base, verdict: 'UGLY', headline: 'Artificial sweeteners' };
+  if (risky.length > 0) return { ...base, verdict: 'UGLY', headline: `Contains ${risky[0].toLowerCase()}` };
   if (r.contains_alcohol) return { ...base, verdict: 'UGLY', headline: 'Contains alcohol' };
 
   // BAD
-  if (hasAddedSugar) {
-    const headline = grams === null ? 'Added sugar, amount not shown' : 'A little added sugar';
-    return { ...base, verdict: 'BAD', headline, note: grams === null ? 'Scan the nutrition panel to check grams' : undefined };
-  }
   if (r.sugar_alcohols.length > 0) return { ...base, verdict: 'BAD', headline: 'Contains sugar alcohols' };
-  if (r.other_sweeteners.length > 0) return { ...base, verdict: 'BAD', headline: 'Contains sweeteners' };
+  if (r.other_sweeteners.length > 0) {
+    return { ...base, verdict: 'BAD', headline: 'Gentler sweetener', note: 'The gentlest option, but still a sweetener' };
+  }
 
   // CLEAN
   return { ...base, verdict: 'CLEAN', headline: 'No added sugar', note: 'Great pick, no added sugar' };
@@ -115,6 +123,6 @@ export function decide(input: LabelReading): ScanResult {
 /** Headline for a verdict when only Jev's call is known (the ingredient lists come later). */
 export const quickHeadline: Record<Verdict, string> = {
   CLEAN: 'No added sugar',
-  BAD: 'Some added sugar or sweeteners',
-  UGLY: 'Heavy sugar or artificial sweeteners',
+  BAD: 'Contains sweeteners',
+  UGLY: 'Added sugar or harsh sweeteners',
 };

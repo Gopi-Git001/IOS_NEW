@@ -1,8 +1,8 @@
 // Pure helpers for what the app shows. No React Native imports, so they run under Node tests.
 import type { ScanResult } from '../types';
 
-// Plant-based sweeteners. Same list as OTHER_SWEETENERS in supabase/functions/_shared/rules.ts; keep in sync.
-const PLANT_SWEETENERS = ['stevia', 'steviol', 'rebaudioside', 'monk fruit', 'luo han guo', 'mogroside', 'allulose', 'thaumatin', 'e960'];
+// Plant-based sweeteners (OTHER_SWEETENERS in supabase/functions/_shared/rules.ts, minus allulose, which is a rare sugar).
+const PLANT_SWEETENERS = ['stevia', 'steviol', 'rebaudioside', 'monk fruit', 'luo han guo', 'mogroside', 'thaumatin', 'e960'];
 
 const isPlantSweetener = (item: string) => PLANT_SWEETENERS.some((w) => item.toLowerCase().includes(w));
 

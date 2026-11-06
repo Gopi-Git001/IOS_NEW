@@ -3,8 +3,8 @@ import type { JevVerdict, ScanResult, Verdict } from '../types';
 
 export const quickHeadline: Record<Verdict, string> = {
   CLEAN: 'No added sugar',
-  BAD: 'Some added sugar or sweeteners',
-  UGLY: 'Heavy sugar or artificial sweeteners',
+  BAD: 'Contains sweeteners',
+  UGLY: 'Added sugar or harsh sweeteners',
 };
 
 export type ScanUpdate =

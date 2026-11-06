@@ -1,6 +1,7 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { notify } from '../lib/confirm';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { FlashIcon } from '../components/Icons';
@@ -37,7 +38,7 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
       setTorch(false);
       onCapture(photo.uri);
     } catch {
-      Alert.alert('Could not take photo', 'Please try again.');
+      notify('Could not take photo', 'Please try again.');
     } finally {
       setBusy(false);
     }

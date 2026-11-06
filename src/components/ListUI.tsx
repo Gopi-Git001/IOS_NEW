@@ -1,7 +1,8 @@
 // Shared pieces of the dark grouped-list screens (Profile, Menu): a full-screen sheet, groups and rows.
 import { ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { Alert, Linking, Modal, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Linking, Modal, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { notify } from '../lib/confirm';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts } from '../theme';
 
@@ -78,10 +79,10 @@ export function Row({ icon: Icon, label, detail, value, danger, chevron, onPress
 }
 
 export function openLink(url: string) {
-  Linking.openURL(url).catch(() => Alert.alert("Couldn't open link", url));
+  Linking.openURL(url).catch(() => notify("Couldn't open link", url));
 }
 
-export const demoAlert = () => Alert.alert('Demo mode', 'The backend is not connected yet, so results are fake and there is no account.');
+export const demoAlert = () => notify('Demo mode', 'The backend is not connected yet, so results are fake and there is no account.');
 
 export const listStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },

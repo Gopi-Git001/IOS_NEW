@@ -38,23 +38,25 @@ const VERDICT_CRITERIA = {
   },
   BAD: {
     what:
-      'A small or unknown amount of added sugar (1 to 4 g added sugar per serving, or added sugar with no grams visible), ' +
-      'or sugar alcohols (erythritol, xylitol, maltitol, sorbitol...) or plant sweeteners (stevia, monk fruit, allulose).',
-    not_for: 'Artificial sweeteners, drinking alcohol, or more than 4 g added sugar per serving. Those are UGLY.',
+      'No added sugar at all, but sweetened with stevia, monk fruit, allulose, or a sugar alcohol other than ' +
+      'erythritol and xylitol (for example sorbitol, maltitol, mannitol, isomalt).',
+    examples: ['Stevia-sweetened sparkling water', 'Monk fruit protein bar with no sugar', 'Sugar-free mints with sorbitol'],
+    not_for: 'Anything with ANY added sugar, artificial sweeteners, erythritol, xylitol, or drinking alcohol. Those are UGLY.',
   },
   UGLY: {
     what:
-      'More than 4 g added sugar per serving, OR any artificial sweetener (aspartame, sucralose, acesulfame K, saccharin, ' +
-      'neotame, advantame, cyclamate, E950-E969), OR drinking alcohol.',
-    examples: ['Soda', 'Diet soda', 'Candy', 'Frosted cereal with sugar near the top of the list', 'Beer'],
+      'ANY added sugar, in any amount (sugar, cane sugar, syrups, honey, agave, molasses, fruit juice concentrate...), OR any ' +
+      'artificial sweetener (aspartame, sucralose, acesulfame K, saccharin, neotame, advantame, cyclamate, E950-E969), OR ' +
+      'erythritol or xylitol, OR drinking alcohol.',
+    examples: ['Soda', 'Diet soda', 'Bread with 1 g added sugar', 'Keto cookie with erythritol', 'Granola with honey', 'Beer'],
   },
 };
 
 const INSTRUCTIONS =
   'Read the ingredient list (and the nutrition panel, if visible) in `label_photo` and rate the product for sugar. ' +
   'Sugar hides under many names: cane sugar, sucrose, dextrose, glucose or corn syrup, maltodextrin, fruit juice concentrate, ' +
-  'honey, agave, molasses, rice syrup, barley malt and more all count as added sugar. If added sugar is listed near the top ' +
-  'of the ingredients, treat it as more than 4 g per serving unless the panel shows otherwise.';
+  'honey, agave, molasses, rice syrup, barley malt and more all count as added sugar. There is no gram threshold: any ' +
+  'added sugar at all makes the product UGLY. Sugars naturally present in whole fruit, milk or plain yogurt are fine.';
 
 /** Builds the System One request. `ref` is the per-request image reference (a UUID). */
 export function buildJevRequest(imageBase64: string, ref: string) {

@@ -1,8 +1,9 @@
 import { LogOut, Phone, Trash2, User } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { demoAlert, Group, listStyles, Row, Sheet } from '../components/ListUI';
 import { verdictColor } from '../components/VerdictPanel';
+import { confirmAction, notify } from '../lib/confirm';
 import { deleteAccountAndData, saveDisplayName, signOut, type Stats, syncProfile, syncStats, useProfile } from '../lib/account';
 import { initials, maskPhone, percent } from '../lib/display';
 import { isConfigured } from '../lib/supabase';
@@ -68,7 +69,7 @@ function NameCard({ displayName }: { displayName: string | null }) {
       await saveDisplayName(draft);
       setEditing(false);
     } catch (e) {
-      Alert.alert('Not saved', e instanceof Error ? e.message : 'Try again.');
+      notify('Not saved', e instanceof Error ? e.message : 'Try again.');
     } finally {
       setSaving(false);
     }
@@ -159,24 +160,24 @@ function StatsCard({ stats }: { stats: Stats | null }) {
 
 // ---------- Sign out / delete ----------
 
-function confirmSignOut() {
+export function confirmSignOut() {
   if (!isConfigured) return demoAlert();
-  Alert.alert('Sign out?', 'You can sign back in with your phone number.', [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Sign out', onPress: () => signOut().catch(() => Alert.alert('Sign out failed', 'Try again.')) },
-  ]);
+  confirmAction('Sign out?', 'You can sign back in with your phone number.', 'Sign out', () => {
+    signOut().catch(() => notify('Sign out failed', 'Try again.'));
+  });
 }
 
 function confirmDelete() {
   if (!isConfigured) return demoAlert();
-  Alert.alert('Delete account?', 'This permanently deletes your Sugar Hunter account and all of your scan history. It cannot be undone.', [
-    { text: 'Cancel', style: 'cancel' },
-    {
-      text: 'Delete',
-      style: 'destructive',
-      onPress: () => deleteAccountAndData().catch((e: Error) => Alert.alert('Delete failed', e.message)),
+  confirmAction(
+    'Delete account?',
+    'This permanently deletes your Sugar Hunter account and all of your scan history. It cannot be undone.',
+    'Delete',
+    () => {
+      deleteAccountAndData().catch((e: Error) => notify('Delete failed', e.message));
     },
-  ]);
+    true,
+  );
 }
 
 const styles = StyleSheet.create({

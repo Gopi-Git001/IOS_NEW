@@ -1,11 +1,14 @@
 import Constants from 'expo-constants';
-import { BookOpen, Feather, FileText, History, Lock, Mail, ShieldCheck, Star, Trash2, Vibrate } from 'lucide-react-native';
+import { BookOpen, Feather, FileText, History, Lock, LogOut, Mail, ShieldCheck, Star, Trash2, Vibrate } from 'lucide-react-native';
 import { useState } from 'react';
-import { Alert, FlatList, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Group, listStyles, openLink, Row, Sheet } from '../components/ListUI';
 import { verdictColor } from '../components/VerdictPanel';
 import { links } from '../config';
 import { applyStrictMode, ingredientSummary } from '../lib/display';
+import { confirmAction } from '../lib/confirm';
+import { isConfigured } from '../lib/supabase';
+import { confirmSignOut } from './ProfileScreen';
 import { clearHistory, useHistory } from '../lib/history';
 import { type Prefs, setPref, usePrefs } from '../lib/prefs';
 import { colors, fonts } from '../theme';
@@ -66,16 +69,19 @@ function MenuList({ open }: { open: (p: Page) => void }) {
         <Row icon={Star} label="Rate Sugar Hunter" onPress={() => openLink(Platform.OS === 'ios' ? links.appStore : links.playStore)} chevron />
       </Group>
 
+      {isConfigured && (
+        <Group title="Account">
+          <Row icon={LogOut} label="Sign out" onPress={confirmSignOut} />
+        </Group>
+      )}
+
       <Text style={listStyles.version}>Sugar Hunter {Constants.expoConfig?.version ?? ''}</Text>
     </ScrollView>
   );
 }
 
 function confirmClearHistory() {
-  Alert.alert('Clear history?', 'This removes every saved scan from this phone.', [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Clear', style: 'destructive', onPress: clearHistory },
-  ]);
+  confirmAction('Clear history?', 'This removes every saved scan from this phone.', 'Clear', clearHistory, true);
 }
 
 // ---------- History (on this phone; moves to the account in Phase 4) ----------
@@ -122,8 +128,8 @@ function formatDate(iso: string) {
 
 const rules: { verdict: keyof typeof verdictColor; text: string }[] = [
   { verdict: 'CLEAN', text: 'No added sugar and no sweeteners. Sugars that are naturally in the food, like the lactose in milk or the fructose in fruit, are fine.' },
-  { verdict: 'BAD', text: 'A little added sugar (1–4 g per serving), sugar alcohols such as erythritol, or plant sweeteners such as stevia and monk fruit.' },
-  { verdict: 'UGLY', text: 'Artificial sweeteners such as aspartame or sucralose, alcohol, or more than 4 g of added sugar per serving.' },
+  { verdict: 'BAD', text: 'No added sugar, but a gentler sweetener: stevia, monk fruit, allulose, or a sugar alcohol such as sorbitol or maltitol.' },
+  { verdict: 'UGLY', text: 'Any added sugar at all, including honey, syrups and fruit juice concentrate. Also artificial sweeteners such as sucralose or aspartame, erythritol, xylitol, or alcohol.' },
 ];
 
 function Methodology() {
@@ -142,8 +148,8 @@ function Methodology() {
         </View>
       ))}
       <Text style={styles.paragraph}>
-        If the label doesn't show how many grams of added sugar there are, any added sugar counts as BAD and Sugar Hunter asks you to scan the
-        nutrition panel.
+        There is no gram cutoff. The 2025–2030 Dietary Guidelines say no amount of added sugar or sweetener is recommended, so any added
+        sugar makes a product UGLY. The grams are shown so you can see how much.
       </Text>
       <Text style={styles.paragraph}>
         With Strict mode off, a product whose only sweetener is stevia, monk fruit or a similar plant sweetener shows as CLEAN.
