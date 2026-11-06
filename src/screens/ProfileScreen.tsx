@@ -7,7 +7,7 @@ import { confirmAction, notify } from '../lib/confirm';
 import { deleteAccountAndData, saveDisplayName, signOut, type Stats, syncProfile, syncStats, useProfile } from '../lib/account';
 import { initials, maskPhone, percent } from '../lib/display';
 import { isConfigured } from '../lib/supabase';
-import { brand, colors, fonts } from '../theme';
+import { brand, colors, fonts, frost } from '../theme';
 
 type Props = { visible: boolean; onClose: () => void; phone?: string; onChangePhone: () => void };
 
@@ -78,7 +78,7 @@ function NameCard({ displayName }: { displayName: string | null }) {
   return (
     <View style={styles.nameCard}>
       <View style={styles.avatar} accessibilityLabel={displayName ? `Profile picture, ${displayName}` : 'Profile picture'}>
-        {letters ? <Text style={styles.avatarText}>{letters}</Text> : <User size={32} color={colors.paper} strokeWidth={2} />}
+        {letters ? <Text style={styles.avatarText}>{letters}</Text> : <User size={32} color={colors.onInk} strokeWidth={2} />}
       </View>
 
       {editing ? (
@@ -100,7 +100,7 @@ function NameCard({ displayName }: { displayName: string | null }) {
               <Text style={styles.secondaryButtonText}>Cancel</Text>
             </Pressable>
             <Pressable onPress={save} disabled={saving} style={styles.primaryButton} accessibilityRole="button">
-              {saving ? <ActivityIndicator color={colors.paper} /> : <Text style={styles.primaryButtonText}>Save</Text>}
+              {saving ? <ActivityIndicator color={colors.onInk} /> : <Text style={styles.primaryButtonText}>Save</Text>}
             </Pressable>
           </View>
         </View>
@@ -181,7 +181,7 @@ function confirmDelete() {
 }
 
 const styles = StyleSheet.create({
-  nameCard: { backgroundColor: colors.paperRaised, borderWidth: 1, borderColor: colors.hairline, borderRadius: 16, padding: 20, marginTop: 12, alignItems: 'center', gap: 8 },
+  nameCard: { backgroundColor: colors.paperRaised, ...frost(24), borderRadius: 20, padding: 20, marginTop: 12, alignItems: 'center', gap: 8 },
   avatar: {
     width: 72,
     height: 72,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 4,
   },
-  avatarText: { fontFamily: fonts.black, fontSize: 28, letterSpacing: -1, color: colors.paper },
+  avatarText: { fontFamily: fonts.black, fontSize: 28, letterSpacing: -1, color: colors.onInk },
   name: { fontFamily: fonts.black, fontSize: 24, letterSpacing: -0.6, color: colors.ink },
   namePlaceholder: { color: colors.inkMuted },
   editLink: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },
@@ -200,9 +200,9 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 12,
     paddingHorizontal: 14,
-    backgroundColor: colors.paper,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: colors.ink,
+    borderColor: colors.rule,
     color: colors.ink,
     fontFamily: fonts.medium,
     fontSize: 16,
@@ -210,8 +210,8 @@ const styles = StyleSheet.create({
   editorButtons: { flexDirection: 'row', gap: 10 },
   secondaryButton: { flex: 1, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.ink },
   secondaryButtonText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
-  primaryButton: { flex: 1, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.ink },
-  primaryButtonText: { fontFamily: fonts.bold, fontSize: 15, color: colors.paper },
+  primaryButton: { flex: 1, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(244,246,251,0.92)' },
+  primaryButtonText: { fontFamily: fonts.bold, fontSize: 15, color: colors.onInk },
   statsCard: { padding: 16, gap: 12, minHeight: 52, justifyContent: 'center' },
   total: { fontFamily: fonts.black, fontSize: 32, letterSpacing: -1, color: colors.ink },
   totalLabel: { fontFamily: fonts.serif, fontSize: 18, letterSpacing: 0, color: colors.inkMuted },

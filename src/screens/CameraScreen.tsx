@@ -157,10 +157,10 @@ const styles = StyleSheet.create({
   permissionText: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 25, color: colors.inkMuted, textAlign: 'center' },
   permissionButton: {
     marginTop: 12,
-    backgroundColor: colors.ink,
+    backgroundColor: 'rgba(244,246,251,0.92)',
     borderRadius: 999,
     paddingHorizontal: 28,
     paddingVertical: 14,
   },
-  permissionButtonText: { fontFamily: fonts.bold, fontSize: 16, color: colors.paper },
+  permissionButtonText: { fontFamily: fonts.bold, fontSize: 16, color: colors.onInk },
 });

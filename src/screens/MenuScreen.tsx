@@ -11,7 +11,7 @@ import { isConfigured } from '../lib/supabase';
 import { confirmSignOut } from './ProfileScreen';
 import { clearHistory, useHistory } from '../lib/history';
 import { type Prefs, setPref, usePrefs } from '../lib/prefs';
-import { brand, colors, fonts } from '../theme';
+import { brand, colors, fonts, frost } from '../theme';
 
 type Page = 'menu' | 'history' | 'methodology';
 const titles: Record<Page, string> = { menu: 'Menu', history: 'Scan history', methodology: 'How verdicts work' };
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   historyDate: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 16, color: colors.inkMuted, textAlign: 'right' },
   empty: { fontFamily: fonts.regular, fontSize: 15, color: colors.inkMuted, textAlign: 'center', marginTop: 48 },
   paragraph: { fontFamily: fonts.serif, fontSize: 17, lineHeight: 24, color: colors.ink, marginTop: 16 },
-  ruleCard: { backgroundColor: colors.paperRaised, borderWidth: 1, borderColor: colors.hairline, borderRadius: 16, padding: 16, marginTop: 12, gap: 8 },
+  ruleCard: { backgroundColor: colors.paperRaised, ...frost(24), borderRadius: 20, padding: 16, marginTop: 12, gap: 8 },
   ruleText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.ink },
   muted: { fontFamily: fonts.regular, fontSize: 13, color: colors.inkFaint, marginTop: 24 },
 });

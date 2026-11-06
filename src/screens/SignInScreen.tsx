@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CharacterView } from '../components/Character';
-import { Footer, Header } from '../components/Chrome';
+import { Ambient, Footer, Header } from '../components/Chrome';
 import { sendPhoneCode, verifyPhoneCode } from '../lib/api';
-import { colors, fonts } from '../theme';
+import { colors, fonts, frost } from '../theme';
 
 const RESEND_SECONDS = 60;
 
@@ -66,6 +66,8 @@ export function SignInScreen() {
   };
 
   return (
+    <View style={styles.root}>
+    <Ambient />
     <SafeAreaView style={styles.fill}>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Header ink />
@@ -92,7 +94,7 @@ export function SignInScreen() {
                 autoComplete="sms-otp"
                 maxLength={6}
                 placeholder="••••••"
-                placeholderTextColor="rgba(14,14,12,0.35)"
+                placeholderTextColor="rgba(244,246,251,0.45)"
                 autoFocus
               />
               <PrimaryButton label="Verify" onPress={() => verify(code)} busy={busy} disabled={code.length !== 6} />
@@ -121,7 +123,7 @@ export function SignInScreen() {
                 textContentType="telephoneNumber"
                 autoComplete="tel"
                 placeholder="+1 555 123 4567"
-                placeholderTextColor="rgba(14,14,12,0.35)"
+                placeholderTextColor="rgba(244,246,251,0.45)"
                 autoFocus
               />
               <PrimaryButton label="Send code" onPress={submitPhone} busy={busy} disabled={phone.trim().length < 8} />
@@ -133,6 +135,7 @@ export function SignInScreen() {
         <Footer ink />
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </View>
   );
 }
 
@@ -143,23 +146,23 @@ function PrimaryButton({ label, onPress, busy, disabled }: { label: string; onPr
       disabled={busy || disabled}
       style={({ pressed }) => [styles.button, (disabled || busy) && styles.buttonDisabled, pressed && styles.buttonPressed]}
     >
-      {busy ? <ActivityIndicator color={colors.paper} /> : <Text style={styles.buttonText}>{label}</Text>}
+      {busy ? <ActivityIndicator color={colors.onInk} /> : <Text style={styles.buttonText}>{label}</Text>}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1, backgroundColor: colors.paper },
+  root: { flex: 1, backgroundColor: colors.paper },
+  fill: { flex: 1 },
   body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 12 },
   character: { alignSelf: 'center', marginBottom: 4 },
   title: { fontFamily: fonts.black, fontSize: 30, lineHeight: 33, letterSpacing: -1.1, color: colors.ink },
-  titleRule: { height: 10, backgroundColor: colors.rule, marginTop: -4 },
+  titleRule: { height: 2, borderRadius: 1, backgroundColor: colors.rule, marginTop: -4 },
   subtitle: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 24, color: colors.inkMuted, marginBottom: 6 },
   input: {
     height: 58,
     borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colors.ink,
+    ...frost(20),
     backgroundColor: colors.paperRaised,
     paddingHorizontal: 18,
     fontFamily: fonts.semibold,
@@ -170,14 +173,15 @@ const styles = StyleSheet.create({
   button: {
     height: 58,
     borderRadius: 29,
-    backgroundColor: colors.ink,
+    backgroundColor: 'rgba(244,246,251,0.92)',
+    ...frost(16),
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
   },
   buttonDisabled: { opacity: 0.35 },
   buttonPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  buttonText: { fontFamily: fonts.bold, fontSize: 18, color: colors.paper },
+  buttonText: { fontFamily: fonts.bold, fontSize: 18, color: colors.onInk },
   links: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 6, marginTop: 4 },
   link: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },
   linkDisabled: { color: colors.inkFaint, textDecorationLine: 'none' },

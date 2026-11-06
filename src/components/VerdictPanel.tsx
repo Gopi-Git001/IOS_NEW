@@ -7,7 +7,7 @@ import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, V
 import { ingredientNames } from '../lib/display';
 import { addedAmount, type Kind } from '../lib/glossary';
 import { getPrefs } from '../lib/prefs';
-import { colors, fonts } from '../theme';
+import { colors, fonts, frost } from '../theme';
 import type { ScanResult, Verdict } from '../types';
 import { kindColor, kindTag, type Pick } from './GlossaryCard';
 import { CameraIcon } from './Icons';
@@ -47,7 +47,7 @@ export function ResultSheet({ children, action, footer, maxHeight, bottom, onHei
         {children}
       </ScrollView>
       <Pressable onPress={action.onPress} accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}>
-        <CameraIcon color={colors.paper} size={22} />
+        <CameraIcon color={colors.onInk} size={22} />
         <Text style={styles.buttonText}>{action.label}</Text>
       </Pressable>
       {footer}
@@ -56,7 +56,7 @@ export function ResultSheet({ children, action, footer, maxHeight, bottom, onHei
 }
 
 /** Rules of the panel: 10 pt under the title, 5 pt between blocks, hairlines between rows. */
-const Rule = ({ h }: { h: 10 | 5 }) => <View style={[styles.rule, { height: h }, h === 10 ? styles.rule10 : styles.rule5]} />;
+const Rule = ({ h }: { h: 10 | 5 }) => <View style={[styles.rule, h === 10 ? styles.rule10 : styles.rule5]} />;
 
 /**
  * "Verdict Facts": the verdict word and added grams where Calories sit on a real panel,
@@ -144,17 +144,17 @@ const styles = StyleSheet.create({
     left: 8,
     right: 8,
     borderRadius: 30,
-    backgroundColor: colors.paper,
+    backgroundColor: colors.sheet,
     paddingTop: 20,
-    boxShadow: '0px -10px 40px rgba(0,0,0,0.32)',
+    ...frost(34),
     overflow: 'hidden',
   },
   body: { flexGrow: 0, flexShrink: 1 },
   bodyContent: { paddingHorizontal: 22, paddingBottom: 14 },
   title: { fontFamily: fonts.black, fontSize: 30, lineHeight: 32, letterSpacing: -1, color: colors.ink },
   rule: { backgroundColor: colors.rule },
-  rule10: { marginTop: 8, marginBottom: 6 },
-  rule5: { marginVertical: 6 },
+  rule10: { height: 2, borderRadius: 1, marginTop: 8, marginBottom: 6 },
+  rule5: { height: 1, marginVertical: 6 },
   amtRow: { flexDirection: 'row', justifyContent: 'space-between' },
   amt: { fontFamily: fonts.semibold, fontSize: 12, color: colors.ink },
   verdictRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 4 },
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   grams: { alignItems: 'flex-end', paddingBottom: 6 },
   gramsBig: { fontFamily: fonts.black, fontSize: 32, lineHeight: 34, letterSpacing: -1, color: colors.ink },
   gramsSmall: { fontFamily: fonts.semibold, fontSize: 11.5, lineHeight: 15, color: colors.inkMuted, textAlign: 'right' },
-  why: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 24, color: '#33312D', marginTop: 8, marginBottom: 2 },
+  why: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 24, color: colors.ink, marginTop: 8, marginBottom: 2 },
   note: { fontFamily: fonts.serif, fontSize: 15, lineHeight: 21, color: colors.inkMuted, marginTop: 4 },
   row: {
     minHeight: 40,
@@ -172,15 +172,15 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: colors.rule,
+    borderBottomColor: colors.hairline,
   },
   rowIn: { minHeight: 44, paddingLeft: 16 },
-  rowPressed: { backgroundColor: 'rgba(14,14,12,0.05)' },
-  lastSection: { borderBottomWidth: 4, borderBottomColor: colors.rule },
+  rowPressed: { backgroundColor: 'rgba(255,255,255,0.08)' },
+  lastSection: { borderBottomWidth: 2, borderBottomColor: colors.rule },
   rowHead: { fontFamily: fonts.extrabold, fontSize: 15, color: colors.ink },
   rowCount: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink },
   alias: { flex: 1, fontFamily: fonts.bold, fontSize: 15, lineHeight: 20 },
-  tag: { borderWidth: 1, borderColor: colors.ink, borderRadius: 3, paddingHorizontal: 5, paddingVertical: 1 },
+  tag: { borderWidth: 1, borderColor: colors.rule, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1 },
   tagText: { fontFamily: fonts.bold, fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.ink },
   hint: { fontFamily: fonts.serif, fontSize: 15, color: colors.inkMuted, marginTop: 10 },
   pending: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 },
@@ -189,12 +189,13 @@ const styles = StyleSheet.create({
     height: 56,
     marginHorizontal: 14,
     borderRadius: 28,
-    backgroundColor: colors.ink,
+    backgroundColor: 'rgba(244,246,251,0.92)',
+    ...frost(16),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
   },
   buttonPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  buttonText: { fontFamily: fonts.bold, fontSize: 17, color: colors.paper },
+  buttonText: { fontFamily: fonts.bold, fontSize: 17, color: colors.onInk },
 });

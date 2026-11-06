@@ -2,7 +2,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Menu, User } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { type DimensionValue, Pressable, StyleSheet, Text, View } from 'react-native';
+import { type DimensionValue, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useProfile } from '../lib/account';
 import { initials } from '../lib/display';
 import { brand, colors, fonts } from '../theme';
@@ -41,25 +41,40 @@ export function ProfileButton({ onOpen, leading }: { onOpen: (sheet: Sheet) => v
   );
 }
 
-/** The wordmark: heavy grotesque over a Nutrition Facts rule. `ink` sets it on paper instead of photos. */
-export function Wordmark({ ink, size = 26 }: { ink?: boolean; size?: number }) {
-  const color = ink ? colors.ink : colors.text;
+const ICON = require('../../assets/brand-icon.png');
+
+/** The brand mark: the glass lens cube with a sugar crystal inside. Replaces the spelled-out name in headers. */
+export function Wordmark({ size = 44 }: { ink?: boolean; size?: number }) {
   return (
-    <View style={styles.wordmark} accessibilityRole="header" accessibilityLabel={brand.name}>
-      <Text style={[styles.brand, { color, fontSize: size, lineHeight: size * 1.05, letterSpacing: -size * 0.04 }]}>{brand.name}</Text>
-      <View style={[styles.brandRule, { backgroundColor: color, height: Math.max(3, Math.round(size / 7)) }]} />
+    <View style={[styles.mark, { width: size, height: size, borderRadius: size * 0.27 }]} accessible accessibilityRole="header" accessibilityLabel={brand.name}>
+      <Image source={ICON} style={{ width: size, height: size }} resizeMode="cover" />
     </View>
   );
 }
 
-export function Header({ right, tagline = brand.tagline, ink }: { right?: ReactNode; tagline?: string; ink?: boolean }) {
+export function Header({ right, tagline, ink }: { right?: ReactNode; tagline?: string; ink?: boolean }) {
   return (
     <View style={styles.header}>
-      <View>
+      <View style={styles.brandRow}>
         <Wordmark ink={ink} />
-        <Text style={[styles.tagline, ink && styles.taglineInk]}>{tagline}</Text>
+        {tagline ? <Text style={[styles.tagline, ink && styles.taglineInk]}>{tagline}</Text> : null}
       </View>
       <View style={styles.actions}>{right}</View>
+    </View>
+  );
+}
+
+/**
+ * The ambient backdrop behind every non-camera screen: a deep base with three soft pools of light
+ * (teal, indigo, amber, taken from the icon) for the glass sheets to refract.
+ */
+export function Ambient() {
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <LinearGradient colors={['#0B1220', '#06080D', '#0A0B12']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+      <View style={[styles.glow, styles.glowTeal]} />
+      <View style={[styles.glow, styles.glowIndigo]} />
+      <View style={[styles.glow, styles.glowAmber]} />
     </View>
   );
 }
@@ -97,15 +112,23 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     paddingTop: 8,
   },
-  brand: { fontFamily: fonts.black },
-  wordmark: { alignSelf: 'flex-start' },
-  brandRule: { marginTop: 3 },
-  taglineInk: { color: colors.inkMuted, textShadowColor: 'transparent', textShadowRadius: 0 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12, flexShrink: 1 },
+  mark: {
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.28)',
+    boxShadow: 'inset 0px 1px 0px rgba(255,255,255,0.4), 0px 6px 18px rgba(0,0,0,0.4)',
+  },
+  glow: { position: 'absolute', borderRadius: 999, ...(Platform.OS === 'web' ? ({ filter: 'blur(70px)' } as object) : {}) },
+  glowTeal: { width: 360, height: 360, top: -90, left: -120, backgroundColor: 'rgba(31,181,168,0.30)' },
+  glowIndigo: { width: 420, height: 420, top: '38%', right: -200, backgroundColor: 'rgba(76,99,230,0.26)' },
+  glowAmber: { width: 300, height: 300, bottom: -110, left: -60, backgroundColor: 'rgba(245,158,11,0.18)' },
+  taglineInk: { color: colors.inkMuted, textShadowColor: 'transparent', textShadowRadius: 0, marginTop: 0 },
   tagline: {
     fontFamily: fonts.serifMedium,
     fontSize: 15,
     color: colors.text,
-    marginTop: 4,
+    flexShrink: 1,
     textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,

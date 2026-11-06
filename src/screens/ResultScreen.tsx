@@ -121,6 +121,6 @@ const styles = StyleSheet.create({
   pill: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 22, height: 54, borderRadius: 27 },
   pillText: { fontFamily: fonts.serifMedium, fontSize: 19, color: colors.text },
   errorTitle: { fontFamily: fonts.black, fontSize: 30, lineHeight: 32, color: colors.ink, letterSpacing: -1 },
-  errorRule: { height: 10, backgroundColor: colors.rule, marginTop: 8, marginBottom: 10 },
-  errorText: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 25, color: '#33312D' },
+  errorRule: { height: 2, borderRadius: 1, backgroundColor: colors.rule, marginTop: 8, marginBottom: 10 },
+  errorText: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 25, color: colors.ink },
 });

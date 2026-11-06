@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type Kind, lookup } from '../lib/glossary';
-import { colors, fonts } from '../theme';
+import { colors, fonts, frost } from '../theme';
 
 export const kindColor: Record<Kind, string> = { added: colors.ugly, sweetener: colors.bad, natural: colors.clean };
 export const kindTag: Record<Kind, string> = { added: 'Sugar', sweetener: 'Sweetener', natural: 'Natural' };
@@ -60,7 +60,8 @@ const styles = StyleSheet.create({
     right: 8,
     bottom: 0,
     borderRadius: 30,
-    backgroundColor: colors.paper,
+    backgroundColor: colors.sheet,
+    ...frost(34),
     paddingHorizontal: 22,
     paddingTop: 20,
     paddingBottom: 16,
@@ -68,15 +69,15 @@ const styles = StyleSheet.create({
   },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   kind: { fontFamily: fonts.black, fontSize: 22, letterSpacing: -0.6, color: colors.ink },
-  tag: { borderWidth: 1, borderColor: colors.ink, borderRadius: 3, paddingHorizontal: 6, paddingVertical: 2 },
+  tag: { borderWidth: 1, borderColor: colors.rule, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   tagText: { fontFamily: fonts.bold, fontSize: 10.5, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.ink },
-  rule10: { height: 10, backgroundColor: colors.rule, marginTop: 8, marginBottom: 12 },
-  rule5: { height: 5, backgroundColor: colors.rule, marginTop: 14, marginBottom: 10 },
+  rule10: { height: 2, borderRadius: 1, backgroundColor: colors.rule, marginTop: 8, marginBottom: 12 },
+  rule5: { height: 1, backgroundColor: colors.rule, marginTop: 14, marginBottom: 10 },
   name: { fontFamily: fonts.semibold, fontSize: 15, color: colors.inkMuted },
   reveal: { fontFamily: fonts.black, fontSize: 36, lineHeight: 40, marginTop: 2, letterSpacing: -1.2 },
-  blurb: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 25, color: '#33312D', marginTop: 6 },
+  blurb: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 25, color: colors.ink, marginTop: 6 },
   effectText: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink },
-  button: { marginTop: 18, height: 52, borderRadius: 26, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { fontFamily: fonts.bold, fontSize: 17, color: colors.paper },
+  button: { marginTop: 18, height: 52, borderRadius: 26, backgroundColor: 'rgba(244,246,251,0.92)', alignItems: 'center', justifyContent: 'center', ...frost(16) },
+  buttonText: { fontFamily: fonts.bold, fontSize: 17, color: colors.onInk },
   pressed: { opacity: 0.8 },
 });
