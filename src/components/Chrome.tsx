@@ -59,18 +59,20 @@ export function Scrims({ topHeight = 170 }: { topHeight?: DimensionValue }) {
       <LinearGradient
         pointerEvents="none"
         colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0)']}
-        style={[StyleSheet.absoluteFill, { bottom: undefined, height: topHeight }]}
+        style={[styles.scrim, { top: 0, height: topHeight }]}
       />
       <LinearGradient
         pointerEvents="none"
         colors={['rgba(11,11,15,0)', 'rgba(11,11,15,0.92)']}
-        style={[StyleSheet.absoluteFill, { top: undefined, height: 260 }]}
+        style={[styles.scrim, { bottom: 0, height: 260 }]}
       />
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  // Pinned with explicit edges: on web, `top: undefined` doesn't clear absoluteFill's `top: 0`.
+  scrim: { position: 'absolute', left: 0, right: 0 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
