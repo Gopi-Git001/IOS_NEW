@@ -14,7 +14,7 @@ const FOOTER_HEIGHT = 46;
 
 export type ScanState =
   | { status: 'reading' }
-  | { status: 'done'; result: ScanResult }
+  | { status: 'done'; result: ScanResult; listsPending?: boolean }
   | { status: 'error'; message: string };
 
 type Props = { photoUri: string; state: ScanState; onScanAnother: () => void; tagline?: string };
@@ -25,7 +25,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, tagline }: Props)
   const blurTarget = useRef<ComponentRef<typeof View>>(null);
   const bottomBar = insets.bottom + FOOTER_HEIGHT + BUTTON_HEIGHT;
   const buttonColor = state.status === 'done' ? verdictColor[state.result.verdict] : '#FFFFFF';
-  const buttonInk = state.status === 'done' && state.result.verdict === 'BAD' ? '#FFFFFF' : colors.background;
+  const buttonInk = state.status === 'done' && state.result.verdict === 'UGLY' ? '#FFFFFF' : colors.background;
 
   return (
     <View style={styles.fill}>
@@ -56,7 +56,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, tagline }: Props)
       {state.status === 'done' && (
         <>
           <View style={[styles.panelSlot, { top: insets.top + 64 }]} pointerEvents="box-none">
-            <VerdictPanel result={state.result} blurTarget={blurTarget} />
+            <VerdictPanel result={state.result} blurTarget={blurTarget} listsPending={state.listsPending} />
           </View>
           <Character mood={moodForVerdict[state.result.verdict]} bottom={bottomBar} />
         </>
@@ -76,7 +76,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, tagline }: Props)
           <GlassPill blurTarget={blurTarget} wide>
             <Text style={[styles.pillText, styles.errorText]}>{state.message}</Text>
           </GlassPill>
-          <Character mood="okay" bottom={bottomBar} />
+          <Character mood="bad" bottom={bottomBar} />
         </>
       )}
     </View>

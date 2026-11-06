@@ -1,4 +1,4 @@
-export type Verdict = 'CLEAN' | 'OKAY' | 'BAD';
+export type Verdict = 'CLEAN' | 'BAD' | 'UGLY';
 
 export type ScanResult = {
   verdict: Verdict;
@@ -11,3 +11,10 @@ export type ScanResult = {
   /** Optional closing line at the bottom of the panel. */
   note?: string;
 };
+
+/** Jev's fast call (see supabase/functions/_shared/jev.ts). */
+export type JevVerdict =
+  | { status: 'decided'; verdict: Verdict; confidence: number; model: string }
+  | { status: 'unsure'; verdict: Verdict | null; confidence: number | null; model: string }
+  | { status: 'not_a_label'; model: string }
+  | { status: 'unavailable'; reason: string };

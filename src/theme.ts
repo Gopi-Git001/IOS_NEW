@@ -1,7 +1,7 @@
 export const colors = {
   clean: '#34D399',
-  okay: '#FBBF24',
-  bad: '#FB7185',
+  bad: '#FBBF24',
+  ugly: '#FB7185',
   background: '#0B0B0F',
   text: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.72)',

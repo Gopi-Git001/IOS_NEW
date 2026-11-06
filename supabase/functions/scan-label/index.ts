@@ -1,11 +1,14 @@
-// POST { image: <base64 JPEG> }  →  { result: ScanResult, jev: JevCheck } | { error: string }
-// Signed-in users only. Claude vision reads the label → the sugar rules decide → Jev confirms.
+// POST { image: <base64 JPEG> }  →  { result: ScanResult } | { error: string }
+// Signed-in users only. Claude vision lists the sugars on the label and the rules give a backstop
+// verdict. Runs alongside quick-verdict (Jev), which makes the actual CLEAN / BAD / UGLY call.
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0';
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
-import { askJev } from '../_shared/jev.ts';
-import { decide, type LabelReading, normalise } from '../_shared/rules.ts';
+import { decide, type LabelReading } from '../_shared/rules.ts';
 
 const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
+
+// Override with the CLAUDE_MODEL secret, e.g. a faster model if the lists feel slow.
+const CLAUDE_MODEL = Deno.env.get('CLAUDE_MODEL') ?? 'claude-opus-5-5';
 
 const MAX_IMAGE_BASE64 = 6_000_000; // ~4.5 MB JPEG; the app sends ~0.3 MB
 
@@ -63,7 +66,7 @@ export default {
     let reading: LabelReading;
     try {
       const response = await anthropic.beta.messages.create({
-        model: 'claude-opus-5-5',
+        model: CLAUDE_MODEL,
         max_tokens: 4000,
         // Re-runs on a fallback model if a safety classifier declines the request.
         betas: ['server-side-fallback-2026-07-01'],
@@ -96,14 +99,6 @@ export default {
 
     const result = decide(reading);
 
-    // Jev (TypeSafe) confirms. Rules beat Jev: its answer is logged and returned, never applied.
-    const jev = await askJev(normalise(reading), result.verdict, Deno.env.get('TYPESAFE_API_KEY'));
-    if (jev.status === 'disagrees') {
-      console.warn('jev disagrees', { rules: result.verdict, jev: jev.jevVerdict, confidence: jev.confidence, model: jev.model, reading });
-    } else if (jev.status === 'unavailable') {
-      console.warn('jev unavailable', jev.reason);
-    }
-
-    return json({ result, jev });
+    return json({ result });
   }),
 };

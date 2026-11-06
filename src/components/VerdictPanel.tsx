@@ -1,17 +1,17 @@
 import { BlurView } from 'expo-blur';
 import type { ComponentProps, ReactNode } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
 import { colors, fonts } from '../theme';
 import type { ScanResult, Verdict } from '../types';
 import { CubeIcon, DropIcon, LeafIcon, VerdictIcon } from './Icons';
 
-export const verdictColor: Record<Verdict, string> = { CLEAN: colors.clean, OKAY: colors.okay, BAD: colors.bad };
-const verdictIcon = { CLEAN: 'check', OKAY: 'dash', BAD: 'cross' } as const;
+export const verdictColor: Record<Verdict, string> = { CLEAN: colors.clean, BAD: colors.bad, UGLY: colors.ugly };
+const verdictIcon = { CLEAN: 'check', BAD: 'dash', UGLY: 'cross' } as const;
 
 type BlurTarget = ComponentProps<typeof BlurView>['blurTarget'];
 
 /** Top-right see-through card (dark tint + light blur): verdict, then the sugar lists that apply. */
-export function VerdictPanel({ result, blurTarget }: { result: ScanResult; blurTarget: BlurTarget }) {
+export function VerdictPanel({ result, blurTarget, listsPending = false }: { result: ScanResult; blurTarget: BlurTarget; listsPending?: boolean }) {
   const color = verdictColor[result.verdict];
   const sections: { title: string; items: string[]; icon: ReactNode }[] = [
     { title: 'Natural sugars', items: result.naturalSugars, icon: <LeafIcon color={colors.textMuted} /> },
@@ -53,6 +53,13 @@ export function VerdictPanel({ result, blurTarget }: { result: ScanResult; blurT
           </View>
         </View>
       ))}
+
+      {listsPending && (
+        <View style={[styles.section, styles.pendingRow]}>
+          <ActivityIndicator size="small" color={colors.textMuted} />
+          <Text style={styles.item}>Listing the sugars...</Text>
+        </View>
+      )}
 
       {result.note && (
         <View style={styles.noteRow}>
@@ -103,6 +110,7 @@ const styles = StyleSheet.create({
   sectionBody: { flex: 1, gap: 6 },
   sectionTitle: { fontFamily: fonts.semibold, fontSize: 15.5, color: colors.text, ...textShadow },
   item: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, ...textShadow },
+  pendingRow: { alignItems: 'center' },
   noteRow: { paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider },
   note: { fontFamily: fonts.medium, fontSize: 14, ...textShadow },
 });

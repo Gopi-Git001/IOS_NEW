@@ -176,5 +176,5 @@ const styles = StyleSheet.create({
   links: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 6, marginTop: 4 },
   link: { fontFamily: fonts.medium, fontSize: 15, color: colors.clean },
   linkDisabled: { color: colors.textFaint },
-  error: { fontFamily: fonts.medium, fontSize: 14, color: colors.bad, textAlign: 'center' },
+  error: { fontFamily: fonts.medium, fontSize: 14, color: colors.ugly, textAlign: 'center' },
 });

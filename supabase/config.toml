@@ -426,5 +426,8 @@ enabled = true
 [functions.scan-label]
 verify_jwt = true
 
+[functions.quick-verdict]
+verify_jwt = true
+
 [functions.delete-account]
 verify_jwt = true

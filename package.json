@@ -31,7 +31,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lottie": "node scripts/make-lottie.mjs",
-    "test:rules": "node --test \"supabase/functions/_shared/*.test.ts\""
+    "test:rules": "npx -y tsx --test supabase/functions/_shared/*.test.ts src/lib/combine.test.ts"
   },
   "private": true
 }

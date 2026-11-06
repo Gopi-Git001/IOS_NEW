@@ -11,7 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { scanLabel } from './src/lib/api';
+import { runScan } from './src/lib/scan';
 import { isConfigured, supabase } from './src/lib/supabase';
 import { placeholderResults } from './src/placeholderResults';
 import { CameraScreen } from './src/screens/CameraScreen';
@@ -51,15 +51,25 @@ export default function App() {
   const handleCapture = async (photoUri: string) => {
     const id = ++scanId.current;
     setScan({ photoUri, state: { status: 'reading' } });
-    let state: ScanState;
+    // Ignore anything that arrives after the user already left this scan.
+    const show = (state: ScanState) => {
+      if (id === scanId.current) setScan({ photoUri, state });
+    };
     try {
-      const result = isConfigured ? await scanLabel(photoUri) : await demoScan();
-      state = { status: 'done', result };
+      if (!isConfigured) {
+        show({ status: 'done', result: await demoScan() });
+        return;
+      }
+      // Jev's verdict shows first; the ingredient lists fill in when Claude finishes.
+      let shown = false;
+      await runScan(photoUri, (u) => {
+        shown = true;
+        show(u);
+      });
+      if (!shown) show({ status: 'error', message: "Couldn't read the label. Try again." });
     } catch (e) {
-      state = { status: 'error', message: e instanceof Error ? e.message : "Couldn't read the label." };
+      show({ status: 'error', message: e instanceof Error ? e.message : "Couldn't read the label." });
     }
-    // Ignore a result that arrives after the user already left this scan.
-    if (id === scanId.current) setScan({ photoUri, state });
   };
 
   const handleScanAnother = () => {

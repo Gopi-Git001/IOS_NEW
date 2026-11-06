@@ -11,7 +11,7 @@ export const placeholderResults: ScanResult[] = [
     note: 'Great pick, no added sugar',
   },
   {
-    verdict: 'OKAY',
+    verdict: 'BAD',
     headline: 'A little added sugar',
     naturalSugars: ['Fructose'],
     addedSugars: ['Honey (3 g)'],
@@ -19,7 +19,7 @@ export const placeholderResults: ScanResult[] = [
     note: 'Fine now and then',
   },
   {
-    verdict: 'BAD',
+    verdict: 'UGLY',
     headline: 'Too much sugar',
     naturalSugars: ['Fruit juice concentrate'],
     addedSugars: ['Sucrose', 'Glucose syrup'],

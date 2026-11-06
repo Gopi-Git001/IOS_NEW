@@ -1,12 +1,13 @@
-// QuickGAB sugar rules. Pure functions: no network, no Deno APIs, so they run under Node tests too.
+// QuickGAB sugar rules (CLEAN / BAD / UGLY). Pure functions: no network, no Deno APIs, so they run under Node tests too.
 //
-//   BAD   = artificial sweeteners, alcohol, or over 4 g added sugar
-//   OKAY  = sugar alcohols, or 1–4 g added sugar
+//   UGLY  = artificial sweeteners, alcohol, or over 4 g added sugar
+//   BAD   = sugar alcohols, plant sweeteners, or 1–4 g added sugar (or added sugar, grams not shown)
 //   CLEAN = no added sugar and no sweeteners
 //
-// These rules always decide the verdict; no model output can override them.
+// Jev makes the fast call straight from the photo (see _shared/jev.ts). These rules are the
+// backstop: they decide when Jev is unavailable or unsure, and they check Jev's call afterwards.
 
-export type Verdict = 'CLEAN' | 'OKAY' | 'BAD';
+export type Verdict = 'CLEAN' | 'BAD' | 'UGLY';
 
 /** What Claude reads off the label (see LABEL_SCHEMA in scan-label). */
 export type LabelReading = {
@@ -92,19 +93,26 @@ export function decide(input: LabelReading): ScanResult {
 
   const base = { naturalSugars: r.natural_sugars, addedSugars, sweeteners };
 
-  // BAD
-  if (grams !== null && grams > 4) return { ...base, verdict: 'BAD', headline: 'Too much sugar' };
-  if (r.artificial_sweeteners.length > 0) return { ...base, verdict: 'BAD', headline: 'Artificial sweeteners' };
-  if (r.contains_alcohol) return { ...base, verdict: 'BAD', headline: 'Contains alcohol' };
+  // UGLY
+  if (grams !== null && grams > 4) return { ...base, verdict: 'UGLY', headline: 'Too much sugar' };
+  if (r.artificial_sweeteners.length > 0) return { ...base, verdict: 'UGLY', headline: 'Artificial sweeteners' };
+  if (r.contains_alcohol) return { ...base, verdict: 'UGLY', headline: 'Contains alcohol' };
 
-  // OKAY
+  // BAD
   if (hasAddedSugar) {
     const headline = grams === null ? 'Added sugar, amount not shown' : 'A little added sugar';
-    return { ...base, verdict: 'OKAY', headline, note: grams === null ? 'Scan the nutrition panel to check grams' : undefined };
+    return { ...base, verdict: 'BAD', headline, note: grams === null ? 'Scan the nutrition panel to check grams' : undefined };
   }
-  if (r.sugar_alcohols.length > 0) return { ...base, verdict: 'OKAY', headline: 'Contains sugar alcohols' };
-  if (r.other_sweeteners.length > 0) return { ...base, verdict: 'OKAY', headline: 'Contains sweeteners' };
+  if (r.sugar_alcohols.length > 0) return { ...base, verdict: 'BAD', headline: 'Contains sugar alcohols' };
+  if (r.other_sweeteners.length > 0) return { ...base, verdict: 'BAD', headline: 'Contains sweeteners' };
 
   // CLEAN
   return { ...base, verdict: 'CLEAN', headline: 'No added sugar', note: 'Great pick, no added sugar' };
 }
+
+/** Headline for a verdict when only Jev's call is known (the ingredient lists come later). */
+export const quickHeadline: Record<Verdict, string> = {
+  CLEAN: 'No added sugar',
+  BAD: 'Some added sugar or sweeteners',
+  UGLY: 'Heavy sugar or artificial sweeteners',
+};
