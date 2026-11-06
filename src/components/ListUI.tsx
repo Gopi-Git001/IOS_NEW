@@ -5,6 +5,7 @@ import { Linking, Modal, Pressable, StyleSheet, Switch, Text, View } from 'react
 import { notify } from '../lib/confirm';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts } from '../theme';
+import { Glass } from './Glass';
 
 /** Full-screen sheet that slides up, with a back chevron and a title. Android back calls `onBack`. */
 export function Sheet({ visible, title, onBack, backLabel, children }: { visible: boolean; title: string; onBack: () => void; backLabel: string; children: ReactNode }) {
@@ -13,13 +14,15 @@ export function Sheet({ visible, title, onBack, backLabel, children }: { visible
       <SafeAreaProvider>
         <SafeAreaView style={listStyles.screen} edges={['top', 'bottom']}>
           <View style={listStyles.topBar}>
-            <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button" accessibilityLabel={backLabel}>
-              <ChevronLeft size={26} color={colors.cardText} />
+            <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel={backLabel}>
+              <Glass style={listStyles.back}>
+                <ChevronLeft size={24} color={colors.cardText} strokeWidth={2.5} />
+              </Glass>
             </Pressable>
-            <Text style={listStyles.title} accessibilityRole="header">
-              {title}
-            </Text>
           </View>
+          <Text style={listStyles.title} accessibilityRole="header">
+            {title}
+          </Text>
           {children}
         </SafeAreaView>
       </SafeAreaProvider>
@@ -86,8 +89,10 @@ export const demoAlert = () => notify('Demo mode', 'The backend is not connected
 
 export const listStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  topBar: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 52, paddingHorizontal: 12 },
-  title: { fontFamily: fonts.bold, fontSize: 20, color: colors.cardText },
+  topBar: { flexDirection: 'row', alignItems: 'center', height: 56, paddingHorizontal: 14 },
+  back: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', paddingRight: 2 },
+  // iOS large title.
+  title: { fontFamily: fonts.extrabold, fontSize: 34, lineHeight: 40, letterSpacing: -0.6, color: colors.cardText, paddingHorizontal: 20, marginTop: 2, marginBottom: 4 },
   content: { paddingHorizontal: 16, paddingBottom: 32 },
   group: { marginTop: 20 },
   groupTitle: {
@@ -97,9 +102,9 @@ export const listStyles = StyleSheet.create({
     textTransform: 'uppercase',
     color: colors.textFaint,
     marginBottom: 8,
-    marginLeft: 4,
+    marginLeft: 16,
   },
-  groupCard: { backgroundColor: colors.surface, borderRadius: 14, overflow: 'hidden' },
+  groupCard: { backgroundColor: '#1C1C1E', borderRadius: 16, overflow: 'hidden' },
   row: {
     minHeight: 52,
     flexDirection: 'row',

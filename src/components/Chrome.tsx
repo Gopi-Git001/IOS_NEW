@@ -6,14 +6,19 @@ import { type DimensionValue, Pressable, StyleSheet, Text, View } from 'react-na
 import { useProfile } from '../lib/account';
 import { initials } from '../lib/display';
 import { colors, fonts } from '../theme';
+import { Glass } from './Glass';
 
 export type Sheet = 'profile' | 'menu';
 
-/** Top-right pill: the avatar opens Profile, ☰ opens the Menu. Shows the user's initials when they have a name. */
-export function ProfileButton({ onOpen }: { onOpen: (sheet: Sheet) => void }) {
+/**
+ * Top-right glass capsule: optional extra controls (the flash), the avatar (opens Profile) and ☰ (opens the Menu).
+ * Shows the user's initials when they have a name.
+ */
+export function ProfileButton({ onOpen, leading }: { onOpen: (sheet: Sheet) => void; leading?: ReactNode }) {
   const letters = initials(useProfile().displayName);
   return (
-    <View style={styles.profile}>
+    <Glass style={styles.profile}>
+      {leading}
       <Pressable
         onPress={() => onOpen('profile')}
         hitSlop={{ top: 6, bottom: 6, left: 6, right: 2 }}
@@ -32,7 +37,7 @@ export function ProfileButton({ onOpen }: { onOpen: (sheet: Sheet) => void }) {
       >
         <Menu size={20} color={colors.cardText} strokeWidth={2.25} />
       </Pressable>
-    </View>
+    </Glass>
   );
 }
 
@@ -85,22 +90,20 @@ const styles = StyleSheet.create({
   tagline: { fontFamily: fonts.regular, fontSize: 12.5, color: colors.textMuted, marginTop: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 18 },
   profile: {
-    height: 40,
+    height: 44,
     borderRadius: 22,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 6,
+    paddingLeft: 8,
     paddingRight: 4,
+    gap: 2,
   },
   menu: { height: 38, paddingLeft: 8, paddingRight: 8, justifyContent: 'center' },
   avatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.16)',
     alignItems: 'center',
     justifyContent: 'center',
   },

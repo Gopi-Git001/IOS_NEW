@@ -156,18 +156,23 @@ export function CharacterView({ mood, size }: { mood: Mood; size: number }) {
   );
 }
 
-/** The sugar-cube character, standing in the bottom-left corner above `bottom`. */
-export function Character({ mood, bottom }: { mood: Mood; bottom: number }) {
+/**
+ * The sugar-cube character standing above `bottom`: in the bottom-left corner by default,
+ * or `right` points from the right edge (it perches on the result sheet that way).
+ */
+export function Character({ mood, bottom, size, right }: { mood: Mood; bottom: number; size?: number; right?: number }) {
   const { width } = useWindowDimensions();
+  const side = right === undefined ? styles.left : { right };
   return (
-    <View style={[styles.corner, { bottom }]} pointerEvents="none">
-      <CharacterView key={mood} mood={mood} size={characterSize(width)} />
+    <View style={[styles.corner, side, { bottom }]} pointerEvents="none">
+      <CharacterView key={mood} mood={mood} size={size ?? characterSize(width)} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  corner: { position: 'absolute', left: 4 },
+  corner: { position: 'absolute' },
+  left: { left: 4 },
   shadow: { position: 'absolute', height: 14, borderRadius: 7, backgroundColor: 'rgba(0,0,0,0.35)' },
   glint: { position: 'absolute' },
 });
