@@ -13,6 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { guestMode, signInAsGuest } from './src/lib/api';
 import { notify } from './src/lib/confirm';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { applyStrictMode } from './src/lib/display';
@@ -72,12 +73,15 @@ export default function App() {
   }, []);
 
   // Signing out (or deleting the account) returns to the sign-in screen.
+  // Testing builds start a guest session instead, so there is no phone check.
+  const [guestFailed, setGuestFailed] = useState(false);
   useEffect(() => {
     if (session === null && isConfigured) {
       setScan(null);
       setSheet(null);
+      if (guestMode && !guestFailed) signInAsGuest().then((err) => err && setGuestFailed(true));
     }
-  }, [session]);
+  }, [session, guestFailed]);
 
   // Signed in: load the name and settings from the profile (unsynced local changes are sent first).
   const userId = session?.user.id;
@@ -133,7 +137,7 @@ export default function App() {
   // Strict mode is applied on the device to the verdict shown; the server result is kept as is.
   const shownState: ScanState | undefined =
     scan?.state.status === 'done' ? { ...scan.state, result: applyStrictMode(scan.state.result, prefs.strict) } : scan?.state;
-  const ready = fontsLoaded && session !== undefined;
+  const ready = fontsLoaded && session !== undefined && !(guestMode && session === null && isConfigured && !guestFailed);
 
   return (
     <SafeAreaProvider>

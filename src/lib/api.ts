@@ -63,6 +63,17 @@ export async function deleteAccount() {
   await supabase.auth.signOut({ scope: 'local' });
 }
 
+/** Testing builds skip phone verification: set EXPO_PUBLIC_GUEST_MODE=1 at build time. */
+export const guestMode = process.env.EXPO_PUBLIC_GUEST_MODE === '1';
+
+/** Starts a test session with no phone check (the server must also allow it). Returns an error message or null. */
+export async function signInAsGuest(): Promise<string | null> {
+  const { data, error } = await supabase.functions.invoke<{ token_hash: string }>('quickgob-phone-auth', { body: { action: 'guest' } });
+  if (error || !data?.token_hash) return messageFrom(error, 'Could not start a test session.');
+  const { error: authError } = await supabase.auth.verifyOtp({ token_hash: data.token_hash, type: 'email' });
+  return authError ? 'Could not start a test session.' : null;
+}
+
 /** Texts a sign-in code through Twilio Verify (our phone-auth function). Returns an error message or null. */
 export async function sendPhoneCode(phone: string): Promise<string | null> {
   const { error } = await supabase.functions.invoke('quickgob-phone-auth', { body: { action: 'send', phone } });

@@ -2,6 +2,7 @@
 // then we hand the app a one-time token it trades for a normal Supabase session.
 // POST { action: 'send', phone } -> { sent: true }
 // POST { action: 'verify', phone, code } -> { token_hash }
+// POST { action: 'guest' } -> { token_hash }   (testing only: a fresh account with no phone check)
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import { env } from '../_shared/env.ts';
 
@@ -42,6 +43,30 @@ Deno.serve(async (req) => {
   } catch {
     return json({ error: 'Bad request' }, 400);
   }
+  const admin = () =>
+    createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  const tokenFor = async (email: string) => {
+    const link = await admin().auth.admin.generateLink({ type: 'magiclink', email });
+    const token_hash = link.data?.properties?.hashed_token;
+    if (link.error || !token_hash) console.error('generate link failed', link.error?.message);
+    return token_hash ?? null;
+  };
+
+  // Testing: skip phone verification. Each guest gets a new hidden account; the app keeps the session.
+  if (input.action === 'guest') {
+    if (env('GUEST_SIGNIN') !== 'on') return json({ error: 'Guest sign-in is off.' }, 403);
+    const email = `guest-${crypto.randomUUID()}@guest.sugarhunter.app`;
+    const created = await admin().auth.admin.createUser({ email, email_confirm: true, user_metadata: { app: 'sugar-hunter', guest: true } });
+    if (created.error) {
+      console.error('create guest failed', created.error.message);
+      return json({ error: 'Could not start a test session. Try again.' }, 500);
+    }
+    const token_hash = await tokenFor(email);
+    return token_hash ? json({ token_hash }) : json({ error: 'Could not start a test session. Try again.' }, 500);
+  }
+
   const phone = String(input.phone ?? '').replace(/[\s()-]/g, '');
   if (!E164.test(phone)) return json({ error: 'Enter your full number with country code.' }, 400);
 

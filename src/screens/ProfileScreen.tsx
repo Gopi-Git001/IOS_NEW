@@ -31,7 +31,7 @@ export function ProfileScreen({ visible, onClose, phone, onChangePhone }: Props)
           <Row
             icon={Phone}
             label="Phone number"
-            value={isConfigured ? maskPhone(phone) : 'Demo mode'}
+            value={!isConfigured ? 'Demo mode' : phone ? maskPhone(phone) : 'Test session'}
             onPress={isConfigured ? onChangePhone : demoAlert}
             chevron
           />

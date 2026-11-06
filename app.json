@@ -23,7 +23,7 @@
       "name": "Reallabel",
       "shortName": "Reallabel",
       "description": "Point your camera at a food label. Get one sugar verdict: Clean, Bad or Ugly.",
-      "themeColor": "#0E0E0C",
+      "themeColor": "#06080D",
       "backgroundColor": "#06080D"
     },
     "plugins": [
