@@ -1,18 +1,18 @@
-import { LogOut, Phone, Trash2, User } from 'lucide-react-native';
+import { AtSign, LogOut, Trash2, User } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { demoAlert, Group, listStyles, Row, Sheet } from '../components/ListUI';
 import { verdictColor } from '../components/VerdictPanel';
 import { confirmAction, notify } from '../lib/confirm';
 import { deleteAccountAndData, saveDisplayName, signOut, type Stats, syncProfile, syncStats, useProfile } from '../lib/account';
-import { initials, maskPhone, percent } from '../lib/display';
+import { initials, percent } from '../lib/display';
 import { isConfigured } from '../lib/supabase';
 import { brand, colors, fonts, frost } from '../theme';
 
-type Props = { visible: boolean; onClose: () => void; phone?: string; onChangePhone: () => void };
+type Props = { visible: boolean; onClose: () => void; email?: string };
 
-/** The person screen: name, phone, stats, sign out and delete account. */
-export function ProfileScreen({ visible, onClose, phone, onChangePhone }: Props) {
+/** The person screen: name, Google email, stats, sign out and delete account. */
+export function ProfileScreen({ visible, onClose, email }: Props) {
   const { displayName, stats } = useProfile();
 
   // Fresh name, settings and stats each time the screen opens; the local copy shows meanwhile.
@@ -29,11 +29,10 @@ export function ProfileScreen({ visible, onClose, phone, onChangePhone }: Props)
 
         <Group title="Account">
           <Row
-            icon={Phone}
-            label="Phone number"
-            value={!isConfigured ? 'Demo mode' : phone ? maskPhone(phone) : 'Test session'}
-            onPress={isConfigured ? onChangePhone : demoAlert}
-            chevron
+            icon={AtSign}
+            label="Google account"
+            value={!isConfigured ? 'Demo mode' : email && !isTestEmail(email) ? email : 'Test session'}
+            onPress={isConfigured ? undefined : demoAlert}
           />
         </Group>
 
@@ -49,6 +48,9 @@ export function ProfileScreen({ visible, onClose, phone, onChangePhone }: Props)
     </Sheet>
   );
 }
+
+/** Guest and old phone sessions use hidden placeholder emails; never show those. */
+const isTestEmail = (email: string) => /@(guest|phone)\.sugarhunter\.app$/.test(email);
 
 // ---------- Name ----------
 
@@ -162,7 +164,7 @@ function StatsCard({ stats }: { stats: Stats | null }) {
 
 export function confirmSignOut() {
   if (!isConfigured) return demoAlert();
-  confirmAction('Sign out?', 'You can sign back in with your phone number.', 'Sign out', () => {
+  confirmAction('Sign out?', 'You can sign back in with Google.', 'Sign out', () => {
     signOut().catch(() => notify('Sign out failed', 'Try again.'));
   });
 }

@@ -2,6 +2,7 @@
   "expo": {
     "name": "Reallabel",
     "slug": "sugar-hunter",
+    "scheme": "reallabel",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -42,7 +43,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#06080D"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "backgroundColor": "#06080D"
   }

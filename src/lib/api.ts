@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import type { JevVerdict, ScanResult } from '../types';
@@ -72,6 +74,41 @@ export async function signInAsGuest(): Promise<string | null> {
   if (error || !data?.token_hash) return messageFrom(error, 'Could not start a test session.');
   const { error: authError } = await supabase.auth.verifyOtp({ token_hash: data.token_hash, type: 'email' });
   return authError ? 'Could not start a test session.' : null;
+}
+
+const NATIVE_REDIRECT = 'reallabel://auth';
+
+/**
+ * Google sign-in through Supabase Auth (free; no SMS). Returns an error message, or null when it
+ * started (web: the page leaves for Google and comes back signed in) or the person cancelled (phones).
+ */
+export async function signInWithGoogle(): Promise<string | null> {
+  const failed = 'Could not open Google sign-in. Try again.';
+  if (Platform.OS === 'web') {
+    const back = window.location.origin + window.location.pathname;
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: back } });
+    return error ? failed : null;
+  }
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: NATIVE_REDIRECT, skipBrowserRedirect: true },
+  });
+  if (error || !data?.url) return failed;
+  const result = await WebBrowser.openAuthSessionAsync(data.url, NATIVE_REDIRECT);
+  if (result.type !== 'success') return null;
+  const code = new URL(result.url).searchParams.get('code');
+  if (!code) return 'Google sign-in was cancelled.';
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+  return exchangeError ? 'Could not sign you in. Try again.' : null;
+}
+
+/** On the web, Google sends people back with ?error=... when they cancel or something fails. */
+export function takeAuthRedirectError(): string | null {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search + '&' + window.location.hash.replace(/^#/, ''));
+  if (!params.get('error')) return null;
+  window.history.replaceState(null, '', window.location.pathname);
+  return params.get('error') === 'access_denied' ? 'Google sign-in was cancelled.' : 'Google sign-in failed. Try again.';
 }
 
 /** Texts a sign-in code through Twilio Verify (our phone-auth function). Returns an error message or null. */

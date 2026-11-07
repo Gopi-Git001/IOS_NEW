@@ -1,152 +1,79 @@
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 import { CharacterView } from '../components/Character';
 import { Ambient, Footer, Header } from '../components/Chrome';
-import { sendPhoneCode, verifyPhoneCode } from '../lib/api';
+import { signInWithGoogle, takeAuthRedirectError } from '../lib/api';
 import { colors, fonts, frost } from '../theme';
 
-const RESEND_SECONDS = 60;
-
-/** "+44 7700 900-123" → "+447700900123", or null if it isn't a full international number. */
-export function toE164(input: string): string | null {
-  const cleaned = input.replace(/[\s\-().]/g, '');
-  return /^\+[1-9]\d{7,14}$/.test(cleaned) ? cleaned : null;
-}
-
-/** Mobile number + SMS code sign-in. Supabase creates the account on first sign-in. */
+/** Google sign-in only (free through Supabase Auth). Supabase creates the account on first sign-in. */
 export function SignInScreen() {
-  const [phone, setPhone] = useState('');
-  const [sentTo, setSentTo] = useState<string | null>(null);
-  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cooldown, setCooldown] = useState(0);
 
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [cooldown]);
+  // Coming back from Google with an error (for example, the person pressed Cancel).
+  useEffect(() => setError(takeAuthRedirectError()), []);
 
-  const sendCode = async (number: string) => {
+  const start = async () => {
     setBusy(true);
     setError(null);
-    const error = await sendPhoneCode(number);
+    const err = await signInWithGoogle();
+    // On the web the page is leaving for Google; on phones the auth listener in App.tsx takes over.
+    if (err) setError(err);
     setBusy(false);
-    if (error) return setError(error);
-    setSentTo(number);
-    setCode('');
-    setCooldown(RESEND_SECONDS);
-  };
-
-  const submitPhone = () => {
-    const number = toE164(phone);
-    if (!number) return setError('Enter your full number with country code, e.g. +44 7700 900123');
-    sendCode(number);
-  };
-
-  const verify = async (token: string) => {
-    if (!sentTo || token.length !== 6) return;
-    setBusy(true);
-    setError(null);
-    const error = await verifyPhoneCode(sentTo, token);
-    setBusy(false);
-    // On success the auth listener in App.tsx switches to the camera.
-    if (error) setError(error);
   };
 
   return (
     <View style={styles.root}>
-    <Ambient />
-    <SafeAreaView style={styles.fill}>
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Ambient />
+      <SafeAreaView style={styles.fill}>
         <Header ink />
         <View style={styles.body}>
           <View style={styles.character}>
             <CharacterView mood="idle" size={170} />
           </View>
-
-          {sentTo ? (
-            <>
-              <Text style={styles.title}>Enter your code</Text>
-              <View style={styles.titleRule} />
-              <Text style={styles.subtitle}>We sent a 6-digit code to {sentTo}</Text>
-              <TextInput
-                style={[styles.input, styles.codeInput]}
-                value={code}
-                onChangeText={(t) => {
-                  const digits = t.replace(/\D/g, '').slice(0, 6);
-                  setCode(digits);
-                  if (digits.length === 6) verify(digits);
-                }}
-                keyboardType="number-pad"
-                textContentType="oneTimeCode"
-                autoComplete="sms-otp"
-                maxLength={6}
-                placeholder="••••••"
-                placeholderTextColor="rgba(244,246,251,0.45)"
-                autoFocus
-              />
-              <PrimaryButton label="Verify" onPress={() => verify(code)} busy={busy} disabled={code.length !== 6} />
-              <View style={styles.links}>
-                <Pressable disabled={cooldown > 0 || busy} onPress={() => sendCode(sentTo)}>
-                  <Text style={[styles.link, cooldown > 0 && styles.linkDisabled]}>
-                    {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend code'}
-                  </Text>
-                </Pressable>
-                <Pressable onPress={() => { setSentTo(null); setError(null); }}>
-                  <Text style={styles.link}>Change number</Text>
-                </Pressable>
-              </View>
-            </>
-          ) : (
-            <>
-              <Text style={styles.title}>Sign in with your phone</Text>
-              <View style={styles.titleRule} />
-              <Text style={styles.subtitle}>We'll text you a code. No password needed.</Text>
-              <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={setPhone}
-                onSubmitEditing={submitPhone}
-                keyboardType="phone-pad"
-                textContentType="telephoneNumber"
-                autoComplete="tel"
-                placeholder="+1 555 123 4567"
-                placeholderTextColor="rgba(244,246,251,0.45)"
-                autoFocus
-              />
-              <PrimaryButton label="Send code" onPress={submitPhone} busy={busy} disabled={phone.trim().length < 8} />
-            </>
-          )}
-
+          <Text style={styles.title}>Sign in to start scanning</Text>
+          <View style={styles.titleRule} />
+          <Text style={styles.subtitle}>Use your Google account. No password, no texts.</Text>
+          <GoogleButton onPress={start} busy={busy} />
+          <Text style={styles.fineprint}>We only get your name and email from Google.</Text>
           {error && <Text style={styles.error}>{error}</Text>}
         </View>
         <Footer ink />
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </SafeAreaView>
     </View>
   );
 }
 
-function PrimaryButton({ label, onPress, busy, disabled }: { label: string; onPress: () => void; busy: boolean; disabled?: boolean }) {
+function GoogleMark() {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 48 48" accessibilityElementsHidden importantForAccessibility="no">
+      <Path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <Path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <Path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <Path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </Svg>
+  );
+}
+
+function GoogleButton({ onPress, busy }: { onPress: () => void; busy: boolean }) {
   return (
     <Pressable
       onPress={onPress}
-      disabled={busy || disabled}
-      style={({ pressed }) => [styles.button, (disabled || busy) && styles.buttonDisabled, pressed && styles.buttonPressed]}
+      disabled={busy}
+      accessibilityRole="button"
+      accessibilityLabel="Continue with Google"
+      style={({ pressed }) => [styles.button, busy && styles.buttonDisabled, pressed && styles.buttonPressed]}
     >
-      {busy ? <ActivityIndicator color={colors.onInk} /> : <Text style={styles.buttonText}>{label}</Text>}
+      {busy ? (
+        <ActivityIndicator color={colors.onInk} />
+      ) : (
+        <View style={styles.buttonRow}>
+          <GoogleMark />
+          <Text style={styles.buttonText}>Continue with Google</Text>
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -181,6 +108,8 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.35 },
   buttonPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
+  buttonRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  fineprint: { fontFamily: fonts.semibold, fontSize: 13, color: colors.inkMuted, textAlign: 'center', marginTop: 2 },
   buttonText: { fontFamily: fonts.bold, fontSize: 18, color: colors.onInk },
   links: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 6, marginTop: 4 },
   link: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },

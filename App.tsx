@@ -14,7 +14,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { guestMode, signInAsGuest } from './src/lib/api';
-import { notify } from './src/lib/confirm';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { applyStrictMode } from './src/lib/display';
 import { recordScan } from './src/lib/history';
@@ -73,7 +72,7 @@ export default function App() {
   }, []);
 
   // Signing out (or deleting the account) returns to the sign-in screen.
-  // Testing builds start a guest session instead, so there is no phone check.
+  // Testing builds start a guest session instead, so there is no Google sign-in step.
   const [guestFailed, setGuestFailed] = useState(false);
   useEffect(() => {
     if (session === null && isConfigured) {
@@ -132,8 +131,6 @@ export default function App() {
 
   const tagline = isConfigured ? undefined : DEMO_TAGLINE;
   const closeSheet = () => setSheet(null);
-  // Phase 3 adds the change-phone flow; until then the row explains it's coming.
-  const changePhone = () => notify('Change phone number', 'Changing your number is coming in the next update.');
   // Strict mode is applied on the device to the verdict shown; the server result is kept as is.
   const shownState: ScanState | undefined =
     scan?.state.status === 'done' ? { ...scan.state, result: applyStrictMode(scan.state.result, prefs.strict) } : scan?.state;
@@ -160,7 +157,7 @@ export default function App() {
           ))}
         {ready && (
           <>
-            <ProfileScreen visible={sheet === 'profile'} onClose={closeSheet} phone={session?.user.phone} onChangePhone={changePhone} />
+            <ProfileScreen visible={sheet === 'profile'} onClose={closeSheet} email={session?.user.email} />
             <MenuScreen visible={sheet === 'menu'} onClose={closeSheet} />
           </>
         )}
