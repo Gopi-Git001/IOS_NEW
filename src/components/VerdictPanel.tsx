@@ -1,10 +1,11 @@
 // The result sheet: a frosted glass card that springs up over the frozen photo, set like a
 // Nutrition Facts panel ("Verdict Facts"). The cube perches on its top edge.
 import * as Haptics from 'expo-haptics';
+import { Info } from 'lucide-react-native';
 import { type ReactNode, useEffect, useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ingredientNames } from '../lib/display';
-import { addedAmount, type Kind } from '../lib/glossary';
+import type { Kind } from '../lib/glossary';
 import { getPrefs } from '../lib/prefs';
 import { colors, fonts, frost } from '../theme';
 import type { ScanResult, Verdict } from '../types';
@@ -58,15 +59,13 @@ export function ResultSheet({ children, action, footer, maxHeight, bottom, onHei
 const Rule = ({ h }: { h: 10 | 5 }) => <View style={[styles.rule, h === 10 ? styles.rule10 : styles.rule5]} />;
 
 /**
- * "Verdict Facts": the verdict word and added grams where Calories sit on a real panel,
- * the reason in italics, then every sugar and sweetener as an indented, tappable row.
+ * "Verdict Facts": the verdict word where Calories sit on a real panel, the reason in italics,
+ * then every sugar and sweetener as an indented row with an (i) that opens why it counts.
+ * No gram amounts: an ingredient list doesn't say how much sugar was added.
  */
 export function VerdictContent({ result, listsPending, onPick }: { result: ScanResult; listsPending?: boolean; onPick: (p: Pick) => void }) {
   const color = verdictColor[result.verdict];
   const sections = SECTIONS.map((s) => ({ ...s, items: ingredientNames(result[s.key]) })).filter((s) => s.items.length > 0);
-  const added = addedAmount(result.addedSugars);
-  const noAdded = !listsPending && ingredientNames(result.addedSugars).length === 0;
-  const amount = added ?? (noAdded ? { grams: '0 g', amount: '' } : null);
 
   const pick = (name: string, kind: Kind) => {
     if (getPrefs().haptics) Haptics.selectionAsync().catch(() => {});
@@ -77,23 +76,10 @@ export function VerdictContent({ result, listsPending, onPick }: { result: ScanR
     <>
       <Text style={styles.title}>Verdict Facts</Text>
       <Rule h={10} />
-      <View style={styles.amtRow}>
-        <Text style={styles.amt}>Your label</Text>
-        <Text style={styles.amt}>per serving</Text>
-      </View>
-      <Rule h={5} />
-
-      <View style={styles.verdictRow} accessible accessibilityRole="header" accessibilityLabel={`${verdictWord[result.verdict]}. ${result.headline}${added ? `. ${added.grams} added sugar, ${added.amount}` : ''}`}>
+      <View style={styles.verdictRow} accessible accessibilityRole="header" accessibilityLabel={`${verdictWord[result.verdict]}. ${result.headline}`}>
         <Text style={[styles.verdict, { color }]} numberOfLines={1} adjustsFontSizeToFit>
           {verdictWord[result.verdict]}
         </Text>
-        {amount && (
-          <View style={styles.grams}>
-            <Text style={styles.gramsBig}>{amount.grams}</Text>
-            <Text style={styles.gramsSmall}>added sugar</Text>
-            {amount.amount !== '' && <Text style={styles.gramsSmall}>{amount.amount}</Text>}
-          </View>
-        )}
       </View>
       <Text style={styles.why}>{result.headline}</Text>
       {result.note && <Text style={styles.note}>{result.note}</Text>}
@@ -110,12 +96,17 @@ export function VerdictContent({ result, listsPending, onPick }: { result: ScanR
               key={item}
               onPress={() => pick(item, s.kind)}
               accessibilityRole="button"
-              accessibilityLabel={`${item}, what is it?`}
+              accessibilityLabel={`${item}. Why it counts`}
               style={({ pressed }) => [styles.row, styles.rowIn, pressed && styles.rowPressed]}
             >
-              <Text style={[styles.alias, { color: kindColor[s.kind] }]} numberOfLines={2}>
-                {item}
-              </Text>
+              <View style={styles.nameWrap}>
+                <Text style={[styles.alias, { color: kindColor[s.kind] }]} numberOfLines={2}>
+                  {item}
+                </Text>
+                <View style={styles.info}>
+                  <Info size={17} color={colors.ink} strokeWidth={2.25} />
+                </View>
+              </View>
               <View style={styles.tag}>
                 <Text style={styles.tagText}>{kindTag[s.kind]}</Text>
               </View>
@@ -124,7 +115,7 @@ export function VerdictContent({ result, listsPending, onPick }: { result: ScanR
         </View>
       ))}
 
-      {sections.length > 0 && <Text style={styles.hint}>Tap a name to see what it really is.</Text>}
+      {sections.length > 0 && <Text style={styles.hint}>Tap ⓘ to see why each one counts.</Text>}
 
       {/* Jev's verdict is in; Claude is still listing the ingredients. */}
       {listsPending && (
@@ -154,13 +145,8 @@ const styles = StyleSheet.create({
   rule: { backgroundColor: colors.rule },
   rule10: { height: 2, borderRadius: 1, marginTop: 8, marginBottom: 6 },
   rule5: { height: 1, marginVertical: 6 },
-  amtRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  amt: { fontFamily: fonts.semibold, fontSize: 12, color: colors.ink },
   verdictRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 4 },
   verdict: { flexShrink: 1, fontFamily: fonts.black, fontSize: 72, lineHeight: 72, letterSpacing: -3.2, includeFontPadding: false },
-  grams: { alignItems: 'flex-end', paddingBottom: 6 },
-  gramsBig: { fontFamily: fonts.black, fontSize: 32, lineHeight: 34, letterSpacing: -1, color: colors.ink },
-  gramsSmall: { fontFamily: fonts.semibold, fontSize: 11.5, lineHeight: 15, color: colors.inkMuted, textAlign: 'right' },
   why: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 24, color: colors.ink, marginTop: 8, marginBottom: 2 },
   note: { fontFamily: fonts.serif, fontSize: 15, lineHeight: 21, color: colors.inkMuted, marginTop: 4 },
   row: {
@@ -178,7 +164,9 @@ const styles = StyleSheet.create({
   lastSection: { borderBottomWidth: 2, borderBottomColor: colors.rule },
   rowHead: { fontFamily: fonts.extrabold, fontSize: 15, color: colors.ink },
   rowCount: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink },
-  alias: { flex: 1, fontFamily: fonts.bold, fontSize: 15, lineHeight: 20 },
+  nameWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 8 },
+  alias: { flexShrink: 1, fontFamily: fonts.bold, fontSize: 15, lineHeight: 20 },
+  info: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.10)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' },
   tag: { borderWidth: 1, borderColor: colors.rule, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1 },
   tagText: { fontFamily: fonts.bold, fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.ink },
   hint: { fontFamily: fonts.serif, fontSize: 15, color: colors.inkMuted, marginTop: 10 },

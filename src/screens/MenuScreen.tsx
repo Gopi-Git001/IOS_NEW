@@ -40,6 +40,17 @@ function MenuList({ open }: { open: (p: Page) => void }) {
 
   return (
     <ScrollView contentContainerStyle={listStyles.content}>
+      <Group title="What the verdicts mean">
+        {definitions.map((d, i) => (
+          <View key={d.verdict} style={[styles.defRow, i > 0 && styles.defDivider]} accessible accessibilityLabel={`${d.verdict}: ${d.text}`}>
+            <View style={[listStyles.badge, styles.defBadge, { backgroundColor: `${verdictColor[d.verdict]}1F` }]}>
+              <Text style={[listStyles.badgeText, { color: verdictColor[d.verdict] }]}>{d.verdict}</Text>
+            </View>
+            <Text style={styles.defText}>{d.text}</Text>
+          </View>
+        ))}
+      </Group>
+
       <Group title="History">
         <Row icon={History} label="Scan history" value={`${history.length}`} onPress={() => open('history')} chevron />
         <Row icon={Trash2} label="Clear history" onPress={confirmClearHistory} />
@@ -126,6 +137,13 @@ function formatDate(iso: string) {
 
 // ---------- How verdicts work ----------
 
+/** One-line definitions for the menu; "How verdicts work" has the full rules. There is no GOOD tier (Rules v2). */
+const definitions: { verdict: keyof typeof verdictColor; text: string }[] = [
+  { verdict: 'CLEAN', text: 'No added sugar or sweeteners. Only sugars that are naturally in the food.' },
+  { verdict: 'BAD', text: 'No added sugar, but a gentler sweetener such as stevia, monk fruit or a sugar alcohol.' },
+  { verdict: 'UGLY', text: 'Any added sugar, including honey and syrups, or an artificial sweetener.' },
+];
+
 const rules: { verdict: keyof typeof verdictColor; text: string }[] = [
   { verdict: 'CLEAN', text: 'No added sugar and no sweeteners. Sugars that are naturally in the food, like the lactose in milk or the fructose in fruit, are fine.' },
   { verdict: 'BAD', text: 'No added sugar, but a gentler sweetener: stevia, monk fruit, allulose, or a sugar alcohol such as sorbitol or maltitol.' },
@@ -149,7 +167,7 @@ function Methodology() {
       ))}
       <Text style={styles.paragraph}>
         There is no gram cutoff. The 2025–2030 Dietary Guidelines say no amount of added sugar or sweetener is recommended, so any added
-        sugar makes a product UGLY. The grams are shown so you can see how much.
+        sugar makes a product UGLY. Ingredient lists don't say how many grams were added, so the verdict goes by what is in the list.
       </Text>
       <Text style={styles.paragraph}>
         With Strict mode off, a product whose only sweetener is stevia, monk fruit or a similar plant sweetener shows as CLEAN.
@@ -180,6 +198,10 @@ const styles = StyleSheet.create({
   historyDate: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 16, color: colors.inkMuted, textAlign: 'right' },
   empty: { fontFamily: fonts.regular, fontSize: 15, color: colors.inkMuted, textAlign: 'center', marginTop: 48 },
   paragraph: { fontFamily: fonts.serif, fontSize: 17, lineHeight: 24, color: colors.ink, marginTop: 16 },
+  defRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
+  defDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.rule },
+  defBadge: { width: 62, alignItems: 'center', marginTop: 1 },
+  defText: { flex: 1, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21, color: colors.ink },
   ruleCard: { backgroundColor: colors.paperRaised, ...frost(24), borderRadius: 20, padding: 16, marginTop: 12, gap: 8 },
   ruleText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.ink },
   muted: { fontFamily: fonts.regular, fontSize: 13, color: colors.inkFaint, marginTop: 24 },
