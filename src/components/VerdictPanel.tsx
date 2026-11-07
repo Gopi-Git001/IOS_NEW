@@ -104,7 +104,7 @@ export function VerdictContent({ result, listsPending, onPick }: { result: ScanR
                   {item}
                 </Text>
                 <View style={styles.info}>
-                  <Info size={17} color={colors.ink} strokeWidth={2.25} />
+                  <Info size={13} color={colors.inkMuted} strokeWidth={2} />
                 </View>
               </View>
               <View style={styles.tag}>
@@ -114,8 +114,6 @@ export function VerdictContent({ result, listsPending, onPick }: { result: ScanR
           ))}
         </View>
       ))}
-
-      {sections.length > 0 && <Text style={styles.hint}>Tap ⓘ to see why each one counts.</Text>}
 
       {/* Jev's verdict is in; Claude is still listing the ingredients. */}
       {listsPending && (
@@ -164,12 +162,11 @@ const styles = StyleSheet.create({
   lastSection: { borderBottomWidth: 2, borderBottomColor: colors.rule },
   rowHead: { fontFamily: fonts.extrabold, fontSize: 15, color: colors.ink },
   rowCount: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink },
-  nameWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 8 },
+  nameWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5, paddingRight: 8 },
   alias: { flexShrink: 1, fontFamily: fonts.bold, fontSize: 15, lineHeight: 20 },
-  info: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.10)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' },
+  info: { opacity: 0.8, marginTop: 1 },
   tag: { borderWidth: 1, borderColor: colors.rule, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1 },
   tagText: { fontFamily: fonts.bold, fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.ink },
-  hint: { fontFamily: fonts.serif, fontSize: 15, color: colors.inkMuted, marginTop: 10 },
   pending: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 },
   pendingText: { fontFamily: fonts.serif, fontSize: 16, color: colors.inkMuted },
   button: {
