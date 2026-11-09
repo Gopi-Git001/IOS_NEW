@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { BookOpen, Feather, FileText, History, Lock, LogOut, Mail, ShieldCheck, Star, Trash2, Vibrate, Globe } from 'lucide-react-native';
+import { BookOpen, Feather, FileText, History, Lock, Mail, ShieldCheck, Star, Trash2, Vibrate, Globe } from 'lucide-react-native';
 import { useState } from 'react';
 import { FlatList, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Group, listStyles, openLink, Row, Sheet } from '../components/ListUI';
@@ -7,8 +7,6 @@ import { verdictColor } from '../components/VerdictPanel';
 import { links } from '../config';
 import { applyStrictMode, ingredientSummary } from '../lib/display';
 import { confirmAction } from '../lib/confirm';
-import { isConfigured } from '../lib/supabase';
-import { confirmSignOut } from './ProfileScreen';
 import { clearHistory, useHistory } from '../lib/history';
 import { type Prefs, setPref, usePrefs } from '../lib/prefs';
 import { brand, colors, fonts, frost } from '../theme';
@@ -80,12 +78,6 @@ function MenuList({ open }: { open: (p: Page) => void }) {
         <Row icon={FileText} label="Terms" onPress={() => openLink(links.terms)} chevron />
         <Row icon={Star} label={`Rate ${brand.name}`} onPress={() => openLink(Platform.OS === 'ios' ? links.appStore : links.playStore)} chevron />
       </Group>
-
-      {isConfigured && (
-        <Group title="Account">
-          <Row icon={LogOut} label="Sign out" onPress={confirmSignOut} />
-        </Group>
-      )}
 
       <Text style={listStyles.version}>{brand.name} {Constants.expoConfig?.version ?? ''} · {brand.tagline}</Text>
     </ScrollView>

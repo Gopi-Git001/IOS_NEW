@@ -3,14 +3,16 @@ import * as WebBrowser from 'expo-web-browser';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import type { JevVerdict, ScanResult } from '../types';
+import { type Photo, type Rect, toPixels } from './photo';
+import { noteScan, scanTimingId } from './scanTiming';
 import { supabase } from './supabase';
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
-async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string }> {
+async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
   if (error instanceof FunctionsHttpError) {
     try {
       const body = await error.context.clone().json();
-      if (typeof body?.error === 'string') return { message: body.error, code: typeof body.code === 'string' ? body.code : undefined };
+      if (typeof body?.error === 'string') return { message: body.error, code: typeof body.code === 'string' ? body.code : undefined, timing: body.timing };
     } catch {}
   }
   return { message: fallback };
@@ -23,38 +25,65 @@ async function messageFrom(error: unknown, fallback: string) {
 /** Thrown by readLabel when the photo is too blurry, dark or cut off to read. */
 export class UnreadableError extends Error {}
 
-const MAX_SIDE = 1280;
+/** Jev rejects any side over 1568 px or under 280 px. */
+const MAX_SIDE = 1568;
+const MIN_SIDE = 280;
+const UPLOAD_QUALITY = 0.85;
 
 /**
- * Shrinks the photo once so its LONGEST side is 1280 px (Jev rejects any side over 1568 px, and
- * portrait phone photos resized by width alone came out 1280x1707) and returns it as base64 JPEG.
+ * Crops the photo to the guide box (when known) so the label text gets the pixels, shrinks it so its
+ * LONGEST side is at most 1568 px (portrait photos resized by width alone come out too tall), and
+ * returns it as base64 JPEG. The full photo stays on screen; only this copy is uploaded.
  */
-export async function preparePhoto(photoUri: string): Promise<string> {
-  const original = await ImageManipulator.manipulate(photoUri).renderAsync();
-  const portrait = original.height > original.width;
-  const longest = Math.max(original.width, original.height);
-  const ctx = ImageManipulator.manipulate(photoUri);
-  if (longest > MAX_SIDE) ctx.resize(portrait ? { height: MAX_SIDE } : { width: MAX_SIDE });
+export async function preparePhoto(photo: Photo): Promise<string> {
+  try {
+    return await encodeForUpload(photo, photo.crop);
+  } catch (e) {
+    if (!photo.crop) throw e;
+    return encodeForUpload(photo, undefined);
+  }
+}
+
+async function encodeForUpload({ uri, width, height }: Photo, crop: Rect | undefined): Promise<string> {
+  if (!width || !height) ({ width, height } = await ImageManipulator.manipulate(uri).renderAsync());
+  const ctx = ImageManipulator.manipulate(uri);
+  const rect = crop && toPixels(crop, width, height);
+  if (rect && Math.min(rect.width, rect.height) >= MIN_SIDE) {
+    ctx.crop(rect);
+    ({ width, height } = rect);
+  }
+  if (Math.max(width, height) > MAX_SIDE) ctx.resize(height > width ? { height: MAX_SIDE } : { width: MAX_SIDE });
   const rendered = await ctx.renderAsync();
-  const { base64 } = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.7, base64: true });
+  const { base64 } = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: UPLOAD_QUALITY, base64: true });
   if (!base64) throw new Error('Could not prepare the photo.');
   return base64;
 }
 
 /** Fast path: Jev makes the CLEAN / BAD / UGLY call straight from the photo. Never throws. */
 export async function quickVerdict(image: string): Promise<JevVerdict> {
-  const { data, error } = await supabase.functions.invoke<{ jev: JevVerdict }>('quickgob-quick-verdict', { body: { image } });
-  if (error || !data?.jev) return { status: 'unavailable', reason: await messageFrom(error, 'quick-verdict failed') };
+  const { data, error } = await supabase.functions.invoke<{ jev: JevVerdict; timing?: unknown }>('quickgob-quick-verdict', {
+    body: { image, scan_id: scanTimingId() },
+  });
+  if (error || !data?.jev) {
+    const e = await errorFrom(error, 'quick-verdict failed');
+    noteScan({ quick_verdict_server: e.timing, quick_verdict_error: e.message });
+    return { status: 'unavailable', reason: e.message };
+  }
+  noteScan({ quick_verdict_server: data.timing });
   return data.jev;
 }
 
 /** Detail path: Claude lists the sugars, and the rules give a backstop verdict. */
 export async function readLabel(image: string): Promise<ScanResult> {
-  const { data, error } = await supabase.functions.invoke<{ result: ScanResult }>('quickgob-scan-label', { body: { image } });
+  const { data, error } = await supabase.functions.invoke<{ result: ScanResult; timing?: unknown }>('quickgob-scan-label', {
+    body: { image, scan_id: scanTimingId() },
+  });
   if (error || !data?.result) {
     const e = await errorFrom(error, "Couldn't read the label. Try again.");
+    noteScan({ scan_label_server: e.timing, scan_label_error: e.code ?? e.message });
     throw e.code === 'unreadable' ? new UnreadableError(e.message) : new Error(e.message);
   }
+  noteScan({ scan_label_server: data.timing });
   return data.result;
 }
 

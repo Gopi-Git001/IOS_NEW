@@ -45,3 +45,6 @@ supabase/functions/.env
 .env
 supabase/.env
 dist-web/
+
+# Scan timing traces (metro.config.js)
+.scan-timing/

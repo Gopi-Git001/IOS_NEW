@@ -40,7 +40,7 @@ sugarcane character reacts.
 - Jev's verdict wins. The rules verdict is used only when Jev is unavailable or its confidence is
   under 0.45 (`MIN_CONFIDENCE` in `_shared/jev.ts`).
 - Images to Jev need the `TypeSafe-Danger-Zone-Images: true` header and 280–1568 px per side;
-  the app sends a 1280 px-wide JPEG.
+  the app sends a JPEG cropped to the guide box, longest side 1568 px.
 
 ## Rules
 - Signup: Google sign-in (Supabase Auth, PKCE). Guest sign-in only for testing builds. Include "Delete account".

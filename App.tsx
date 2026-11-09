@@ -18,7 +18,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { applyStrictMode } from './src/lib/display';
 import { recordScan } from './src/lib/history';
 import { getPrefs, usePrefs } from './src/lib/prefs';
+import type { Photo } from './src/lib/photo';
 import { runScan } from './src/lib/scan';
+import { finishScanTiming, markScanPainted, noteScan } from './src/lib/scanTiming';
 import { isConfigured, supabase } from './src/lib/supabase';
 import { placeholderResults } from './src/placeholderResults';
 import { CameraScreen } from './src/screens/CameraScreen';
@@ -88,7 +90,8 @@ export default function App() {
     if (userId) syncProfile();
   }, [userId]);
 
-  const handleCapture = async (photoUri: string) => {
+  const handleCapture = async (photo: Photo) => {
+    const photoUri = photo.uri;
     const id = ++scanId.current;
     setScan({ photoUri, state: { status: 'reading' } });
     let buzzed = false;
@@ -97,7 +100,14 @@ export default function App() {
     const show = (state: ScanState) => {
       if (id !== scanId.current) return;
       setScan({ photoUri, state });
+      if (state.status === 'error') {
+        noteScan({ error: state.message });
+        markScanPainted('error_on_screen');
+      }
       if (state.status !== 'done') return;
+      noteScan({ shown_verdict: state.result.verdict });
+      markScanPainted('verdict_on_screen');
+      if (!state.listsPending) markScanPainted('lists_on_screen');
       const { strict, haptics } = getPrefs();
       // Buzz when the first verdict appears; save to history once the ingredient lists are in.
       if (!buzzed && haptics) Haptics.notificationAsync(verdictHaptic[applyStrictMode(state.result, strict).verdict]).catch(() => {});
@@ -114,7 +124,7 @@ export default function App() {
       }
       // Jev's verdict shows first; the ingredient lists fill in when Claude finishes.
       let shown = false;
-      await runScan(photoUri, (u) => {
+      await runScan(photo, (u) => {
         shown = true;
         show(u);
       });
@@ -122,6 +132,7 @@ export default function App() {
     } catch (e) {
       show({ status: 'error', message: e instanceof Error ? e.message : "Couldn't read the label." });
     }
+    if (id === scanId.current) finishScanTiming();
   };
 
   const handleScanAnother = () => {

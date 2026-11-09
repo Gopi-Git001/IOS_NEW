@@ -1,4 +1,4 @@
-// POST { image: <base64 JPEG> }  ->  { result: ScanResult } | { error: string, code?: string }
+// POST { image: <base64 JPEG>, scan_id?: string }  ->  { result: ScanResult, timing } | { error: string, code?: string, timing }
 // Signed-in users only. Stage 1 (extraction): Claude vision copies the label literally, with no
 // sorting and no verdict. Stages 2-4 (normalize, classify, policy) run in _shared/rules.ts.
 // Runs alongside quick-verdict (Jev), which makes the actual CLEAN / BAD / UGLY call.
@@ -7,6 +7,7 @@ import { env } from '../_shared/env.ts';
 import { allow, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
 import { decide, type LiteralLabel } from '../_shared/rules.ts';
+import { imageKb, requestTimer, timed } from '../_shared/timing.ts';
 
 const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY') });
 
@@ -51,28 +52,36 @@ const SYSTEM = `You transcribe photos of food and drink labels for a sugar-check
 
 export const UNREADABLE = "The photo isn't clear enough to read. Hold steady, move closer to the ingredient list, and try again.";
 
-const json = (body: unknown, status = 200) => Response.json(body, { status });
-
 export default {
-  fetch: withSupabase({ auth: 'user' }, async (req, ctx) => {
+  fetch: timed('scan-label', withSupabase({ auth: 'user' }, async (req, ctx) => {
+    const timer = requestTimer();
+    timer.mark('auth');
+    const json = (body: Record<string, unknown>, status = 200) => Response.json({ ...body, timing: timer.snapshot() }, { status });
     if (req.method !== 'POST') return json({ error: 'Use POST' }, 405);
 
     let image: unknown;
+    let scanId: unknown;
     try {
-      ({ image } = await req.json());
+      ({ image, scan_id: scanId } = await req.json());
     } catch {
       return json({ error: 'Body must be JSON' }, 400);
     }
+    timer.mark('body');
+    if (typeof scanId === 'string') timer.set({ scan_id: scanId.slice(0, 32) });
     if (!isJpegBase64(image)) {
       return json({ error: 'Send a JPEG photo as base64 in "image"' }, 400);
     }
+    timer.set({ image_kb: imageKb(image) });
 
     // Each scan calls a paid model, so cap scans per account per day (SCAN_DAILY_LIMIT secret).
     const userId = ctx.userClaims?.id;
     if (!userId) return json({ error: 'Not signed in' }, 401);
-    if (!(await allow(ctx.supabaseAdmin, `label:${userId}`, 86_400, intSetting('SCAN_DAILY_LIMIT', 100)))) return tooMany();
+    const allowed = await allow(ctx.supabaseAdmin, `label:${userId}`, 86_400, intSetting('SCAN_DAILY_LIMIT', 100));
+    timer.mark('checks');
+    if (!allowed) return tooMany();
 
     let reading: LiteralLabel;
+    timer.mark('claude_start');
     try {
       const response = await anthropic.beta.messages.create({
         model: CLAUDE_MODEL,
@@ -92,12 +101,22 @@ export default {
           },
         ],
       });
+      timer.mark('claude_end');
+      timer.set({
+        claude_model: response.model,
+        claude_in_tokens: response.usage?.input_tokens,
+        claude_out_tokens: response.usage?.output_tokens,
+        claude_stop: response.stop_reason,
+      });
 
       if (response.stop_reason === 'refusal') return json({ error: "Couldn't read this photo. Try again." }, 422);
       const text = response.content.find((b) => b.type === 'text');
       if (!text || text.type !== 'text') throw new Error(`No text block (stop_reason ${response.stop_reason})`);
       reading = JSON.parse(text.text);
+      timer.set({ is_food_label: reading.is_food_label, is_readable: reading.is_readable });
     } catch (err) {
+      timer.mark('claude_end');
+      timer.set({ claude_error: err instanceof Error ? err.message.slice(0, 200) : String(err) });
       console.error('label reading failed', err);
       return json({ error: 'The label reader is unavailable. Try again in a moment.' }, 502);
     }
@@ -112,8 +131,9 @@ export default {
     }
 
     const decision = decide(reading);
+    timer.mark('rules');
     const ev = decision.evaluation;
-    console.log('label read', { status: ev.status, verdict: ev.verdict, rule: ev.ruleId, policy: ev.policyVersion, unresolved: ev.unresolved.length });
+    timer.set({ rules_status: ev.status, rules_verdict: ev.verdict, rule: ev.ruleId, policy: ev.policyVersion, unresolved: ev.unresolved.length });
 
     if (decision.status === 'unresolved') {
       // Retake when a better photo would help; otherwise report it plainly (Jev's call can still stand).
@@ -121,5 +141,5 @@ export default {
     }
     const result = decision.result;
     return json({ result });
-  }),
+  })),
 };
