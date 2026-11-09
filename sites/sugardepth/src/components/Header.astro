@@ -12,7 +12,7 @@ const isCurrent = (href: string) => (href === '/ingredients' ? path.startsWith('
 ---
 <header class="site-header">
   <div class="wrap">
-    <a class="wordmark" href="/" aria-label="Sugar Depth home">Sugar Depth</a>
+    <a class="wordmark" href="/" aria-label="Sugar Depth home"><span>Sugar Depth</span></a>
     <nav class="nav" aria-label="Main">
       {links.map((l) => <a href={l.href} aria-current={isCurrent(l.href) ? 'page' : undefined}>{l.label}</a>)}
     </nav>

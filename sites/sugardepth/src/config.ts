@@ -4,10 +4,11 @@
 export const SITE_URL = 'https://sugardepth.com';
 
 /**
- * Where "Scan a label" buttons go. Today this is the existing Expo web build.
- * TODO: switch to https://app.sugardepth.com once that domain points at the scanner.
+ * Where "Scan a label" buttons go: the Expo web build on its own subdomain
+ * (Vercel project quickgob-web). Google sign-in there needs app.sugardepth.com in the
+ * Supabase Auth redirect list and the Google OAuth client before this ships.
  */
-export const APP_URL = 'https://quickgob-web.vercel.app';
+export const APP_URL = 'https://app.sugardepth.com';
 
 export const SITE_NAME = 'Sugar Depth';
 export const TAGLINE = 'Read the fine print.';

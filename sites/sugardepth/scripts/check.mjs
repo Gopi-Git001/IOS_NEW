@@ -34,7 +34,7 @@ for (const file of pages) {
     if (!ok) errors.push(`${rel}: broken internal link ${p}`);
     if (p.length > 1 && p.endsWith('/')) errors.push(`${rel}: internal link with trailing slash ${p} (site uses no trailing slashes)`);
   }
-  if (/<script(?![^>]*application\/ld\+json)[^>]*>/.test(html)) errors.push(`${rel}: ships a non-JSON-LD <script>`);
+  if (/<script(?![^>]*(?:application\/ld\+json|data-motion))[^>]*>/.test(html)) errors.push(`${rel}: ships a non-JSON-LD <script> (only the data-motion reduced-motion helper is allowed)`);
 }
 for (const f of ['robots.txt', 'sitemap-index.xml', 'og/default.png', 'favicon.svg', 'how-it-works/index.html', 'privacy/index.html', 'terms/index.html']) if (!existsSync(join(dist, f))) errors.push(`missing ${f}`);
 
