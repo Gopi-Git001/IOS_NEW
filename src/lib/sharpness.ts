@@ -24,7 +24,9 @@ export function frameChange(a: ArrayLike<number>, b: ArrayLike<number>): number 
 }
 
 export function lockAutoCapture(state: AutoCaptureState): AutoCaptureState {
-  return { locked: true, reference: state.previous, count: 0, moved: 0 };
+  // An automatic shot already moved `previous` into `reference`. capture() locks again;
+  // preserve that scene, while a manual shot with a newer sample takes the newer scene.
+  return { locked: true, reference: state.previous ?? state.reference, count: 0, moved: 0 };
 }
 
 /** Pure gate: 5 sharp, stable frames spanning >=560ms; no catch-up after background gaps. */

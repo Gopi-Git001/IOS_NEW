@@ -63,6 +63,41 @@ test('manual capture without samples stays locked until a later scene change', (
   assert.equal(step(state, 140).fire, false);
 });
 
+test('automatic shot then capture lock preserves its scene and re-arms for an already changed label', () => {
+  let state = initialAutoCapture();
+  for (const at of [0, 140, 280, 420, 560]) state = step(state, at).state;
+  const shot = step(state, 700);
+  assert.equal(shot.fire, true);
+  state = lockAutoCapture(shot.state); // LabelCamera.capture() locks again.
+  assert.deepEqual(state.reference, gray(100));
+  state = step(state, 2000, 200, 150).state; // Different label already visible on return.
+  assert.equal(state.locked, true);
+  state = step(state, 2140, 200, 150).state;
+  assert.equal(state.locked, false);
+  for (const at of [2280, 2420, 2560, 2700]) {
+    const next = step(state, at, 200, 150);
+    assert.equal(next.fire, false);
+    state = next.state;
+  }
+  assert.equal(step(state, 2840, 200, 150).fire, true);
+});
+
+test('manual shot uses the latest sampled scene and repeated locking keeps it', () => {
+  // A manual shot can happen while still locked from an earlier automatic shot.
+  let state = lockAutoCapture({ ...initialAutoCapture(), previous: gray(50) });
+  state = step(state, 0, 200, 100, false).state;
+  state = lockAutoCapture(state); // Manual shutter must use this shot's scene, not the old one.
+  state = lockAutoCapture(state);
+  assert.deepEqual(state.reference, gray(100));
+  for (const at of [2000, 2140]) {
+    state = step(state, at).state;
+    assert.equal(state.locked, true); // No repeat of the manually captured scene.
+  }
+  state = step(state, 2280, 200, 150).state;
+  state = step(state, 2420, 200, 150).state;
+  assert.equal(state.locked, false);
+});
+
 test('nonfinite sharpness and empty/mismatched frames cannot trigger capture', () => {
   assert.equal(step(initialAutoCapture(), 0, Infinity).fire, false);
   assert.equal(frameChange([], []), Infinity);

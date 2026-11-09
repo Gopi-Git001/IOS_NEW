@@ -8,14 +8,14 @@ No deployments, remote writes, PRs or pushes are part of this change.
 
 - `quickgob-scan` accepts `{image, scan_id}` and emits NDJSON `jev`, then `reading`.
 - The reader starts alongside Jev. A negative Jev outcome never cancels the reader.
-- The new function debits `label:<account>` once. This is the existing reader's quota, so mixed old/new clients share the same daily 100-reading allowance.
-- Legacy `quick-verdict` still has its independent quota, unchanged. After exhausting the shared reader quota, a mixed-version client can obtain Jev-only results until that legacy quota is exhausted; strict cross-version accounting needs a separate limiter migration.
+- The new function debits both legacy allowances once per scan: `label:<account>`, then `verdict:<account>`. Both must allow before either model starts, so mixed old/new clients share the same daily 100-call allowance for each model without a migration.
+- The limiter increments denied hits. Checks are sequential and stop after the first denial, preserving verdict quota when the historically more-used label quota is exhausted. If the second check denies or fails, one label reservation is still consumed; fully atomic reservations would require a different RPC.
 - Old `quickgob-quick-verdict` and `quickgob-scan-label` keep their response, guard and quota behavior. The latter delegates its identical model/rules logic to `_shared/reader.ts`.
 - Client fallback is only on HTTP 404. Network/stream errors never retry a potentially paid scan.
 - `{action:"warm"}` and `{action:"timing",trace:{...}}` require auth but skip validation, rate-limit and model calls.
 - Technical traces are allowlisted both before sending and before logging. The single `scan_timing_client` line excludes identifiers, IPs, photos, free text, verdicts and model output.
 - Auto-capture defaults on, web only: 240px-wide guide samples every 140ms, sharpness >=80 (manual minimum 20), mean frame change <=3, five qualifying samples spanning >=560ms.
-- A shot locks auto-capture. Only returning to the camera plus two frames differing from the captured scene by >18 luma can re-arm it. A fresh stable hold is then required.
+- A shot locks auto-capture. The repeated lock inside `capture()` preserves the automatic shot's scene reference; a manual shot uses its latest sample instead. Only returning to the camera plus two frames differing from the captured scene by >18 luma can re-arm it, even when the new label is already visible on return. A fresh stable hold is then required.
 - Hidden tabs, open sheets and capture/scan work suspend sampling. Manual shutter remains available; native remains manual-only.
 
 ## Deployment input
@@ -41,10 +41,10 @@ The legacy reader only needs redeployment if adopting the extracted source there
 
 ## Verification
 
-Local gates passed: `npm run test:rules` (153 tests), `npx tsc --noEmit`, `npm run build:web`.
+Local gates passed: `npm run test:rules` (159 tests), `npx tsc --noEmit`, `npm run build:web`.
 Deno 2.9.8 passed all five entrypoints using `deno check --config supabase/functions/<name>/deno.json --lock supabase/functions/<name>/deno.lock --frozen-lockfile supabase/functions/<name>/index.ts`.
 The existing root lock fails frozen validation due to stale workspace metadata and a missing direct Supabase specifier; it was not rewritten.
-Unit coverage includes chunked UTF-8, immediate Jev delivery, error outcomes, whole-body fallback, conservative capture/re-arm and trace privacy.
+Unit coverage includes chunked UTF-8, immediate Jev delivery, error outcomes, whole-body fallback, capture/re-arm including automatic and manual repeated locks, mixed-client model quotas, denied-hit accounting and trace privacy.
 
 Still needs an approved deployed test: gateway CORS/JWT behavior, actual incremental delivery, warm-up effectiveness, quota sharing, and receipt of the production timing line.
 Still needs real phones: focus thresholds, scene-change sensitivity, hidden-tab behavior, manual override, Android still capture and iOS Safari fallback.

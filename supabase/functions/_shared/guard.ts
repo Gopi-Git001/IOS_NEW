@@ -32,5 +32,14 @@ export async function allow(admin: SupabaseClient, key: string, windowSeconds: n
   return data === true;
 }
 
+/** One reservation per model, shared with legacy clients; no paid work unless both allow. */
+export async function allowScan(admin: SupabaseClient, userId: string, limit: number): Promise<boolean> {
+  // The RPC increments even on denial. Reader-first avoids spending verdict quota when
+  // the historically more-used reader quota is exhausted; never check both in parallel.
+  if (!await allow(admin, `label:${userId}`, 86_400, limit)) return false;
+  // Separate RPCs cannot undo the reader reservation if this one denies (or fails closed).
+  return allow(admin, `verdict:${userId}`, 86_400, limit);
+}
+
 export const tooMany = () =>
   Response.json({ error: "You've hit today's scan limit. Try again tomorrow.", code: 'rate_limited' }, { status: 429 });

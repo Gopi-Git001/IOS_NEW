@@ -1,6 +1,6 @@
-// One upload, one daily scan debit, two incremental NDJSON outcomes.
+// One upload, one debit per model allowance, two incremental NDJSON outcomes.
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
-import { allow, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
+import { allowScan, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
 import { askJev } from '../_shared/jev.ts';
 import { readLabel } from '../_shared/reader.ts';
 import { env } from '../_shared/env.ts';
@@ -29,8 +29,8 @@ export default {
     if (!isJpegBase64(image)) return Response.json({ error: 'Send a JPEG photo as base64 in "image"' }, { status: 400 });
     if (typeof body.scan_id === 'string') timer.set({ scan_id: body.scan_id.slice(0, 32) });
     timer.set({ image_kb: imageKb(image) });
-    // Share the legacy reader's quota during rollout, not a fresh extra 100 scans.
-    if (!await allow(ctx.supabaseAdmin, `label:${userId}`, 86_400, intSetting('SCAN_DAILY_LIMIT', 100))) return tooMany();
+    // Each model shares its legacy allowance, preventing extra paid calls via mixed clients.
+    if (!await allowScan(ctx.supabaseAdmin, userId, intSetting('SCAN_DAILY_LIMIT', 100))) return tooMany();
     timer.mark('checks');
     const encoder = new TextEncoder();
     let disconnected = false;
