@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Reallabel",
+    "name": "Sugar Depth",
     "slug": "sugar-hunter",
     "scheme": "reallabel",
     "version": "1.0.0",
@@ -21,9 +21,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "name": "Reallabel",
-      "shortName": "Reallabel",
-      "description": "Point your camera at a food label. Get one sugar verdict: Clean, Bad or Ugly.",
+      "name": "Sugar Depth",
+      "shortName": "Sugar Depth",
+      "description": "Scan a food label and see its added sugar and sweeteners. One verdict: Clean, Bad or Ugly.",
       "themeColor": "#06080D",
       "backgroundColor": "#06080D"
     },
@@ -32,7 +32,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Reallabel uses the camera to read food and drink labels."
+          "cameraPermission": "Sugar Depth uses the camera to read food and drink labels."
         }
       ],
       [

@@ -1,7 +1,7 @@
-// Reallabel: the verdict set like a Nutrition Facts panel, cut in glass. Every surface is a frosted sheet
+// Sugar Depth: the verdict set like a Nutrition Facts panel, cut in glass. Every surface is a frosted sheet
 // over a dark ambient backdrop with soft colored light; type is white, one colored word carries the verdict.
 // Libre Franklin (the panel's grotesque, up to 900) for everything set; Newsreader italic for the voice.
-export const brand = { name: 'Reallabel', tagline: 'Read the fine print.' };
+export const brand = { name: 'Sugar Depth', tagline: 'Read the fine print.' };
 
 export const colors = {
   // Verdict colors, tuned for white-on-dark glass (each at least 7:1 on #0B0F18).

@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { BookOpen, Feather, FileText, History, Lock, LogOut, Mail, ShieldCheck, Star, Trash2, Vibrate } from 'lucide-react-native';
+import { BookOpen, Feather, FileText, History, Lock, LogOut, Mail, ShieldCheck, Star, Trash2, Vibrate, Globe } from 'lucide-react-native';
 import { useState } from 'react';
 import { FlatList, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Group, listStyles, openLink, Row, Sheet } from '../components/ListUI';
@@ -74,7 +74,8 @@ function MenuList({ open }: { open: (p: Page) => void }) {
 
       <Group title="About">
         <Row icon={BookOpen} label="How verdicts work" onPress={() => open('methodology')} chevron />
-        <Row icon={Mail} label="Help & support" onPress={() => openLink(`mailto:${links.supportEmail}?subject=Reallabel%20support`)} chevron />
+        <Row icon={Globe} label="Learn more at sugardepth.com" onPress={() => openLink(links.howItWorks)} chevron />
+        <Row icon={Mail} label="Help & support" onPress={() => openLink(`mailto:${links.supportEmail}?subject=Sugar%20Depth%20support`)} chevron />
         <Row icon={Lock} label="Privacy policy" onPress={() => openLink(links.privacy)} chevron />
         <Row icon={FileText} label="Terms" onPress={() => openLink(links.terms)} chevron />
         <Row icon={Star} label={`Rate ${brand.name}`} onPress={() => openLink(Platform.OS === 'ios' ? links.appStore : links.playStore)} chevron />
