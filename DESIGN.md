@@ -15,6 +15,11 @@ One system for the scanner app (`src/`) and the marketing site (`sites/sugardept
 
 The sections below document the retained dark-glass foundation, not the current light verdict surfaces.
 
+Below-hero editorial media pairs Higgsfield stills generated on 2026-11-09 with `gpt_image_2_6`
+(label magnifier, sugar aliases, three tinted slabs and a sugar specimen) with HyperFrames loops.
+Responsive AVIF/WebP stills are lazy-loaded in rounded paper-toned frames; loops play only while
+visible, pause when the page is hidden and respect reduced motion. The homepage hero stays unchanged.
+
 History: direction B ("paper panel") was chosen on 2026-11-06, followed by dark glass.
 On 2026-11-09 the owner approved the editorial glossy-crystal verdict reference, retaining its exact
 word, bead and slab layout language rather than introducing new shapes.

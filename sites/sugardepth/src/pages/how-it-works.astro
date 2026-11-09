@@ -3,6 +3,9 @@ import Base from '../layouts/Base.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Sources from '../components/Sources.astro';
 import ScanCta from '../components/ScanCta.astro';
+import EditorialImage from '../components/EditorialImage.astro';
+import Film from '../components/Film.astro';
+import FilmMotion from '../components/FilmMotion.astro';
 import { RULES, TREATMENTS } from '../data/rules';
 import { S } from '../data/sources';
 import { breadcrumbs, ORG_ID } from '../data/schema';
@@ -29,7 +32,7 @@ const article = {
   path="/how-it-works"
   jsonLd={[article, breadcrumbs(crumbs)]}
 >
-  <div class="wrap page-head">
+  <div class="wrap page-head editorial-article">
     <Breadcrumbs items={crumbs} />
     <span class="kicker">The rulebook · {POLICY_VERSION}</span>
     <h1>How verdicts work</h1>
@@ -40,9 +43,12 @@ const article = {
       <strong class="clean">CLEAN</strong> means a complete ingredient list with nothing sweet added.
     </p>
     <p class="voice">There is no GOOD tier. There is no gram cutoff. A pinch of sugar is still sugar.</p>
+    <figure class="editorial-frame label-figure">
+      <EditorialImage name="label" alt="A thick clear glass slab rests over fine print on a cream food package, with a sugar cube beside it." />
+    </figure>
   </div>
 
-  <div class="wrap page-body">
+  <div class="wrap page-body editorial-article">
     <div class="prose">
       <h2 id="pipeline">What happens to your photo</h2>
       <ol>
@@ -51,6 +57,11 @@ const article = {
         <li><strong>Matching.</strong> Each ingredient is matched to one versioned registry ({REGISTRY_VERSION}) by its exact name, never by a fragment. "Sugar" never matches "sugar alcohol", and "maltodextrin" never matches "resistant maltodextrin".</li>
         <li><strong>Deciding.</strong> The ordered rules below produce the verdict, the rule that fired, and the printed words that triggered it.</li>
       </ol>
+      <figure class="editorial-frame steps-film">
+        <Film name="three-steps" label="Three illustrated stages: photograph the label, read the ingredient names, and reveal one verdict." width={1280} height={720}>
+          <EditorialImage name="label" alt="Clear glass magnifies the ingredient print on a cream package beside a sugar cube." sizes="(max-width: 760px) calc(100vw - 40px), 800px" />
+        </Film>
+      </figure>
       <p>
         A separate verdict checker also looks at the photo and makes the final call; the rules below decide when that
         checker is unavailable or unsure, so in rare cases the verdict shown can differ from what the rules alone would give.
@@ -128,4 +139,5 @@ const article = {
     </div>
     <div style="margin-top:48px"><ScanCta /></div>
   </div>
+  <FilmMotion />
 </Base>

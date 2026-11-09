@@ -1,12 +1,14 @@
 ---
 import { APP_URL } from '../config';
-const { title = 'Point it at a label.', text = 'Open the scanner, photograph the ingredient list, get one verdict.' } = Astro.props as { title?: string; text?: string };
+import EditorialImage from './EditorialImage.astro';
+const { title = 'Point it at a label.', text = 'Open the scanner, photograph the ingredient list, get one verdict.', graphic = false } = Astro.props as { title?: string; text?: string; graphic?: boolean };
 ---
-<div class="sheet cta-band">
+<div class:list={['sheet', 'cta-band', { 'cta-editorial': graphic }]}>
+  {graphic && <EditorialImage name="specimen" alt="" sizes="(max-width: 760px) calc(100vw - 40px), 560px" />}
   <div>
     <h2>{title}</h2>
     <p class="muted" style="margin:0">{text}</p>
   </div>
   <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
-  <img class="cta-cube" src="/brand/cube-scanning.webp" alt="" width="360" height="360" loading="lazy" decoding="async" />
+  {!graphic && <img class="cta-cube" src="/brand/cube-scanning.webp" alt="" width="360" height="360" loading="lazy" decoding="async" />}
 </div>
