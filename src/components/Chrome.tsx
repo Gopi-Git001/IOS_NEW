@@ -6,7 +6,7 @@ import { AccessibilityInfo, Animated, type DimensionValue, Easing, Image, Platfo
 import { useProfile } from '../lib/account';
 import { initials } from '../lib/display';
 import type { Verdict } from '../types';
-import { brand, colors, fonts } from '../theme';
+import { ambient, brand, colors, fonts } from '../theme';
 import { Glass } from './Glass';
 
 export type Sheet = 'profile' | 'menu';
@@ -160,7 +160,7 @@ export function Header({ right, tagline, ink, mark }: { right?: ReactNode; tagli
 export function Ambient() {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <LinearGradient colors={['#0B1220', '#06080D', '#0A0B12']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={ambient.base as [string, string, string]} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
       <View style={[styles.glow, styles.glowTeal]} />
       <View style={[styles.glow, styles.glowIndigo]} />
       <View style={[styles.glow, styles.glowAmber]} />
@@ -210,9 +210,9 @@ const styles = StyleSheet.create({
   },
   sweep: { position: 'absolute', left: '25%' },
   glow: { position: 'absolute', borderRadius: 999, ...(Platform.OS === 'web' ? ({ filter: 'blur(70px)' } as object) : {}) },
-  glowTeal: { width: 360, height: 360, top: -90, left: -120, backgroundColor: 'rgba(31,181,168,0.30)' },
-  glowIndigo: { width: 420, height: 420, top: '38%', right: -200, backgroundColor: 'rgba(76,99,230,0.26)' },
-  glowAmber: { width: 300, height: 300, bottom: -110, left: -60, backgroundColor: 'rgba(245,158,11,0.18)' },
+  glowTeal: { width: 360, height: 360, top: -90, left: -120, backgroundColor: ambient.glowTeal },
+  glowIndigo: { width: 420, height: 420, top: '38%', right: -200, backgroundColor: ambient.glowIndigo },
+  glowAmber: { width: 300, height: 300, bottom: -110, left: -60, backgroundColor: ambient.glowAmber },
   taglineInk: { color: colors.inkMuted, textShadowColor: 'transparent', textShadowRadius: 0, marginTop: 0 },
   tagline: {
     fontFamily: fonts.serifMedium,
