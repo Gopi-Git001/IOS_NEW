@@ -1,128 +1,130 @@
-import { BlurTargetView, BlurView } from 'expo-blur';
-import { type ComponentRef, type RefObject, useRef } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Easing, Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Character, moodForVerdict } from '../components/Character';
-import { Footer, Header, MenuButton, Scrims } from '../components/Chrome';
-import { CameraIcon } from '../components/Icons';
-import { VerdictPanel, verdictColor } from '../components/VerdictPanel';
+import { Character, type Mood, moodForVerdict } from '../components/Character';
+import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
+import { Glass } from '../components/Glass';
+import { GlossaryCard, type Pick } from '../components/GlossaryCard';
+import { ResultSheet, VerdictContent } from '../components/VerdictPanel';
 import { colors, fonts } from '../theme';
 import type { ScanResult } from '../types';
 
-const BUTTON_HEIGHT = 66;
-const FOOTER_HEIGHT = 46;
+const CUBE = 130;
+const PERCH = 22; // how far the cube's feet sink below the sheet's top edge
 
 export type ScanState =
   | { status: 'reading' }
-  | { status: 'done'; result: ScanResult }
+  | { status: 'done'; result: ScanResult; listsPending?: boolean }
   | { status: 'error'; message: string };
 
-type Props = { photoUri: string; state: ScanState; onScanAnother: () => void; tagline?: string };
+type Props = {
+  photoUri: string;
+  state: ScanState;
+  onScanAnother: () => void;
+  onOpenSheet: (sheet: Sheet) => void;
+  /** Gentle mode: for UGLY, the character shows its calm reaction instead of crying. */
+  gentle?: boolean;
+  tagline?: string;
+};
 
-/** The captured photo frozen full screen, with the verdict panel and character on top. */
-export function ResultScreen({ photoUri, state, onScanAnother, tagline }: Props) {
+/** The captured photo frozen full screen. While reading, a light band sweeps it; then the result sheet rises. */
+export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gentle, tagline }: Props) {
   const insets = useSafeAreaInsets();
-  const blurTarget = useRef<ComponentRef<typeof View>>(null);
-  const bottomBar = insets.bottom + FOOTER_HEIGHT + BUTTON_HEIGHT;
-  const buttonColor = state.status === 'done' ? verdictColor[state.result.verdict] : '#FFFFFF';
-  const buttonInk = state.status === 'done' && state.result.verdict === 'BAD' ? '#FFFFFF' : colors.background;
+  const window = useWindowDimensions();
+  const [headerBottom, setHeaderBottom] = useState(insets.top + 60);
+  const [sheetHeight, setSheetHeight] = useState(0);
+  const [pick, setPick] = useState<Pick>(null);
+  const sheetBottom = Math.max(insets.bottom, 8);
+  // Leave room above the sheet for the header and the perched cube.
+  const sheetMax = window.height - sheetBottom - headerBottom - CUBE + PERCH - 8;
+  const doneMood = (verdict: keyof typeof moodForVerdict): Mood => (gentle && verdict === 'UGLY' ? 'bad' : moodForVerdict[verdict]);
+
+  const action = { label: state.status === 'done' ? 'Scan another' : 'Try again', onPress: onScanAnother };
 
   return (
     <View style={styles.fill}>
-      <BlurTargetView ref={blurTarget} style={StyleSheet.absoluteFill}>
-        <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-      </BlurTargetView>
-      <Scrims />
+      <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      <Scrims topHeight="22%" />
+      {state.status === 'reading' && <Shimmer height={window.height} />}
 
-      <SafeAreaView style={styles.fill} edges={['top', 'bottom']}>
-        <Header tagline={tagline} right={<MenuButton />} />
-        <View style={styles.fill} />
-        {state.status !== 'reading' && (
-          <View>
-            <Pressable
-              onPress={onScanAnother}
-              style={({ pressed }) => [styles.button, { backgroundColor: buttonColor }, pressed && styles.buttonPressed]}
-            >
-              <CameraIcon color={buttonInk} size={26} />
-              <Text style={[styles.buttonText, { color: buttonInk }]}>
-                {state.status === 'error' ? 'Try again' : 'Scan another'}
-              </Text>
-            </Pressable>
-            <Footer />
-          </View>
-        )}
+      <SafeAreaView style={styles.fill} edges={['top']} pointerEvents="box-none">
+        <View onLayout={(e) => setHeaderBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}>
+          <Header
+            tagline={tagline}
+            mark={state.status === 'reading' ? 'scanning' : state.status === 'done' ? state.result.verdict : 'idle'}
+            right={<ProfileButton onOpen={onOpenSheet} />}
+          />
+        </View>
       </SafeAreaView>
 
-      {state.status === 'done' && (
-        <>
-          <View style={[styles.panelSlot, { top: insets.top + 64 }]} pointerEvents="box-none">
-            <VerdictPanel result={state.result} blurTarget={blurTarget} />
-          </View>
-          <Character mood={moodForVerdict[state.result.verdict]} bottom={bottomBar} />
-        </>
-      )}
       {state.status === 'reading' && (
         <>
-          <GlassPill blurTarget={blurTarget}>
-            <ActivityIndicator size="large" color="#60A5FA" />
-            <View style={styles.pillDivider} />
-            <Text style={styles.pillText}>Reading the label...</Text>
-          </GlassPill>
+          <View style={styles.pillSlot} pointerEvents="none">
+            <Glass style={styles.pill}>
+              <ActivityIndicator size="small" color="#FFFFFF" />
+              <Text style={styles.pillText}>Reading the label</Text>
+            </Glass>
+          </View>
           <Character mood="scanning" bottom={insets.bottom + 40} />
         </>
       )}
-      {state.status === 'error' && (
+
+      {state.status !== 'reading' && (
         <>
-          <GlassPill blurTarget={blurTarget} wide>
-            <Text style={[styles.pillText, styles.errorText]}>{state.message}</Text>
-          </GlassPill>
-          <Character mood="okay" bottom={bottomBar} />
+          <ResultSheet key={state.status} action={action} footer={<Footer ink />} maxHeight={sheetMax} bottom={sheetBottom} onHeight={setSheetHeight}>
+            {state.status === 'done' ? (
+              <VerdictContent result={state.result} listsPending={state.listsPending} onPick={setPick} />
+            ) : (
+              <>
+                <Text style={styles.errorTitle}>No verdict</Text>
+                <View style={styles.errorRule} />
+                <Text style={styles.errorText}>{state.message}</Text>
+              </>
+            )}
+          </ResultSheet>
+          {sheetHeight > 0 && (
+            <Character
+              mood={state.status === 'done' ? doneMood(state.result.verdict) : 'bad'}
+              bottom={sheetBottom + sheetHeight - PERCH}
+              size={CUBE}
+              right={10}
+            />
+          )}
         </>
       )}
+
+      <GlossaryCard pick={pick} onClose={() => setPick(null)} />
     </View>
   );
 }
 
-function GlassPill({ children, blurTarget, wide }: { children: React.ReactNode; blurTarget: RefObject<ComponentRef<typeof View> | null>; wide?: boolean }) {
+/** A soft band of light sweeping down the frozen photo, like the label is being read. */
+function Shimmer({ height }: { height: number }) {
+  const y = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(Animated.timing(y, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.quad), useNativeDriver: true }));
+    loop.start();
+    return () => loop.stop();
+  }, [y]);
+  const translateY = y.interpolate({ inputRange: [0, 1], outputRange: [-160, height] });
   return (
-    <View style={styles.pillSlot} pointerEvents="none">
-      <View style={[styles.pill, wide && styles.pillWide]}>
-        <BlurView intensity={40} tint="dark" blurTarget={blurTarget} blurMethod="dimezisBlurViewSdk31Plus" style={StyleSheet.absoluteFill} />
-        {children}
-      </View>
-    </View>
+    <Animated.View pointerEvents="none" style={[styles.shimmer, { transform: [{ translateY }] }]}>
+      <LinearGradient
+        colors={['rgba(243,241,236,0)', 'rgba(243,241,236,0.22)', 'rgba(255,255,255,0.55)', 'rgba(243,241,236,0.22)', 'rgba(243,241,236,0)']}
+        style={StyleSheet.absoluteFill}
+      />
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: 'transparent' },
-  panelSlot: { position: 'absolute', left: 0, right: 0 },
-  button: {
-    height: BUTTON_HEIGHT,
-    marginHorizontal: 20,
-    borderRadius: BUTTON_HEIGHT / 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  buttonPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  buttonText: { fontFamily: fonts.semibold, fontSize: 19 },
-  pillSlot: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingBottom: 40 },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 18,
-    paddingHorizontal: 26,
-    height: 84,
-    borderRadius: 42,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    backgroundColor: 'rgba(60,60,66,0.6)',
-  },
-  pillWide: { height: undefined, paddingVertical: 20, borderRadius: 28, marginHorizontal: 24 },
-  pillDivider: { width: 1.5, height: 46, backgroundColor: 'rgba(255,255,255,0.4)' },
-  pillText: { fontFamily: fonts.semibold, fontSize: 19, color: colors.text },
-  errorText: { flexShrink: 1, textAlign: 'center', fontSize: 17, lineHeight: 24 },
+  shimmer: { position: 'absolute', left: 0, right: 0, top: 0, height: 160 },
+  pillSlot: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingBottom: 60 },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 22, height: 54, borderRadius: 27 },
+  pillText: { fontFamily: fonts.serifMedium, fontSize: 19, color: colors.text },
+  errorTitle: { fontFamily: fonts.black, fontSize: 30, lineHeight: 32, color: colors.ink, letterSpacing: -1 },
+  errorRule: { height: 2, borderRadius: 1, backgroundColor: colors.rule, marginTop: 8, marginBottom: 10 },
+  errorText: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 25, color: colors.ink },
 });

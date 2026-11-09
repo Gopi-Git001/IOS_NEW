@@ -1,7 +1,7 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 // Both values are public by design: the publishable key only allows what the backend permits.
 // Every real secret (Anthropic key, Supabase secret key) lives in Supabase secrets.
@@ -15,7 +15,10 @@ export const supabase = createClient(url ?? 'https://not-configured.supabase.co'
     storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    // Google sign-in returns with ?code=... (PKCE). On the web the client trades it for a session on load;
+    // on phones api.ts trades it after the in-app browser closes.
+    flowType: 'pkce',
+    detectSessionInUrl: Platform.OS === 'web',
   },
 });
 

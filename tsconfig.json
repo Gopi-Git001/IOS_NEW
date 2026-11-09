@@ -5,6 +5,10 @@
   },
   "exclude": [
     "node_modules",
-    "supabase/functions"
+    "dist-web",
+    "docs",
+    "sites",
+    "supabase/functions",
+    "**/*.test.ts"
   ]
 }

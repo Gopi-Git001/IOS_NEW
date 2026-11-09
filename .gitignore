@@ -44,3 +44,4 @@ yarn-error.*
 supabase/functions/.env
 .env
 supabase/.env
+dist-web/

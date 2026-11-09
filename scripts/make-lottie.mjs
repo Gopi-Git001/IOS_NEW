@@ -1,90 +1,117 @@
-// Generates the sugar-cube character as Lottie animations in assets/lottie/.
+// Generates the sugarcane character as Lottie animations in assets/lottie/.
 // Run with: npm run lottie
+//
+// The character is a real-looking sugarcane stalk (orange, matching the cane-i logo):
+// three jointed internodes with cylindrical shading, node rings, waxy bloom, fibre streaks and buds,
+// a crown of arching leaves on top, and two leaves that work as arms.
+//
+// Motion is built to feel physical rather than cartoon-snappy:
+//   * the stalk bends joint by joint (each internode is nested in the one below), so sway travels up it;
+//   * leaves follow through: they lag the stalk and flex (shape morph), not just rotate;
+//   * squash/stretch is anchored at the root, with anticipation before jumps and settle after landing;
+//   * blinks and glances are irregular, and breathing never stops.
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const FPS = 30;
 const SIZE = 300;
+const ROOT = [150, 268]; // where the stalk meets the ground
 
 // ---------- Lottie helpers ----------
 const isProp = (v) => v && typeof v === 'object' && 'a' in v && 'k' in v;
 const prop = (v) => (isProp(v) ? v : { a: 0, k: v });
 
-/** Animated value. frames: [[frame, value], ...] — values are numbers, arrays or path shapes. */
-const kf = (frames) => ({
+const EASE = {
+  inOut: [[0.42, 0], [0.58, 1]],
+  out: [[0.2, 0.6], [0.35, 1]],
+  in: [[0.55, 0], [0.8, 0.4]],
+  linear: [[0.25, 0.25], [0.75, 0.75]],
+  back: [[0.3, 0], [0.2, 1.4]], // slight overshoot
+};
+
+/** Animated value. frames: [[frame, value, ease?], ...] — values are numbers, arrays or path shapes. */
+const kf = (frames, defEase = 'inOut') => ({
   a: 1,
-  k: frames.map(([t, v], idx) => {
+  k: frames.map(([t, v, e], idx) => {
     const isShape = v && typeof v === 'object' && !Array.isArray(v);
     const s = isShape ? [v] : Array.isArray(v) ? v : [v];
     if (idx === frames.length - 1) return { t, s };
     const dims = isShape ? 1 : s.length;
-    return {
-      t,
-      s,
-      o: { x: Array(dims).fill(0.42), y: Array(dims).fill(0) },
-      i: { x: Array(dims).fill(0.58), y: Array(dims).fill(1) },
-    };
+    const [o, i] = EASE[e ?? defEase];
+    return { t, s, o: { x: Array(dims).fill(o[0]), y: Array(dims).fill(o[1]) }, i: { x: Array(dims).fill(i[0]), y: Array(dims).fill(i[1]) } };
   }),
 });
 
-const hex = (h, a = 1) => {
-  const n = parseInt(h.slice(1), 16);
-  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255, a];
+/** A smooth looping sine: `cycles` per loop, offset by `phase` (0..1), sampled every few frames. */
+const wave = (op, { base = 0, amp = 1, cycles = 1, phase = 0, steps = 16 } = {}) => {
+  const frames = [];
+  for (let k = 0; k <= steps; k++) {
+    const t = (op * k) / steps;
+    const val = (x) => base + amp * Math.sin(2 * Math.PI * (cycles * x + phase));
+    frames.push([Math.round(t * 100) / 100, Array.isArray(base) ? base : val(k / steps), 'linear']);
+  }
+  return kf(frames);
+};
+/** Same as wave, for [x, y] vectors (amplitude per axis). */
+const wave2 = (op, { base, amp, cycles = 1, phase = 0, steps = 16 }) => {
+  const frames = [];
+  for (let k = 0; k <= steps; k++) {
+    const x = k / steps;
+    const s = Math.sin(2 * Math.PI * (cycles * x + phase));
+    frames.push([(op * k) / steps, base.map((b, i) => b + (amp[i] ?? 0) * s), 'linear']);
+  }
+  return kf(frames);
 };
 
-const fill = (color, opacity = 100) => ({ ty: 'fl', c: prop(hex(color)), o: prop(opacity), r: 1, nm: 'fill' });
+const hex = (h) => {
+  const n = parseInt(h.slice(1), 16);
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+};
+const rgba = (h, a = 1) => [...hex(h), a];
+
+const fill = (color, opacity = 100) => ({ ty: 'fl', c: prop(rgba(color)), o: prop(opacity), r: 1, nm: 'fill' });
 const stroke = (color, width, opacity = 100) => ({
-  ty: 'st', c: prop(hex(color)), o: prop(opacity), w: prop(width), lc: 2, lj: 2, ml: 4, nm: 'stroke',
+  ty: 'st', c: prop(rgba(color)), o: prop(opacity), w: prop(width), lc: 2, lj: 2, ml: 4, nm: 'stroke',
+});
+/** Linear gradient fill. stops: [[offset, '#hex'], ...]; s/e: start and end points in local space. */
+const gfill = (stops, s, e, opacity = 100) => ({
+  ty: 'gf', nm: 'gradient', o: prop(opacity), r: 1, t: 1, s: prop(s), e: prop(e),
+  g: { p: stops.length, k: prop(stops.flatMap(([o, c]) => [o, ...hex(c)])) },
 });
 const ellipse = (p, s) => ({ ty: 'el', d: 1, p: prop(p), s: prop(s), nm: 'ellipse' });
 const rect = (p, s, r) => ({ ty: 'rc', d: 1, p: prop(p), s: prop(s), r: prop(r), nm: 'rect' });
 
 /** Path shape data. pts: [[x, y, inTangent?, outTangent?], ...] (tangents relative to the point). */
 const shape = (pts, closed = false) => ({
-  c: closed,
-  v: pts.map((p) => [p[0], p[1]]),
-  i: pts.map((p) => p[2] ?? [0, 0]),
-  o: pts.map((p) => p[3] ?? [0, 0]),
+  c: closed, v: pts.map((p) => [p[0], p[1]]), i: pts.map((p) => p[2] ?? [0, 0]), o: pts.map((p) => p[3] ?? [0, 0]),
 });
 const path = (pts, closed = false) => ({ ty: 'sh', d: 1, ks: prop(shape(pts, closed)), nm: 'path' });
 const pathAnim = (frames) => ({ ty: 'sh', d: 1, ks: kf(frames), nm: 'path' });
 
+/** Smooth path through points (Catmull-Rom → Bézier). */
+const smooth = (pts, closed = false, tension = 1 / 6) => {
+  const n = pts.length;
+  const at = (i) => pts[closed ? (i + n) % n : Math.max(0, Math.min(n - 1, i))];
+  return shape(
+    pts.map((p, i) => {
+      const a = at(i - 1), b = at(i + 1);
+      const t = [(b[0] - a[0]) * tension, (b[1] - a[1]) * tension];
+      return [p[0], p[1], [-t[0], -t[1]], t];
+    }),
+    closed,
+  );
+};
+
 const group = (nm, items, tr = {}) => ({
-  ty: 'gr',
-  nm,
+  ty: 'gr', nm,
   it: [
     ...items,
-    {
-      ty: 'tr',
-      p: prop(tr.p ?? [0, 0]),
-      a: prop(tr.a ?? [0, 0]),
-      s: prop(tr.s ?? [100, 100]),
-      r: prop(tr.r ?? 0),
-      o: prop(tr.o ?? 100),
-      sk: prop(0),
-      sa: prop(0),
-      nm: 'transform',
-    },
+    { ty: 'tr', p: prop(tr.p ?? [0, 0]), a: prop(tr.a ?? [0, 0]), s: prop(tr.s ?? [100, 100]), r: prop(tr.r ?? 0), o: prop(tr.o ?? 100), sk: prop(0), sa: prop(0), nm: 'transform' },
   ],
 });
 
-const layer = (nm, ind, shapes, op, ks = {}) => ({
-  ddd: 0,
-  ind,
-  ty: 4,
-  nm,
-  sr: 1,
-  ao: 0,
-  ip: 0,
-  op,
-  st: 0,
-  bm: 0,
-  ks: {
-    o: prop(ks.o ?? 100),
-    r: prop(ks.r ?? 0),
-    p: prop(ks.p ?? [0, 0, 0]),
-    a: prop(ks.a ?? [0, 0, 0]),
-    s: prop(ks.s ?? [100, 100, 100]),
-  },
+const layer = (nm, shapes, op, ks = {}) => ({
+  ddd: 0, ty: 4, nm, sr: 1, ao: 0, ip: 0, op, st: 0, bm: 0,
+  ks: { o: prop(ks.o ?? 100), r: prop(ks.r ?? 0), p: prop(ks.p ?? [0, 0, 0]), a: prop(ks.a ?? [0, 0, 0]), s: prop(ks.s ?? [100, 100, 100]) },
   shapes,
 });
 
@@ -93,270 +120,531 @@ const animation = (nm, op, layers) => ({
   layers: layers.map((l, i) => ({ ...l, ind: i + 1 })),
 });
 
-// ---------- Character parts ----------
-const INK = '#1E1E26';
-const FRONT = '#F5F5F0';
-const TOP = '#FFFFFF';
-const SIDE = '#D8D8D2';
-const SPECK = '#C9C9C2';
-const BLUSH = '#F9A8B8';
-const TEAR = '#60A5FA';
+// ---------- Palettes ----------
+const HEALTHY = {
+  rind: ['#7A3510', '#C8621C', '#F39A3D', '#FFD08A', '#F08A2C', '#B4521A', '#6B2C0C'],
+  node: ['#5C250A', '#9A4614', '#C9772F', '#8B3B10', '#4E1F08'],
+  outline: '#4A1E06',
+  bloom: '#FFF4DC',
+  streak: '#7A3510',
+  leafBase: '#2F6B22',
+  leafMid: '#5AA537',
+  leafTip: '#A7D65A',
+  rib: '#D8F0A8',
+  lid: '#E88A33',
+  cheek: '#FF7A59',
+};
+const SICK = {
+  rind: ['#4E3214', '#7E5A2A', '#A88648', '#C8AC70', '#9C7C40', '#6E4E22', '#3E2810'],
+  node: ['#3A2410', '#5E3F1C', '#7C5A30', '#56391A', '#2E1C0C'],
+  outline: '#2E1C0C',
+  bloom: '#E8E0C8',
+  streak: '#3E2810',
+  leafBase: '#5A5A22',
+  leafMid: '#9A8A34',
+  leafTip: '#8A5A22',
+  rib: '#D8CF9A',
+  lid: '#9C7C40',
+  cheek: '#9C7C40',
+};
 
-// Cube front face spans x 80..200, y 95..205. Feet rest at y≈250.
-const FEET = [150, 250];
+const INK = '#2A1206';
+const IRIS = '#5B3417';
+const MOUTH = '#5A1A08';
+const TONGUE = '#E86A5A';
+const TEAR = '#7CC4FF';
 
-const cube = () => [
-  group('front', [rect([140, 150], [120, 110], 16), stroke(INK, 5), fill(FRONT)]),
-  group('side', [path([[196, 97], [222, 74], [222, 180], [198, 202]], true), stroke(INK, 5), fill(SIDE)]),
-  group('top', [path([[84, 97], [108, 72], [222, 72], [198, 97]], true), stroke(INK, 5), fill(TOP)]),
+// ---------- Stalk ----------
+// Internode heights / widths (bottom → top). Local coordinates: joint at (0,0), growing up to (0,-h).
+const SEG = [
+  { h: 66, w0: 48, w1: 50 },
+  { h: 82, w0: 56, w1: 58 }, // the face lives here
+  { h: 52, w0: 52, w1: 46 },
 ];
 
-// Little sugar-grain specks on the faces.
-const specks = () =>
-  group('specks', [
-    ...[[96, 112], [186, 118], [92, 190], [184, 192], [140, 112], [210, 120], [212, 160], [130, 82], [180, 80]].map(
-      (p) => ellipse(p, [3.5, 3.5]),
-    ),
-    fill(SPECK),
+const rindGradient = (pal, w) =>
+  gfill(
+    pal.rind.map((c, i) => [i / (pal.rind.length - 1), c]),
+    [-w / 2 - 1, 0],
+    [w / 2 + 1, 0],
+  );
+
+/** One internode: slightly barrel-shaped cylinder with shading, streaks and bloom. */
+function internode(pal, { h, w0, w1 }, i) {
+  const l0 = -w0 / 2, r0 = w0 / 2, l1 = -w1 / 2, r1 = w1 / 2;
+  const bulge = 2.5;
+  const body = path(
+    [
+      [l0, 4, [0, 0], [-bulge, -h * 0.35]],
+      [l1, -h, [-bulge, h * 0.35], [w1 * 0.25, -2]],
+      [r1, -h, [-w1 * 0.25, -2], [bulge, h * 0.35]],
+      [r0, 4, [bulge, -h * 0.35], [-w0 * 0.25, 2]],
+    ],
+    true,
+  );
+  const w = Math.max(w0, w1);
+  const streaks = group('streaks', [
+    path([[l0 * 0.55, -6, [0, 0], [-1, -h * 0.3]], [l1 * 0.6, -h + 8, [-1, h * 0.3], [0, 0]]]),
+    path([[r0 * 0.25, -10, [0, 0], [1, -h * 0.3]], [r1 * 0.3, -h + 12, [1, h * 0.3], [0, 0]]]),
+    path([[r0 * 0.7, -4, [0, 0], [1.5, -h * 0.3]], [r1 * 0.72, -h + 6, [1.5, h * 0.3], [0, 0]]]),
+    stroke(pal.streak, 1.2, 22),
   ]);
+  // Specular sheen down the lit side, plus soft occlusion under the node above.
+  const sheen = group('sheen', [
+    path([[l0 * 0.32, -8, [0, 0], [-1, -h * 0.3]], [l1 * 0.36, -h + 10, [-1, h * 0.3], [0, 0]]]),
+    stroke('#FFFFFF', 4, 26),
+  ]);
+  const occlusion = group('occlusion', [rect([0, -h + 5], [w1 + 1, 10], 5), fill(pal.rind[0], 30)]);
+  const bloom = group('bloom', [rect([0, -9], [w0 - 2, 9], 4.5), fill(pal.bloom, 30)]);
+  return [occlusion, sheen, streaks, bloom, group('rind', [body, stroke(pal.outline, 2.2, 70), rindGradient(pal, w)])];
+}
 
-/** One open eye centred on the origin; pupil offset can be animated. */
-const eye = (name, pos, { pupil = [2, 3], blink = null, size = [26, 30] } = {}) =>
-  group(
-    name,
-    [
-      group('shine', [ellipse([-2, -4], [5, 5]), fill('#FFFFFF')], { p: pupil }),
-      group('pupil', [ellipse([0, 0], [13, 15]), fill(INK)], { p: pupil }),
-      group('white', [ellipse([0, 0], size), stroke(INK, 4), fill('#FFFFFF')]),
-    ],
-    { p: pos, s: blink ?? [100, 100] },
+/** The ring where two internodes meet, with a growth ring, leaf scar and a bud on alternating sides. */
+function node(pal, w, side) {
+  const nodeGrad = gfill(pal.node.map((c, i) => [i / (pal.node.length - 1), c]), [-w / 2 - 2, 0], [w / 2 + 2, 0]);
+  return group('node', [
+    group('bud', [
+      path([[0, 4, [0, 0], [-4, -2]], [0, -6, [-3, 3], [3, 3]], [0, 4, [4, -2], [0, 0]]], true),
+      stroke(pal.outline, 1.4, 60),
+      fill(pal.node[2]),
+    ], { p: [side * (w / 2 - 6), -5] }),
+    group('scar', [path([[-w / 2 + 2, 3], [w / 2 - 2, 3]]), stroke(pal.node[0], 1.2, 45)]),
+    group('growth-ring', [path([[-w / 2 + 1, -3.5, [0, 0], [w * 0.2, 1.5]], [w / 2 - 1, -3.5, [-w * 0.2, 1.5], [0, 0]]]), stroke(pal.bloom, 1.4, 55)]),
+    group('ring', [rect([0, 0], [w + 5, 8], 4), stroke(pal.outline, 2, 75), nodeGrad]),
+  ]);
+}
+
+// ---------- Leaves ----------
+/**
+ * A tapered grass blade as a closed path. The spine starts at angle a0 (degrees, 0 = right, -90 = up)
+ * and curves by `bend` degrees over its length, so animating `bend` flexes the leaf like a real blade.
+ */
+function leafShape({ len, w, a0, bend, droop = 0 }) {
+  const N = 9;
+  const spine = [];
+  let x = 0, y = 0;
+  for (let k = 0; k <= N; k++) {
+    const t = k / N;
+    const ang = ((a0 + bend * t * t + droop * t * t * t) * Math.PI) / 180;
+    spine.push({ x, y, ang, t });
+    x += (Math.cos(ang) * len) / N;
+    y += (Math.sin(ang) * len) / N;
+  }
+  const half = (t) => (w / 2) * Math.pow(Math.sin(Math.PI * Math.min(1, 0.12 + t * 0.95)), 0.8) * (1 - t * 0.15);
+  const left = spine.map(({ x, y, ang, t }) => [x + Math.sin(ang) * half(t), y - Math.cos(ang) * half(t)]);
+  const right = spine.map(({ x, y, ang, t }) => [x - Math.sin(ang) * half(t), y + Math.cos(ang) * half(t)]);
+  const tip = [spine[N].x, spine[N].y];
+  const outline = [...left.slice(0, N), tip, ...right.slice(0, N).reverse()];
+  const rib = spine.slice(0, N).map(({ x, y }) => [x, y]);
+  return { outline: smooth(outline, true), rib: smooth(rib, false), tip };
+}
+
+/** A leaf whose bend (and droop) can be animated: frames [[t, {bend, droop}], ...] or a static spec. */
+function leaf(pal, nm, spec, anim = null, tr = {}) {
+  const frames = anim ?? [[0, {}]];
+  const shapes = frames.map(([t, over, e]) => [t, leafShape({ ...spec, ...over }), e]);
+  const outline = shapes.length > 1 ? pathAnim(shapes.map(([t, s, e]) => [t, s.outline, e])) : { ty: 'sh', d: 1, ks: prop(shapes[0][1].outline), nm: 'path' };
+  const rib = shapes.length > 1 ? pathAnim(shapes.map(([t, s, e]) => [t, s.rib, e])) : { ty: 'sh', d: 1, ks: prop(shapes[0][1].rib), nm: 'path' };
+  const tipDir = shapes[0][1].tip;
+  return group(nm, [
+    group('rib', [rib, stroke(pal.rib, 1.3, 55)]),
+    group('blade', [
+      outline,
+      stroke(pal.leafBase, 1.4, 80),
+      gfill([[0, pal.leafBase], [0.45, pal.leafMid], [1, pal.leafTip]], [0, 0], [tipDir[0], tipDir[1]]),
+    ]),
+  ], tr);
+}
+
+/** Frames that flex a leaf between bend values on a loop, with an optional phase lag. */
+const flex = (op, { bend, amp, cycles = 1, phase = 0, droop = 0, droopAmp = 0, steps = 12 }) => {
+  const frames = [];
+  for (let k = 0; k <= steps; k++) {
+    const s = Math.sin(2 * Math.PI * (cycles * (k / steps) + phase));
+    frames.push([(op * k) / steps, { bend: bend + amp * s, droop: droop + droopAmp * s }, 'linear']);
+  }
+  return frames;
+};
+
+// ---------- Face ----------
+/** Realistic-ish eye: white with soft shade, iris, pupil, two highlights, optional eyelid. */
+function eye(nm, pos, { look = [0, 0], blink = null, lid = 0, pal, size = [17, 20], lidAnim = null }) {
+  const [ew, eh] = size;
+  const lidItems = [];
+  if (lid || lidAnim) {
+    // Upper lid: a rind-coloured cap that covers the top of the eye.
+    const cap = (amount) => shape([
+      [-ew / 2 - 2, -eh / 2 - 3, [0, 0], [0, 0]],
+      [ew / 2 + 2, -eh / 2 - 3, [0, 0], [0, 0]],
+      [ew / 2 + 2, -eh / 2 + eh * amount, [0, 0], [-ew * 0.3, 3]],
+      [-ew / 2 - 2, -eh / 2 + eh * amount, [ew * 0.3, 3], [0, 0]],
+    ], true);
+    const lidShape = lidAnim ? pathAnim(lidAnim.map(([t, a, e]) => [t, cap(a), e])) : { ty: 'sh', d: 1, ks: prop(cap(lid)), nm: 'path' };
+    lidItems.push(group('lid', [
+      group('lash', [lidAnim ? pathAnim(lidAnim.map(([t, a, e]) => [t, shape([[-ew / 2 - 1, -eh / 2 + eh * a + 1, [0, 0], [ew * 0.3, 3]], [ew / 2 + 1, -eh / 2 + eh * a + 1, [-ew * 0.3, 3], [0, 0]]]), e])) : path([[-ew / 2 - 1, -eh / 2 + eh * lid + 1, [0, 0], [ew * 0.3, 3]], [ew / 2 + 1, -eh / 2 + eh * lid + 1, [-ew * 0.3, 3], [0, 0]]]), stroke(INK, 2)]),
+      group('cap', [lidShape, fill(pal.lid)]),
+    ]));
+  }
+  return group(nm, [
+    ...lidItems,
+    group('iris', [
+      group('glint-2', [ellipse([2.6, 2.4], [1.8, 1.8]), fill('#FFFFFF', 80)]),
+      group('glint', [ellipse([-2.2, -2.6], [3.6, 3.6]), fill('#FFFFFF')]),
+      group('pupil', [ellipse([0, 0], [5.4, 6.2]), fill('#120804')]),
+      group('iris-ring', [ellipse([0, 0], [10.5, 12]), stroke('#2A160A', 1, 70), gfill([[0, '#8A5A2E'], [1, IRIS]], [0, -6], [0, 6])]),
+    ], { p: look }),
+    group('shade', [ellipse([0, -eh * 0.18], [ew * 0.9, eh * 0.55]), fill('#C9B8A8', 35)]),
+    group('white', [ellipse([0, 0], size), stroke(INK, 1.8), fill('#FFFDF8')]),
+  ], { p: pos, s: blink ?? [100, 100] });
+}
+
+/** Irregular blink: frames list of blink start frames. */
+const blinks = (op, at) => {
+  const f = [[0, [100, 100]]];
+  for (const t of at) f.push([t, [100, 100], 'in'], [t + 2, [100, 6], 'out'], [t + 5, [100, 100]]);
+  f.push([op, [100, 100]]);
+  return kf(f);
+};
+
+const brow = (pts) => path(pts);
+const browGroup = (l, r, anim = {}) =>
+  group('brows', [group('l', [l, stroke(INK, 2.6)], anim.l ?? {}), group('r', [r, stroke(INK, 2.6)], anim.r ?? {})]);
+
+const cheeks = (pal, op = 40) => group('cheeks', [ellipse([-17, -36], [11, 6]), ellipse([19, -36], [11, 6]), fill(pal.cheek, op)]);
+
+// Mouth shapes: 4 vertices, closed, so they can morph into each other.
+const mouthShape = ({ w = 14, up = 0, open = 2, curve = 6 }) =>
+  shape([
+    [-w / 2, -up, [0, 0], [w * 0.2, curve]],
+    [w / 2, -up, [-w * 0.2, curve], [0, open * 0.6]],
+    [0, curve + open, [w * 0.3, 0], [-w * 0.3, 0]],
+    [-w / 2, -up, [0, open * 0.6], [0, 0]],
+  ], true);
+const mouth = (frames, p = [1, -26]) =>
+  group('mouth', [
+    frames.length > 1 ? pathAnim(frames.map(([t, m, e]) => [t, mouthShape(m), e])) : { ty: 'sh', d: 1, ks: prop(mouthShape(frames[0][1])), nm: 'path' },
+    stroke(INK, 2),
+    fill(MOUTH),
+  ], { p });
+
+// ---------- Assembly ----------
+/**
+ * Builds the whole stalk as nested groups so each joint can bend.
+ * opts: { pal, rot: [r1, r2, r3] (props), face: [...items], arms: { l, r }, crown: [...leaves], extra2, extra3 }
+ */
+function stalk(opts) {
+  const { pal } = opts;
+  const [s1, s2, s3] = SEG;
+  const crownGroup = group('crown', opts.crown ?? [], { p: [0, -s3.h + 4] });
+  const seg3 = group('seg-3', [
+    ...(opts.extra3 ?? []),
+    crownGroup,
+    node(pal, s3.w0, 1),
+    ...internode(pal, s3, 2),
+  ], { p: [0, -s2.h], r: opts.rot?.[2] ?? 0 });
+  const seg2 = group('seg-2', [
+    ...(opts.extra2 ?? []),
+    opts.arms?.l ?? group('arm-l', []),
+    opts.arms?.r ?? group('arm-r', []),
+    seg3,
+    ...(opts.face ?? []),
+    node(pal, s2.w0, -1),
+    ...internode(pal, s2, 1),
+  ], { p: [0, -s1.h], r: opts.rot?.[1] ?? 0 });
+  const seg1 = group('seg-1', [seg2, ...internode(pal, s1, 0)], { r: opts.rot?.[0] ?? 0 });
+  const roots = group('roots', [
+    path([[-14, -2, [0, 0], [-6, 4]], [-26, 6, [4, -3], [0, 0]]]),
+    path([[-6, 0, [0, 0], [-2, 5]], [-12, 9, [2, -3], [0, 0]]]),
+    path([[8, 0, [0, 0], [3, 5]], [14, 9, [-2, -3], [0, 0]]]),
+    path([[15, -2, [0, 0], [6, 4]], [27, 5, [-4, -3], [0, 0]]]),
+    stroke('#6B4A2A', 2.4, 85),
+  ]);
+  // Scaled to leave headroom for jumps and the crown inside the 300 × 300 frame.
+  return [group('stalk', [seg1, roots], { s: [86, 86] })];
+}
+
+/** Arm leaf attached at the top of the face internode. side: -1 left, 1 right. */
+function armLeaf(pal, side, { rot = 0, bendFrames = null, spec = {}, extra = [] } = {}) {
+  const base = { len: 62, w: 13, a0: side > 0 ? -18 : -162, bend: side > 0 ? 70 : -70, ...spec };
+  const lf = leaf(pal, 'blade', base, bendFrames);
+  return group(side > 0 ? 'arm-r' : 'arm-l', [...extra, lf], { p: [side * (SEG[1].w1 / 2 - 4), -SEG[1].h + 6], r: rot });
+}
+
+/** Crown: five arching leaves and a spindle, each with its own lag so wind ripples through them. */
+function crown(pal, op, { amp = 6, droop = 0, cycles = 1, phaseBase = 0.1, still = false } = {}) {
+  const leaves = [
+    { a0: -120, bend: -70, len: 64, w: 12, phase: 0.0 },
+    { a0: -60, bend: 72, len: 66, w: 12, phase: 0.12 },
+    { a0: -104, bend: -40, len: 72, w: 11, phase: 0.22 },
+    { a0: -76, bend: 44, len: 74, w: 11, phase: 0.32 },
+    { a0: -92, bend: 10, len: 50, w: 8, phase: 0.42 }, // spindle
+  ];
+  return leaves.map((l, i) =>
+    leaf(
+      pal,
+      `crown-${i}`,
+      { len: l.len, w: l.w, a0: l.a0, bend: l.bend },
+      still ? null : flex(op, { bend: l.bend, amp: amp * Math.sign(l.bend || 1), cycles, phase: phaseBase + l.phase, droop: droop * Math.sign(l.bend || 1), droopAmp: droop * 0.15 }),
+      { r: still ? 0 : wave(op, { amp: amp * 0.35, cycles, phase: phaseBase + l.phase + 0.1 }) },
+    ),
   );
-
-const blinkFrames = (at) => kf([[0, [100, 100]], [at, [100, 100]], [at + 3, [100, 8]], [at + 6, [100, 100]]]);
-
-/** Closed "^ ^" happy eye. */
-const happyEye = (name, pos) =>
-  group(name, [path([[-11, 4, [0, 0], [4, -12]], [11, 4, [-4, -12], [0, 0]]]), stroke(INK, 5)], { p: pos });
-
-const blush = () => group('blush', [ellipse([102, 166], [17, 9]), ellipse([178, 166], [17, 9]), fill(BLUSH, 85)]);
-
-const brows = (left, right) =>
-  group('brows', [path(left), path(right), stroke(INK, 4.5)]);
-
-/** Arm: a curved line from the shoulder (origin) to a round hand. */
-const arm = (name, shoulder, hand, rotation = 0, extra = []) =>
-  group(
-    name,
-    [
-      ...extra,
-      group('hand', [ellipse(hand, [17, 17]), stroke(INK, 4), fill('#FFFFFF')]),
-      group('line', [path([[0, 0, [0, 0], [hand[0] * 0.2, hand[1] * 0.6]], [hand[0], hand[1], [-hand[0] * 0.3, 0], [0, 0]]]), stroke(INK, 5)]),
-    ],
-    { p: shoulder, r: rotation },
-  );
-
-const legs = (shoe = '#F2F2EC', accent = null) => [
-  group('shoes', [
-    ...(accent
-      ? [group('stripes', [path([[106, 241], [116, 247]]), path([[158, 241], [168, 247]]), stroke(accent, 3.5)])]
-      : []),
-    group('soles', [rect([116, 245], [30, 15], 7), rect([166, 245], [30, 15], 7), stroke(INK, 4), fill(shoe)]),
-  ]),
-  group('legs', [path([[122, 204], [120, 240]]), path([[160, 204], [163, 240]]), stroke(INK, 5)]),
-];
+}
 
 const shadowLayer = (op, scale = [100, 100, 100]) =>
-  layer('shadow', 0, [group('shadow', [ellipse([0, 0], [130, 18]), fill('#000000', 35)])], op, {
-    p: [150, 254, 0],
-    s: scale,
-  });
+  layer('shadow', [
+    group('contact', [ellipse([0, 0], [70, 10]), fill('#000000', 35)]),
+    group('soft', [ellipse([0, 0], [130, 22]), fill('#000000', 18)]),
+  ], op, { p: [...ROOT, 0], s: scale });
 
-/** Body layer: anchored at the feet so scale = squash/stretch. */
-const bodyLayer = (shapes, op, ks = {}) =>
-  layer('body', 0, shapes, op, { a: [...FEET, 0], p: ks.p ?? [...FEET, 0], s: ks.s, r: ks.r });
+const bodyLayer = (shapes, op, ks = {}) => layer('body', shapes, op, { a: [0, 0, 0], p: ks.p ?? [...ROOT, 0], s: ks.s, r: ks.r });
 
-const bob = (op, depth = 4) => kf([[0, [...FEET, 0]], [op / 2, [FEET[0], FEET[1] - depth, 0]], [op, [...FEET, 0]]]);
+// Face coordinates are local to the face internode (joint at 0, top at -82).
+const EYE_L = [-12, -50];
+const EYE_R = [14, -50];
 
 // ---------- Moods ----------
 
 function idle() {
-  const op = 90;
-  const smile = path([[-14, 0, [0, 0], [6, 10]], [14, 0, [-6, 10], [0, 0]]]);
+  const op = 120;
+  const pal = HEALTHY;
+  const look = kf([[0, [0, 0]], [28, [0, 0]], [34, [3, -1], 'out'], [70, [3, -1]], [76, [-2, 0], 'out'], [100, [-2, 0]], [108, [0, 0]], [op, [0, 0]]]);
   return animation('idle', op, [
     bodyLayer(
-      [
-        arm('arm-l', [84, 162], [-14, 34], kf([[0, 4], [op / 2, -3], [op, 4]])),
-        arm('arm-r', [210, 160], [14, 34], kf([[0, -4], [op / 2, 3], [op, -4]])),
-        group('mouth', [smile, stroke(INK, 4.5)], { p: [140, 172] }),
-        blush(),
-        eye('eye-l', [118, 140], { blink: blinkFrames(55) }),
-        eye('eye-r', [162, 140], { blink: blinkFrames(55) }),
-        specks(),
-        ...cube(),
-        ...legs(),
-      ],
+      stalk({
+        pal,
+        rot: [wave(op, { amp: 1.4 }), wave(op, { amp: 1.8, phase: -0.08 }), wave(op, { amp: 2.6, phase: -0.16 })],
+        face: [
+          mouth([[0, { w: 13, curve: 5, open: 1.5 }], [60, { w: 14, curve: 6, open: 2 }], [op, { w: 13, curve: 5, open: 1.5 }]]),
+          cheeks(pal),
+          browGroup(brow([[-19, -64, [0, 0], [4, -3]], [-6, -65, [-4, -1], [0, 0]]]), brow([[8, -65, [0, 0], [4, -1]], [21, -64, [-4, -3], [0, 0]]])),
+          eye('eye-l', EYE_L, { pal, look, blink: blinks(op, [46, 104]) }),
+          eye('eye-r', EYE_R, { pal, look, blink: blinks(op, [46, 104]) }),
+        ],
+        arms: {
+          l: armLeaf(pal, -1, { rot: wave(op, { amp: 4, phase: -0.2 }), bendFrames: flex(op, { bend: -70, amp: -6, phase: -0.25 }) }),
+          r: armLeaf(pal, 1, { rot: wave(op, { amp: 4, phase: -0.3 }), bendFrames: flex(op, { bend: 70, amp: 6, phase: -0.35 }) }),
+        },
+        crown: crown(pal, op, { amp: 5 }),
+      }),
       op,
-      { p: bob(op) },
+      { s: wave2(op, { base: [100, 100, 100], amp: [-0.6, 1.2, 0], cycles: 2 }) },
     ),
-    shadowLayer(op),
+    shadowLayer(op, wave2(op, { base: [100, 100, 100], amp: [2, 0, 0] })),
   ]);
 }
 
 function scanning() {
   const op = 60;
-  const look = kf([[0, [-2, 3]], [op / 2, [5, 2]], [op, [-2, 3]]]);
-  const magnifier = [
-    group('glass', [ellipse([-20, -24], [38, 38]), stroke('#2563EB', 6), fill('#BFE3FF', 55)]),
-    group('glare', [path([[-30, -30, [0, 0], [2, -6]], [-22, -36, [-6, 0], [0, 0]]]), stroke('#FFFFFF', 3.5)]),
-    group('handle', [path([[10, 10], [-6, -10]]), stroke('#7C4A2D', 8)]),
-  ];
-  const mouth = path(
-    [[-10, -2, [0, 0], [4, 12]], [10, -2, [-4, 12], [0, 0]], [0, -4, [6, 0], [-6, 0]]],
-    true,
-  );
+  const pal = HEALTHY;
+  // Eyes sweep across the label the way a reader's do: steady drift, quick return.
+  const look = kf([[0, [-3, 1]], [24, [3.5, 1], 'linear'], [30, [-3, 2.5], 'out'], [54, [3.5, 2.5], 'linear'], [op, [-3, 1], 'out']]);
+  const magnifier = group('magnifier', [
+    group('glint', [path([[-9, -14, [0, 0], [1, -4]], [-4, -18, [-4, 0], [0, 0]]]), stroke('#FFFFFF', 2.4, 90)]),
+    group('lens', [ellipse([0, -10], [26, 26]), stroke('#3A3F48', 3.4), gfill([[0, '#DDF2FF'], [1, '#8EC9F0']], [-10, -20], [10, 0], 45)]),
+    group('handle', [path([[0, 3], [0, 18]]), stroke('#5A3A22', 5)]),
+  ], { p: [46, -28], r: -30 });
   return animation('scanning', op, [
     bodyLayer(
-      [
-        arm('arm-r', [208, 162], [10, 10], kf([[0, -12], [op / 2, 10], [op, -12]]), magnifier),
-        arm('arm-l', [84, 160], [-20, 26]),
-        group('mouth', [mouth, stroke(INK, 4), fill('#7A2E3A')], { p: [140, 176] }),
-        blush(),
-        eye('eye-l', [118, 140], { pupil: look }),
-        eye('eye-r', [162, 140], { pupil: look }),
-        brows([[108, 118], [126, 115]], [[152, 115], [170, 118]]),
-        specks(),
-        ...cube(),
-        ...legs(),
-      ],
+      stalk({
+        pal,
+        rot: [kf([[0, -1.5], [30, 1.5], [op, -1.5]]), kf([[0, -3], [30, 2], [op, -3]]), kf([[0, -4], [32, 3], [op, -4]])],
+        face: [
+          mouth([[0, { w: 7, curve: 2, open: 4 }], [30, { w: 8, curve: 1.5, open: 5 }], [op, { w: 7, curve: 2, open: 4 }]]),
+          cheeks(pal, 25),
+          browGroup(
+            brow([[-19, -62, [0, 0], [4, -2]], [-5, -63, [-4, 0], [0, 0]]]),
+            brow([[8, -67, [0, 0], [4, -4]], [22, -68, [-4, -2], [0, 0]]]),
+            { r: { p: kf([[0, [0, 0]], [30, [0, -1.5]], [op, [0, 0]]]) } },
+          ),
+          eye('eye-l', EYE_L, { pal, look, lid: 0.18 }),
+          eye('eye-r', EYE_R, { pal, look, lid: 0.12 }),
+        ],
+        arms: {
+          l: armLeaf(pal, -1, { rot: wave(op, { amp: 3, phase: -0.2 }), bendFrames: flex(op, { bend: -78, amp: -5, phase: -0.2 }) }),
+          r: armLeaf(pal, 1, {
+            spec: { a0: -40, bend: 20, len: 50 },
+            rot: kf([[0, -10], [26, 14], [32, 12], [54, -8], [op, -10]]),
+            extra: [magnifier],
+          }),
+        },
+        crown: crown(pal, op, { amp: 4, cycles: 1, phaseBase: -0.1 }),
+      }),
       op,
-      { p: bob(op, 3) },
+      { s: wave2(op, { base: [100, 100, 100], amp: [-0.5, 1, 0], cycles: 1 }) },
     ),
     shadowLayer(op),
   ]);
 }
 
 function happy() {
-  const op = 40;
-  const jumpY = kf([[0, [...FEET, 0]], [12, [FEET[0], FEET[1] - 34, 0]], [24, [...FEET, 0]], [op, [...FEET, 0]]]);
-  const squash = kf([[0, [100, 100, 100]], [4, [96, 106, 100]], [24, [100, 100, 100]], [27, [108, 92, 100]], [33, [100, 100, 100]], [op, [100, 100, 100]]]);
-  const bigSmile = path([[-20, -4, [0, 0], [0, 0]], [20, -4, [0, 0], [-2, 22]], [0, 16, [12, 0], [-12, 0]], [-20, -4, [2, 22], [0, 0]]], true);
-  const wave = (a, b) => kf([[0, a], [10, b], [20, a], [30, b], [op, a]]);
-
-  const star = (cx, cy, R, color, delay) => {
-    const r = R * 0.35;
+  // CLEAN: anticipation crouch → spring up with leaves flung high → float → land with squash → settle.
+  const op = 54;
+  const pal = HEALTHY;
+  const y = (dy) => [ROOT[0], ROOT[1] + dy, 0];
+  const pos = kf([[0, y(0)], [8, y(0), 'out'], [24, y(-26), 'out'], [30, y(-28), 'in'], [40, y(0), 'out'], [op, y(0)]]);
+  const squash = kf([
+    [0, [100, 100, 100]], [8, [110, 88, 100], 'out'], [14, [93, 110, 100], 'out'], [24, [99, 101, 100]],
+    [40, [100, 100, 100], 'out'], [43, [112, 86, 100], 'out'], [48, [97, 103, 100]], [op, [100, 100, 100]],
+  ]);
+  const armUp = (side) =>
+    armLeaf(pal, side, {
+      rot: kf([[0, 0], [8, side * 12, 'out'], [16, side * -52, 'back'], [30, side * -46], [40, side * -36], [46, side * -6, 'out'], [op, 0]]),
+      bendFrames: [[0, { bend: side * 70 }], [16, { bend: side * 30 }, 'out'], [30, { bend: side * 50 }], [44, { bend: side * 84 }, 'out'], [op, { bend: side * 70 }]],
+    });
+  const crownFollow = crown(pal, op, { amp: 9, cycles: 2, phaseBase: 0.25 });
+  const glint = (cx, cy, R, color, delay) => {
+    const r = R * 0.22;
     const pts = [];
     for (let k = 0; k < 8; k++) {
       const ang = (Math.PI / 4) * k - Math.PI / 2;
       const rad = k % 2 === 0 ? R : r;
       pts.push([Math.cos(ang) * rad, Math.sin(ang) * rad]);
     }
-    // Pops in and out once per loop, starting at `delay` (needs delay + 16 < op).
-    const frames = [[delay, [0, 0]], [delay + 8, [110, 110]], [delay + 16, [0, 0]], [op, [0, 0]]];
-    if (delay > 0) frames.unshift([0, [0, 0]]);
-    return group('star', [path(pts, true), fill(color)], { p: [cx, cy], s: kf(frames) });
+    const frames = [[0, [0, 0]], [delay, [0, 0]], [delay + 7, [120, 120], 'out'], [delay + 16, [0, 0], 'in'], [op, [0, 0]]];
+    return group('glint', [path(pts, true), fill(color)], { p: [cx, cy], s: kf(frames), r: kf([[0, 0], [op, 90]]) });
   };
-  const confetti = (cx, cy, rot, color) =>
-    group('confetti', [rect([0, 0], [10, 5], 1.5), fill(color)], { p: [cx, cy], r: kf([[0, rot], [op, rot + 180]]) });
-
   return animation('happy', op, [
-    layer(
-      'sparkles',
-      0,
-      [
-        star(48, 70, 16, '#FCD34D', 0),
-        star(246, 56, 13, '#FCD34D', 12),
-        star(258, 150, 10, '#34D399', 22),
-        star(40, 160, 9, '#34D399', 6),
-        confetti(80, 40, 20, '#34D399'),
-        confetti(220, 30, -30, '#22C55E'),
-        confetti(30, 118, 60, '#10B981'),
-        confetti(270, 105, 10, '#FCD34D'),
-      ],
-      op,
-    ),
+    layer('sparkles', [
+      glint(58, 70, 13, '#FFE8A3', 14),
+      glint(244, 58, 11, '#FFFFFF', 20),
+      glint(252, 150, 8, '#A7F3D0', 26),
+      glint(44, 150, 9, '#FFE8A3', 18),
+      glint(150, 22, 9, '#A7F3D0', 24),
+    ], op),
     bodyLayer(
-      [
-        arm('arm-l', [84, 150], [-24, -30], wave(-6, 14)),
-        arm('arm-r', [210, 148], [24, -30], wave(6, -14)),
-        group('mouth', [bigSmile, stroke(INK, 4), fill('#7A2E3A')], { p: [140, 172] }),
-        group('tongue', [ellipse([140, 182], [16, 8]), fill('#F47C8C')]),
-        blush(),
-        happyEye('eye-l', [118, 142]),
-        happyEye('eye-r', [162, 142]),
-        specks(),
-        ...cube(),
-        ...legs('#FFFFFF', '#34D399'),
-      ],
+      stalk({
+        pal,
+        rot: [kf([[0, 0], [8, 0], [14, -2], [24, 1.5], [40, 0], [44, 2], [op, 0]]), kf([[0, 0], [14, -3], [26, 2], [44, -2.5], [50, 1], [op, 0]]), kf([[0, 0], [16, -5], [28, 3], [46, -4], [52, 1.5], [op, 0]])],
+        face: [
+          mouth([[0, { w: 18, curve: 9, open: 7, up: 1 }], [16, { w: 22, curve: 11, open: 10, up: 2 }, 'out'], [40, { w: 20, curve: 10, open: 8, up: 1 }], [op, { w: 18, curve: 9, open: 7, up: 1 }]]),
+          group('tongue', [ellipse([1, -16], [9, 5]), fill(TONGUE)], { o: 85 }),
+          cheeks(pal, 70),
+          browGroup(brow([[-20, -66, [0, 0], [4, -4]], [-5, -68, [-4, -1], [0, 0]]]), brow([[8, -68, [0, 0], [4, -1]], [23, -66, [-4, -4], [0, 0]]]), { l: { p: kf([[0, [0, 0]], [16, [0, -3]], [40, [0, -1]], [op, [0, 0]]]) }, r: { p: kf([[0, [0, 0]], [16, [0, -3]], [40, [0, -1]], [op, [0, 0]]]) } }),
+          // Happy closed eyes: smiling arcs.
+          group('eye-l', [path([[-8, 2, [0, 0], [3, -9]], [8, 2, [-3, -9], [0, 0]]]), stroke(INK, 2.8)], { p: EYE_L }),
+          group('eye-r', [path([[-8, 2, [0, 0], [3, -9]], [8, 2, [-3, -9], [0, 0]]]), stroke(INK, 2.8)], { p: EYE_R }),
+        ],
+        arms: { l: armUp(-1), r: armUp(1) },
+        crown: crownFollow,
+      }),
       op,
-      { p: jumpY, s: squash },
+      { p: pos, s: squash },
     ),
-    shadowLayer(op, kf([[0, [100, 100, 100]], [12, [65, 65, 100]], [24, [100, 100, 100]], [op, [100, 100, 100]]])),
+    shadowLayer(op, kf([[0, [100, 100, 100]], [8, [108, 108, 100]], [27, [55, 55, 100]], [40, [100, 100, 100], 'out'], [43, [112, 112, 100]], [op, [100, 100, 100]]])),
   ]);
 }
 
-function okay() {
-  const op = 72;
-  const mouth = path([[-14, 0, [0, 0], [5, -5]], [0, 0, [-5, 5], [5, -5]], [14, 0, [-5, 5], [0, 0]]]);
-  const shrugL = kf([[0, 0], [18, -18], [36, 0], [op, 0]]);
-  const shrugR = kf([[0, 0], [18, 18], [36, 0], [op, 0]]);
+function bad() {
+  // BAD: a slow, unconvinced shrug with a head tilt, one raised brow and a nervous sweat drop.
+  const op = 84;
+  const pal = HEALTHY;
+  const shrug = (side) =>
+    armLeaf(pal, side, {
+      rot: kf([[0, 0], [14, side * -6, 'in'], [24, side * -40, 'back'], [46, side * -36], [58, side * -4, 'inOut'], [op, 0]]),
+      bendFrames: [[0, { bend: side * 72 }], [24, { bend: side * 40 }, 'out'], [46, { bend: side * 46 }], [60, { bend: side * 78 }], [op, { bend: side * 72 }]],
+    });
+  const look = kf([[0, [-3, 1]], [20, [-3, 1]], [26, [3, 1], 'out'], [56, [3, 1]], [62, [-3, 1], 'out'], [op, [-3, 1]]]);
+  const sweat = group('sweat', [
+    group('drop', [path([[0, -6, [0, 0], [3, 4]], [0, 5, [4, 0], [-4, 0]], [0, -6, [-3, 4], [0, 0]]], true), stroke('#3E8FCC', 1, 60), fill(TEAR, 90)]),
+  ], {
+    p: kf([[0, [26, -72]], [18, [26, -72]], [44, [28, -50], 'in'], [op, [28, -50]]]),
+    o: kf([[0, 0], [18, 0], [22, 100], [40, 100], [46, 0], [op, 0]]),
+  });
   return animation('okay', op, [
     bodyLayer(
-      [
-        arm('arm-l', [84, 160], [-28, -4], shrugL),
-        arm('arm-r', [210, 158], [28, -4], shrugR),
-        group('mouth', [mouth, stroke(INK, 4.5)], { p: [140, 174] }),
-        blush(),
-        eye('eye-l', [118, 142], { pupil: [-3, 1], blink: blinkFrames(50) }),
-        eye('eye-r', [162, 142], { pupil: [-3, 1], blink: blinkFrames(50) }),
-        brows([[106, 120], [128, 120]], [[150, 116, [0, 0], [6, -5]], [172, 114, [-6, -2], [0, 0]]]),
-        specks(),
-        ...cube(),
-        ...legs(),
-      ],
+      stalk({
+        pal,
+        rot: [kf([[0, 0], [24, -1], [56, -1], [op, 0]]), kf([[0, 0], [24, 3, 'out'], [56, 3.5], [70, 0], [op, 0]]), kf([[0, 0], [26, 7, 'out'], [56, 8], [72, 0], [op, 0]])],
+        face: [
+          sweat,
+          mouth([[0, { w: 14, curve: -1, open: 1.5 }], [24, { w: 15, curve: -3, open: 2 }, 'out'], [56, { w: 15, curve: -3, open: 2 }], [op, { w: 14, curve: -1, open: 1.5 }]], [2, -26]),
+          cheeks(pal, 20),
+          browGroup(
+            brow([[-19, -63, [0, 0], [4, 0]], [-5, -63, [-4, 0], [0, 0]]]),
+            brow([[8, -66, [0, 0], [4, -5]], [22, -66, [-4, -4], [0, 0]]]),
+            { r: { p: kf([[0, [0, 0]], [24, [0, -4], 'back'], [56, [0, -4]], [66, [0, 0]], [op, [0, 0]]]) } },
+          ),
+          eye('eye-l', EYE_L, { pal, look, lid: 0.32, blink: blinks(op, [70]) }),
+          eye('eye-r', EYE_R, { pal, look, lid: 0.1, blink: blinks(op, [70]) }),
+        ],
+        arms: { l: shrug(-1), r: shrug(1) },
+        crown: crown(pal, op, { amp: 4, phaseBase: 0.3 }),
+      }),
       op,
-      { r: kf([[0, -2.5], [op / 2, 2.5], [op, -2.5]]) },
+      { s: kf([[0, [100, 100, 100]], [20, [101, 99, 100]], [26, [99, 102, 100], 'out'], [56, [100, 101, 100]], [66, [100, 100, 100]], [op, [100, 100, 100]]]) },
     ),
     shadowLayer(op),
   ]);
 }
 
-function sad() {
-  const op = 60;
-  const sob = kf([[0, [100, 100, 100]], [8, [102, 97, 100]], [16, [100, 100, 100]], [24, [102, 97, 100]], [32, [100, 100, 100]], [op, [100, 100, 100]]]);
-  const frown = (h) =>
-    shape([[-16, 6, [0, 0], [0, 0]], [16, 6, [0, 0], [-4, -h]], [0, -8, [8, 0], [-8, 0]], [-16, 6, [4, -h], [0, 0]]], true);
-  const mouth = pathAnim([[0, frown(10)], [8, frown(14)], [16, frown(10)], [24, frown(14)], [32, frown(10)], [op, frown(10)]]);
-  const drop = (x, delay) =>
-    group('drop', [ellipse([0, 0], [9, 12]), fill(TEAR)], {
-      p: kf([[0, [x, 158]], [delay, [x, 158]], [delay + 22, [x + (x < 140 ? -6 : 6), 205]], [op, [x + (x < 140 ? -6 : 6), 205]]]),
-      o: kf([[0, 0], [delay, 0], [delay + 2, 100], [delay + 18, 100], [delay + 22, 0], [op, 0]]),
+function ugly() {
+  // UGLY: the cane has gone off. It wilts forward, leaves droop and brown at the tips,
+  // it shivers and sobs, and a fly circles it. Colours are sick from frame 0 so the loop is seamless.
+  const op = 72;
+  const pal = SICK;
+  const sob = kf([[0, [100, 100, 100]], [9, [101.5, 97.5, 100]], [18, [100, 100, 100]], [27, [101.5, 97.5, 100]], [36, [100, 100, 100]], [op, [100, 100, 100]]]);
+  const shiver = (base, amp) => {
+    const f = [];
+    for (let t = 0; t <= op; t += 3) f.push([t, base + (t % 6 === 0 ? amp : -amp), 'linear']);
+    f[f.length - 1] = [op, base + amp];
+    return kf(f);
+  };
+  const tear = (x, delay) =>
+    group('tear', [path([[0, -4, [0, 0], [2.5, 3]], [0, 4, [3, 0], [-3, 0]], [0, -4, [-2.5, 3], [0, 0]]], true), fill(TEAR, 95)], {
+      p: kf([[0, [x, -42]], [delay, [x, -42]], [delay + 26, [x + (x < 0 ? -3 : 3), -4], 'in'], [op, [x + (x < 0 ? -3 : 3), -4]]]),
+      o: kf([[0, 0], [delay, 0], [delay + 3, 100], [delay + 22, 100], [delay + 26, 0], [op, 0]]),
     });
-  const shake = (base) => kf([[0, base], [8, base + 4], [16, base], [24, base + 4], [32, base], [op, base]]);
+  const rot = group('rot-spots', [ellipse([-16, -16], [7, 5]), ellipse([18, -8], [5, 4]), ellipse([10, -70], [4, 3]), fill('#3A2410', 55)]);
+  const droopArm = (side) =>
+    armLeaf(pal, side, {
+      spec: { a0: side > 0 ? 10 : 170, len: 60 },
+      rot: kf([[0, side * 8], [18, side * 11], [36, side * 8], [54, side * 11], [op, side * 8]]),
+      bendFrames: [[0, { bend: side * 85, droop: side * 25 }], [36, { bend: side * 92, droop: side * 30 }], [op, { bend: side * 85, droop: side * 25 }]],
+    });
+  // Fly: body + flapping wings on a lazy figure-eight around the head.
+  const flyPath = [];
+  for (let k = 0; k <= 12; k++) {
+    const a = (2 * Math.PI * k) / 12;
+    flyPath.push([(op * k) / 12, [150 + 70 * Math.sin(a), 70 + 22 * Math.sin(2 * a)], 'linear']);
+  }
+  const flap = [];
+  for (let t = 0; t <= op; t += 2) flap.push([t, [100, t % 4 === 0 ? 100 : 25], 'linear']);
+  const fly = group('fly', [
+    group('wings', [ellipse([-4, -5], [8, 6]), ellipse([4, -5], [8, 6]), stroke('#FFFFFF', 0.8, 70), fill('#DDEEFF', 60)], { s: kf(flap) }),
+    group('body', [ellipse([0, 0], [8, 6]), fill('#151515')]),
+  ], { p: kf(flyPath) });
   return animation('sad', op, [
+    layer('fly', [fly], op),
     bodyLayer(
-      [
-        arm('arm-l', [84, 176], [26, -14], shake(0)),
-        arm('arm-r', [206, 176], [-30, -14], shake(0)),
-        drop(110, 4),
-        drop(170, 20),
-        group('tears', [path([[110, 154], [106, 196]]), path([[170, 154], [174, 196]]), stroke(TEAR, 8, 90)]),
-        group('mouth', [mouth, stroke(INK, 4), fill('#7A2E3A')], { p: [140, 182] }),
-        eye('eye-l', [118, 140], { pupil: [1, -4], size: [28, 32] }),
-        eye('eye-r', [162, 140], { pupil: [-1, -4], size: [28, 32] }),
-        brows([[104, 118], [126, 112]], [[154, 112], [176, 118]]),
-        specks(),
-        ...cube(),
-        ...legs(),
-      ],
+      stalk({
+        pal,
+        rot: [shiver(4, 0.4), kf([[0, 6], [18, 8], [36, 6], [54, 8], [op, 6]]), kf([[0, 9], [20, 12], [38, 9], [56, 12], [op, 9]])],
+        extra2: [rot],
+        face: [
+          tear(-12, 4),
+          tear(14, 30),
+          tear(-12, 40),
+          mouth([[0, { w: 16, curve: -7, open: 2, up: -6 }], [9, { w: 17, curve: -9, open: 4, up: -6 }], [18, { w: 16, curve: -7, open: 2, up: -6 }], [27, { w: 17, curve: -9, open: 4, up: -6 }], [36, { w: 16, curve: -7, open: 2, up: -6 }], [op, { w: 16, curve: -7, open: 2, up: -6 }]], [1, -22]),
+          browGroup(brow([[-20, -60, [0, 0], [4, -2]], [-6, -66, [-3, 2], [0, 0]]]), brow([[8, -66, [0, 0], [3, 2]], [22, -60, [-4, -2], [0, 0]]])),
+          eye('eye-l', EYE_L, { pal, look: [1, 3], lid: 0.38, size: [17, 19] }),
+          eye('eye-r', EYE_R, { pal, look: [-1, 3], lid: 0.38, size: [17, 19] }),
+        ],
+        arms: { l: droopArm(-1), r: droopArm(1) },
+        crown: crown(pal, op, { amp: 3, droop: 70, cycles: 1 }),
+      }),
       op,
-      { s: sob, p: [FEET[0], FEET[1] + 2, 0] },
+      { s: sob },
     ),
     shadowLayer(op),
   ]);
 }
 
 mkdirSync('assets/lottie', { recursive: true });
-for (const [name, build] of Object.entries({ idle, scanning, happy, okay, sad })) {
-  writeFileSync(`assets/lottie/${name}.json`, JSON.stringify(build()));
+const moods = { idle, scanning, clean: happy, bad, ugly };
+for (const [name, build] of Object.entries(moods)) {
+  const anim = build();
+  anim.nm = name;
+  // Two decimals is plenty at this size and keeps the files small.
+  writeFileSync(`assets/lottie/${name}.json`, JSON.stringify(anim, (_k, v) => (typeof v === 'number' ? Math.round(v * 100) / 100 : v)));
   console.log(`wrote assets/lottie/${name}.json`);
 }
