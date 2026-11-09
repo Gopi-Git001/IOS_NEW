@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import VerdictFacts from '../components/VerdictFacts.astro';
 import ScanCta from '../components/ScanCta.astro';
 import Film from '../components/Film.astro';
 import { APP_URL } from '../config';
@@ -147,7 +146,7 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
     </div>
   </section>
 
-  <section class="result" aria-labelledby="result-h" style="background:var(--paper-sunk)">
+  <section class="result" aria-labelledby="result-h">
     <div class="wrap hero-grid">
       <div class="reveal">
         <span class="kicker">What you see</span>
@@ -155,21 +154,12 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
         <p class="lead">The result is set like a Nutrition Facts panel: one word on top, the reason in a sentence, and every ingredient tagged underneath so you can see which one decided it.</p>
         <p><a href="/how-it-works">How the rules decide →</a></p>
       </div>
-      <VerdictFacts
-        verdict="UGLY"
-        rule="U1"
-        label="Example label"
-        basis="per ingredient list"
-        why="Evaporated cane juice is sugar with better marketing."
-        rows={[
-          { name: 'Rolled oats' },
-          { name: 'Evaporated cane juice', tag: 'Sugar', tone: 'ugly' },
-          { name: 'Brown rice syrup', tag: 'Sugar', tone: 'ugly' },
-          { name: 'Steviol glycosides', tag: 'Sweetener', tone: 'bad' },
-          { name: 'Milk', tag: 'Natural', tone: 'clean' },
-        ]}
-        foot="Illustration of a result for a made-up ingredient list, not a real product."
-      />
+      <figure class="screens">
+        <img class="phone p1" src="/app/camera.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The Sugar Depth camera screen framing a cereal box's ingredient list, with the hint Fit the ingredient list in the panel." />
+        <img class="phone p2" src="/app/result-ugly.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The Sugar Depth result: Verdict Facts, Ugly, added sugar. Sucrose, glucose syrup and fruit juice concentrate are tagged sugar; aspartame is tagged sweetener." />
+        <img class="phone p3" src="/app/glossary.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The ingredient card for sucrose: That's sugar. The chemical name for table sugar. Any added sugar makes it UGLY." />
+        <figcaption>Real Sugar Depth screens: scan, verdict, and tap any ingredient for why it counts. Demo label, not a real product.</figcaption>
+      </figure>
     </div>
   </section>
 

@@ -1,33 +1,14 @@
 // Sugar Depth: the verdict set like a Nutrition Facts panel, cut in glass. Every surface is a frosted sheet
 // over a dark ambient backdrop with soft colored light; type is white, one colored word carries the verdict.
 // Libre Franklin (the panel's grotesque, up to 900) for everything set; Newsreader italic for the voice.
+import tokens from '../brand/tokens.json';
+
 export const brand = { name: 'Sugar Depth', tagline: 'Read the fine print.' };
 
-export const colors = {
-  // Verdict colors, tuned for white-on-dark glass (each at least 7:1 on #0B0F18).
-  clean: '#5BE49B',
-  bad: '#FFC24D',
-  ugly: '#FF7A66',
-  // The glass system. `paper` is the deep base under the ambient light; `paperRaised` a frosted sheet.
-  paper: '#06080D',
-  paperRaised: 'rgba(255,255,255,0.07)',
-  ink: '#F4F6FB',
-  inkMuted: 'rgba(244,246,251,0.74)',
-  inkFaint: 'rgba(244,246,251,0.6)',
-  rule: 'rgba(255,255,255,0.34)',
-  hairline: 'rgba(255,255,255,0.12)',
-  // Text on the bright frosted buttons.
-  onInk: '#0A0D14',
-  // The large frosted sheets (result, glossary): darker so text holds over any photo.
-  sheet: 'rgba(16,20,30,0.62)',
-  pressedFill: 'rgba(255,255,255,0.08)',
-  // Over the camera and photos.
-  background: '#06080D',
-  text: '#FFFFFF',
-  textMuted: 'rgba(255,255,255,0.8)',
-  textFaint: 'rgba(255,255,255,0.62)',
-  glassBorder: 'rgba(255,255,255,0.18)',
-};
+// Colors live in brand/tokens.json, shared with the marketing site (sites/sugardepth). Edit them there.
+// Verdict colors are tuned for white-on-dark glass (each at least 7:1 on #0B0F18).
+export const colors = tokens.colors;
+export const ambient = tokens.ambient;
 
 export const fonts = {
   regular: 'LibreFranklin_400Regular',

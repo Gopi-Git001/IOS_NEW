@@ -18,6 +18,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Brand tokens in sync (app and site)
+        run: node scripts/sync-tokens.mjs --check
       - name: Type check
         run: npx tsc --noEmit
       - name: Rules and app tests
