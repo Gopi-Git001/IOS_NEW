@@ -5,6 +5,8 @@
   },
   "exclude": [
     "node_modules",
+    "dist-web",
+    "docs",
     "supabase/functions",
     "**/*.test.ts"
   ]
