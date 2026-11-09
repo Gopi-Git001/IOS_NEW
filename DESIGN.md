@@ -1,11 +1,23 @@
 # Sugar Depth design system
 
-One system for the scanner app (`src/`) and the marketing site (`sites/sugardepth`). The verdict is set
-like a US Nutrition Facts panel, because the product's job is to read the fine print, and the panel is cut
-in glass. Tagline: "Read the fine print."
+One system for the scanner app (`src/`) and the marketing site (`sites/sugardepth`). Tagline:
+"Read the fine print." The current verdict direction is **The Verdict, glossy crystal**.
 
-History: direction B ("paper panel") was chosen on 2026-11-06. The app then moved to dark glass, and on
-2026-11-09 the marketing site was moved to match, so both surfaces now share the dark glass described here.
+## Current verdict surfaces
+
+- Warm editorial paper, faint grid and soft light beams on the site; a warm translucent scrim over the captured photo in the app.
+- A giant glossy black verdict word, a fading mirror reflection and a small coloured glossy bead as its full stop.
+- A thick tilted rectangular glass slab in the verdict colour: visible edge, inset rim, diagonal inner streaks, sheen and glints, with a soft coloured floor caustic. Never substitute faceted gem shapes.
+- A hairline rule and Newsreader italic reason underneath; Libre Franklin carries the verdict and UI.
+- Brand fills stay CLEAN `#5be49b`, BAD `#ffc24d`, UGLY `#ff7a66`; darker `cleanInk`, `badInk`, `uglyInk` tokens carry readable coloured text on light paper.
+- Site verdict preview uses native HTML radios and CSS only. Reduced motion disables the sheen; app reduced motion also disables the sheet spring and reading shimmer.
+- Existing camera controls, glossary, menu and profile retain their dark glass. Only history verdict badges adopt the slab material. Verdict wording, rules, data flow and interactions are unchanged.
+
+The sections below document the retained dark-glass foundation, not the current light verdict surfaces.
+
+History: direction B ("paper panel") was chosen on 2026-11-06, followed by dark glass.
+On 2026-11-09 the owner approved the editorial glossy-crystal verdict reference, retaining its exact
+word, bead and slab layout language rather than introducing new shapes.
 
 ## Principles
 - Glass over light. Every surface is a frosted sheet over a dark ambient backdrop: a deep blue-black base

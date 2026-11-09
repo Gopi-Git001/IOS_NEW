@@ -3,11 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Character, type Mood, moodForVerdict } from '../components/Character';
-import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
+import { Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { Glass } from '../components/Glass';
 import { GlossaryCard, type Pick } from '../components/GlossaryCard';
 import { ResultSheet, VerdictContent } from '../components/VerdictPanel';
-import { colors, fonts } from '../theme';
+import { colors, crystal, fonts } from '../theme';
+import { CrystalSlab, useCrystalReducedMotion } from '../components/CrystalVerdict';
 import type { ScanResult } from '../types';
 
 const CUBE = 130;
@@ -45,6 +46,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
   return (
     <View style={styles.fill}>
       <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      <LinearGradient pointerEvents="none" colors={['#F4F2EB00', '#F4F2EB70', '#F4F2EBE8']} locations={[0, .3, 1]} style={StyleSheet.absoluteFill} />
       <Scrims topHeight="22%" />
       {state.status === 'reading' && <Shimmer height={window.height} />}
 
@@ -72,12 +74,15 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
 
       {state.status !== 'reading' && (
         <>
-          <ResultSheet key={state.status} action={action} footer={<Footer ink />} maxHeight={sheetMax} bottom={sheetBottom} onHeight={setSheetHeight}>
+          <ResultSheet key={state.status} action={action} footer={<Text style={styles.footer}>Not medical advice · Doesn't check allergens</Text>} maxHeight={sheetMax} bottom={sheetBottom} onHeight={setSheetHeight}>
             {state.status === 'done' ? (
               <VerdictContent result={state.result} listsPending={state.listsPending} onPick={setPick} />
             ) : (
               <>
-                <Text style={styles.errorTitle}>No verdict</Text>
+                <View style={styles.errorHero}>
+                  <Text style={styles.errorTitle}>No verdict</Text>
+                  <CrystalSlab verdict={null} />
+                </View>
                 <View style={styles.errorRule} />
                 <Text style={styles.errorText}>{state.message}</Text>
               </>
@@ -88,7 +93,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
               mood={state.status === 'done' ? doneMood(state.result.verdict) : 'bad'}
               bottom={sheetBottom + sheetHeight - PERCH}
               size={CUBE}
-              right={10}
+              right={(window.width - Math.min(window.width * .96, 700)) / 2 + 10}
             />
           )}
         </>
@@ -102,11 +107,13 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
 /** A soft band of light sweeping down the frozen photo, like the label is being read. */
 function Shimmer({ height }: { height: number }) {
   const y = useRef(new Animated.Value(0)).current;
+  const reduced = useCrystalReducedMotion();
   useEffect(() => {
+    if (reduced) return;
     const loop = Animated.loop(Animated.timing(y, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.quad), useNativeDriver: true }));
     loop.start();
     return () => loop.stop();
-  }, [y]);
+  }, [y, reduced]);
   const translateY = y.interpolate({ inputRange: [0, 1], outputRange: [-160, height] });
   return (
     <Animated.View pointerEvents="none" style={[styles.shimmer, { transform: [{ translateY }] }]}>
@@ -124,7 +131,9 @@ const styles = StyleSheet.create({
   pillSlot: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingBottom: 60 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 22, height: 54, borderRadius: 27 },
   pillText: { fontFamily: fonts.serifMedium, fontSize: 19, color: colors.text },
-  errorTitle: { fontFamily: fonts.black, fontSize: 30, lineHeight: 32, color: colors.ink, letterSpacing: -1 },
-  errorRule: { height: 2, borderRadius: 1, backgroundColor: colors.rule, marginTop: 8, marginBottom: 10 },
-  errorText: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 25, color: colors.ink },
+  errorTitle: { fontFamily: fonts.black, fontSize: 42, lineHeight: 48, color: crystal.ink, letterSpacing: -1.5, textShadowColor: '#14161322', textShadowRadius: 6, textShadowOffset: { width: 0, height: 3 } },
+  errorHero: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  errorRule: { height: 1, backgroundColor: crystal.ink, marginTop: 16, marginBottom: 10 },
+  errorText: { fontFamily: fonts.serif, fontSize: 21, lineHeight: 28, color: crystal.ink },
+  footer: { fontFamily: fonts.medium, fontSize: 12, lineHeight: 17, color: crystal.muted, textAlign: 'center', paddingVertical: 14, paddingHorizontal: 12 },
 });
