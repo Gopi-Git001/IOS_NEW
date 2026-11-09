@@ -1,22 +1,33 @@
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { useRef, useState } from 'react';
+import { type ComponentRef, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { notify } from '../lib/confirm';
+import { BlurryPhotoError, type LabelCameraHandle, type Photo, type ViewBox } from '../lib/photo';
+import { markScan, noteScan, startScanTiming } from '../lib/scanTiming';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { Glass } from '../components/Glass';
 import { FlashIcon } from '../components/Icons';
+import { LabelCamera } from '../components/LabelCamera';
 import { brand, colors, fonts } from '../theme';
 
-type Props = { onCapture: (photoUri: string) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string };
+type Props = { onCapture: (photo: Photo) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string };
 
 export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
-  const camera = useRef<CameraView>(null);
+  const camera = useRef<LabelCameraHandle>(null);
+  const root = useRef<ComponentRef<typeof View>>(null);
+  const frame = useRef<ComponentRef<typeof View>>(null);
+  const [box, setBox] = useState<ViewBox | null>(null);
   const [torch, setTorch] = useState(false);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  const measureBox = () =>
+    root.current?.measureInWindow((rootX, rootY, viewWidth, viewHeight) =>
+      frame.current?.measureInWindow((x, y, width, height) => setBox({ x: x - rootX, y: y - rootY, width, height, viewWidth, viewHeight })),
+    );
 
   if (!permission) return <View style={styles.fill} />;
 
@@ -35,26 +46,26 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
   const shoot = async () => {
     if (!camera.current || !ready || busy) return;
     setBusy(true);
+    startScanTiming();
     try {
-      const photo = await camera.current.takePictureAsync({ quality: 0.7 });
+      const photo = await camera.current.capture();
+      markScan('captured');
+      noteScan({ photo_px: `${photo.width}x${photo.height}` });
+      // After the shot, so the buzz can't shake the phone while the photo is taken.
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       setTorch(false);
-      onCapture(photo.uri);
-    } catch {
-      notify('Could not take photo', 'Please try again.');
+      onCapture(photo);
+    } catch (e) {
+      if (e instanceof BlurryPhotoError) notify('Photo is blurry', 'Hold the phone steady and tap again.');
+      else notify('Could not take photo', 'Please try again.');
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <View style={styles.fill}>
-      <CameraView
-        ref={camera}
-        style={StyleSheet.absoluteFill}
-        facing="back"
-        enableTorch={torch}
-        onCameraReady={() => setReady(true)}
-      />
+    <View ref={root} style={styles.fill}>
+      <LabelCamera ref={camera} torch={torch} box={box} onReady={() => setReady(true)} />
       <Scrims />
 
       <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
@@ -80,7 +91,7 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
 
         <View style={styles.middle} pointerEvents="none">
           {/* The scan frame borrows the Nutrition Facts panel: heavy top bar, hairline sides, a medium base rule. */}
-          <View style={styles.frame}>
+          <View ref={frame} onLayout={measureBox} style={styles.frame}>
             <View style={styles.frameTop} />
             <Text style={styles.frameLabel}>Ingredients</Text>
             <View style={styles.frameBase} />
@@ -105,10 +116,7 @@ function Shutter({ onPress, disabled, busy }: { onPress: () => void; disabled: b
   const spring = (toValue: number) => Animated.spring(scale, { toValue, friction: 5, tension: 260, useNativeDriver: true }).start();
   return (
     <Pressable
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-        onPress();
-      }}
+      onPress={onPress}
       onPressIn={() => spring(0.88)}
       onPressOut={() => spring(1)}
       disabled={disabled}

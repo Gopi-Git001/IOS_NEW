@@ -431,3 +431,25 @@ verify_jwt = true
 
 [functions.delete-account]
 verify_jwt = true
+
+# Slugs the app calls (src/lib/api.ts); each publishes the matching folder above.
+[functions.quickgob-scan-label]
+verify_jwt = true
+entrypoint = "./functions/scan-label/index.ts"
+import_map = "./functions/scan-label/deno.json"
+
+[functions.quickgob-quick-verdict]
+verify_jwt = true
+entrypoint = "./functions/quick-verdict/index.ts"
+import_map = "./functions/quick-verdict/deno.json"
+
+[functions.quickgob-delete-account]
+verify_jwt = true
+entrypoint = "./functions/delete-account/index.ts"
+import_map = "./functions/delete-account/deno.json"
+
+# Called before sign-in (guest sessions), so no JWT check.
+[functions.quickgob-phone-auth]
+verify_jwt = false
+entrypoint = "./functions/phone-auth/index.ts"
+import_map = "./functions/phone-auth/deno.json"
