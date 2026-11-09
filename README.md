@@ -24,12 +24,21 @@ Without Supabase settings in `.env` the app runs in demo mode with fake results.
 ## Backend
 
 ```bash
-supabase secrets set ANTHROPIC_API_KEY=... TYPESAFE_API_KEY=...
-# optional: supabase secrets set CLAUDE_MODEL=<faster model for the ingredient lists>
-supabase functions deploy quick-verdict
-supabase functions deploy scan-label
-supabase functions deploy delete-account
+# Secrets live only in Supabase secrets, never in source (see supabase/functions/.env.example)
+npx supabase secrets set --env-file supabase/functions/.env
+npx supabase db push                     # applies supabase/migrations (rate limiter)
+npx supabase functions deploy scan-label --no-verify-jwt     # deployed as quickgob-* in the shared project
+npx supabase functions deploy quick-verdict --no-verify-jwt
+npx supabase functions deploy delete-account --no-verify-jwt
+npx supabase functions deploy phone-auth --no-verify-jwt     # guest sign-in for testing builds only
 ```
+
+### Security notes
+- Scans need a signed-in user and are capped per account per day (`SCAN_DAILY_LIMIT`, default 100).
+- Guest sign-in is off unless `GUEST_SIGNIN=on`, and capped by `GUEST_HOURLY_LIMIT` (default 20/hour).
+- Uploads must be base64 JPEGs under ~4.5 MB.
+- The web build ships security headers from `vercel.json`. The full CSP is report-only until it is checked against the live app.
+- CI runs type checks, tests, `npm audit` and gitleaks on every PR.
 
 ## Tests and the character
 
