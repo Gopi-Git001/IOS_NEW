@@ -110,19 +110,3 @@ export function takeAuthRedirectError(): string | null {
   window.history.replaceState(null, '', window.location.pathname);
   return params.get('error') === 'access_denied' ? 'Google sign-in was cancelled.' : 'Google sign-in failed. Try again.';
 }
-
-/** Texts a sign-in code through Twilio Verify (our phone-auth function). Returns an error message or null. */
-export async function sendPhoneCode(phone: string): Promise<string | null> {
-  const { error } = await supabase.functions.invoke('quickgob-phone-auth', { body: { action: 'send', phone } });
-  return error ? messageFrom(error, 'Could not send the code. Try again.') : null;
-}
-
-/** Checks the code, then trades the one-time token for a normal Supabase session. */
-export async function verifyPhoneCode(phone: string, code: string): Promise<string | null> {
-  const { data, error } = await supabase.functions.invoke<{ token_hash: string }>('quickgob-phone-auth', {
-    body: { action: 'verify', phone, code },
-  });
-  if (error || !data?.token_hash) return messageFrom(error, 'That code is wrong or expired.');
-  const { error: authError } = await supabase.auth.verifyOtp({ token_hash: data.token_hash, type: 'email' });
-  return authError ? 'Could not sign you in. Try again.' : null;
-}

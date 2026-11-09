@@ -4,6 +4,7 @@
 // Runs alongside quick-verdict (Jev), which makes the actual CLEAN / BAD / UGLY call.
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0';
 import { env } from '../_shared/env.ts';
+import { allow, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
 import { decide, type LiteralLabel } from '../_shared/rules.ts';
 
@@ -12,7 +13,6 @@ const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY') });
 // Override with the CLAUDE_MODEL secret, e.g. a faster model if the lists feel slow.
 const CLAUDE_MODEL = env('CLAUDE_MODEL') ?? 'claude-opus-5-5';
 
-const MAX_IMAGE_BASE64 = 6_000_000; // ~4.5 MB JPEG; the app sends ~0.3 MB
 
 const numOrNull = { anyOf: [{ type: 'number' }, { type: 'null' }] };
 const strOrNull = { anyOf: [{ type: 'string' }, { type: 'null' }] };
@@ -54,7 +54,7 @@ export const UNREADABLE = "The photo isn't clear enough to read. Hold steady, mo
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
 export default {
-  fetch: withSupabase({ auth: 'user' }, async (req) => {
+  fetch: withSupabase({ auth: 'user' }, async (req, ctx) => {
     if (req.method !== 'POST') return json({ error: 'Use POST' }, 405);
 
     let image: unknown;
@@ -63,9 +63,14 @@ export default {
     } catch {
       return json({ error: 'Body must be JSON' }, 400);
     }
-    if (typeof image !== 'string' || image.length < 100 || image.length > MAX_IMAGE_BASE64) {
+    if (!isJpegBase64(image)) {
       return json({ error: 'Send a JPEG photo as base64 in "image"' }, 400);
     }
+
+    // Each scan calls a paid model, so cap scans per account per day (SCAN_DAILY_LIMIT secret).
+    const userId = ctx.userClaims?.id;
+    if (!userId) return json({ error: 'Not signed in' }, 401);
+    if (!(await allow(ctx.supabaseAdmin, `label:${userId}`, 86_400, intSetting('SCAN_DAILY_LIMIT', 100)))) return tooMany();
 
     let reading: LiteralLabel;
     try {

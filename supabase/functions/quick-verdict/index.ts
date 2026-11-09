@@ -5,12 +5,12 @@
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
 import { askJev } from '../_shared/jev.ts';
 import { env } from '../_shared/env.ts';
+import { allow, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
 
-const MAX_IMAGE_BASE64 = 6_000_000;
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
 export default {
-  fetch: withSupabase({ auth: 'user' }, async (req) => {
+  fetch: withSupabase({ auth: 'user' }, async (req, ctx) => {
     if (req.method !== 'POST') return json({ error: 'Use POST' }, 405);
 
     let image: unknown;
@@ -19,9 +19,14 @@ export default {
     } catch {
       return json({ error: 'Body must be JSON' }, 400);
     }
-    if (typeof image !== 'string' || image.length < 100 || image.length > MAX_IMAGE_BASE64) {
+    if (!isJpegBase64(image)) {
       return json({ error: 'Send a JPEG photo as base64 in "image"' }, 400);
     }
+
+    // Each scan calls a paid model, so cap scans per account per day (SCAN_DAILY_LIMIT secret).
+    const userId = ctx.userClaims?.id;
+    if (!userId) return json({ error: 'Not signed in' }, 401);
+    if (!(await allow(ctx.supabaseAdmin, `verdict:${userId}`, 86_400, intSetting('SCAN_DAILY_LIMIT', 100)))) return tooMany();
 
     const started = Date.now();
     const jev = await askJev(image, env('TYPESAFE_API_KEY'));

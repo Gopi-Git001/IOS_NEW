@@ -43,7 +43,7 @@ sugarcane character reacts.
   the app sends a 1280 px-wide JPEG.
 
 ## Rules
-- Signup: mobile number + SMS code only (Supabase Auth). Include "Delete account".
+- Signup: Google sign-in (Supabase Auth, PKCE). Guest sign-in only for testing builds. Include "Delete account".
 - API keys only in Supabase secrets (`ANTHROPIC_API_KEY`, `TYPESAFE_API_KEY`, optional
   `CLAUDE_MODEL`), never in the app.
 - Must run in Expo Go on a real phone. No emulator.
