@@ -1,0 +1,56 @@
+---
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import Sources from '../components/Sources.astro';
+import ScanCta from '../components/ScanCta.astro';
+import { ADDED_SUGARS, ADDED_SUGAR_ALIAS_COUNT } from '../data/sugars';
+import { breadcrumbs } from '../data/schema';
+import { REGISTRY_VERSION } from '../config';
+const crumbs = [{ name: 'Home', href: '/' }, { name: 'Hidden sugar names', href: '/hidden-sugar-names' }];
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+---
+<Base
+  title={`${ADDED_SUGAR_ALIAS_COUNT} hidden names for added sugar on food labels`}
+  description={`The ${ADDED_SUGAR_ALIAS_COUNT} added-sugar names Sugar Depth recognizes on ingredient lists, from evaporated cane juice and dextrose to brown rice syrup and juice concentrate. Any one of them makes a label UGLY.`}
+  path="/hidden-sugar-names"
+  jsonLd={[breadcrumbs(crumbs)]}
+>
+  <div class="wrap page-head">
+    <Breadcrumbs items={crumbs} />
+    <span class="kicker">Name the disguise</span>
+    <h1>Hidden sugar names</h1>
+    <p class="lead">This is the list of {ADDED_SUGAR_ALIAS_COUNT} added-sugar names Sugar Depth recognizes on an ingredient list, grouped by what they really are. Any one of them makes a label <strong class="ugly">UGLY</strong>, in any amount.</p>
+    <p class="voice">Sugar doesn't lie on the label. It just uses a lot of names.</p>
+  </div>
+  <div class="wrap page-body">
+    <nav class="sheet" aria-label="Jump to a group" style="margin-bottom:40px">
+      <span class="kicker" style="margin-bottom:8px">Jump to</span>
+      <ul class="alias-list" style="margin:0">
+        {ADDED_SUGARS.map((g) => <li><a href={`#${slug(g.name)}`} style="text-decoration:none">{g.name}</a></li>)}
+      </ul>
+    </nav>
+    <div class="prose" style="max-width:none">
+      {ADDED_SUGARS.map((g) => (
+        <section id={slug(g.name)} style="padding:0 0 32px" aria-labelledby={`${slug(g.name)}-h`}>
+          <hr class="rule-5" />
+          <h2 id={`${slug(g.name)}-h`} style="margin-top:12px;font-size:1.5rem">{g.name}</h2>
+          <p class="voice" style="font-size:1.15rem;margin:0 0 6px">{g.blurb} That's sugar.</p>
+          {g.note && <p class="muted small" style="margin:0 0 6px">{g.note}</p>}
+          {g.guide && <p class="small" style="margin:0"><a href={`/ingredients/${g.guide}`}>Read the guide</a></p>}
+          <ul class="alias-list">{g.aliases.map((a) => <li>{a}</li>)}</ul>
+        </section>
+      ))}
+    </div>
+    <div class="prose">
+      <h2>What isn't on this list</h2>
+      <ul>
+        <li>Sugar that comes with whole foods, like milk, yogurt, whey, fruit, dried fruit, single-strength juice and fruit puree. Those are allowed in CLEAN.</li>
+        <li>Sweeteners that aren't sugar. Artificial sweeteners, <a href="/ingredients/erythritol">erythritol</a> and <a href="/ingredients/xylitol">xylitol</a> are UGLY too, and <a href="/ingredients/stevia">stevia</a>, <a href="/ingredients/monk-fruit">monk fruit</a> and <a href="/ingredients/allulose">allulose</a> are BAD. See the <a href="/ingredients">ingredient guides</a>.</li>
+        <li><a href="/ingredients/maltodextrin">Maltodextrin</a>, which sounds like sugar but is a nonsweet starch polymer.</li>
+      </ul>
+      <p class="small muted">From the Sugar Depth ingredient registry {REGISTRY_VERSION}. Names are matched exactly as whole ingredients, so "sugar" doesn't match "sugar alcohol". The full rules are on <a href="/how-it-works">how it works</a>.</p>
+      <Sources keys={['addedSugarsRule', 'addedSugarsQA', 'ecj', 'rareSugars']} />
+    </div>
+    <div style="margin-top:48px"><ScanCta /></div>
+  </div>
+</Base>

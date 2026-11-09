@@ -1,4 +1,4 @@
-# SUG_SCAN — Sugar Hunter
+# Sugar Depth (formerly SUG_SCAN)
 
 Point the phone at a food label, get one sugar verdict: **CLEAN**, **BAD** or **UGLY**.
 Expo app (iOS + Android) with a Supabase backend. Full brief: [CLAUDE.md](CLAUDE.md).
@@ -46,3 +46,13 @@ npx supabase functions deploy phone-auth --no-verify-jwt     # guest sign-in for
 npm run test:rules       # sugar rules, Jev request/response, verdict combining
 npm run lottie           # regenerate the sugarcane animations in assets/lottie/
 ```
+
+## Repository layout
+
+This repo holds the scanner app and its marketing sites side by side:
+
+- **Root** (`App.tsx`, `src/`, `supabase/`, ...): the Expo scanner app and Supabase backend.
+- **`sites/sugardepth/`**: the Sugar Depth marketing site (Astro, static). Deployed as its own Vercel project with Root Directory `sites/sugardepth`. See [sites/sugardepth/README.md](sites/sugardepth/README.md).
+- **`sites/<name>/`**: any future marketing site goes in its own folder here, with its own `package.json` and Vercel project.
+
+The sites don't import anything from the app, and the app doesn't import anything from `sites/`.

@@ -1,0 +1,28 @@
+---
+// Loops a HyperFrames render (public/media/<name>.{webm,mp4} + <name>-poster.jpg).
+// If the render is not in public/media yet, it renders nothing so the slot falls back.
+import fs from 'node:fs';
+import path from 'node:path';
+const { name, label, width, height } = Astro.props as { name: string; label: string; width: number; height: number };
+const dir = path.join(process.cwd(), 'public', 'media');
+const has = (f: string) => fs.existsSync(path.join(dir, f));
+const ok = has(`${name}.mp4`) && has(`${name}-poster.jpg`);
+---
+{ok && (
+  <video
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="metadata"
+    poster={`/media/${name}-poster.jpg`}
+    width={width}
+    height={height}
+    aria-label={label}
+    data-film
+  >
+    {has(`${name}.webm`) && <source src={`/media/${name}.webm`} type="video/webm" />}
+    <source src={`/media/${name}.mp4`} type="video/mp4" />
+  </video>
+)}
+{!ok && <slot />}

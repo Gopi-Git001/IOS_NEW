@@ -1,0 +1,204 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import VerdictFacts from '../components/VerdictFacts.astro';
+import ScanCta from '../components/ScanCta.astro';
+import Film from '../components/Film.astro';
+import { APP_URL } from '../config';
+import { organization, website, webApplication } from '../data/schema';
+import { ADDED_SUGAR_ALIAS_COUNT } from '../data/sugars';
+const guides = (await getCollection('ingredients')).sort((a, b) => a.data.order - b.data.order);
+const disguises = [
+  { alias: 'Evaporated cane juice', reveal: "That's sugar.", href: '/ingredients/evaporated-cane-juice' },
+  { alias: 'Brown rice syrup', reveal: "That's sugar.", href: '/hidden-sugar-names' },
+  { alias: 'Apple juice concentrate', reveal: "That's sugar.", href: '/ingredients/juice-concentrate' },
+  { alias: 'Sucralose', reveal: "That's an artificial sweetener.", href: '/ingredients/sucralose' },
+  { alias: 'Erythritol', reveal: "That's a sugar alcohol.", href: '/ingredients/erythritol' },
+  { alias: 'Maltodextrin', reveal: "Not sugar. Really.", href: '/ingredients/maltodextrin' },
+];
+const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'Dextrose', 'Fruit juice concentrate', 'Barley malt', 'Coconut sugar', 'Invert sugar', 'Maltose', 'Cane crystals'];
+---
+<Base
+  title="Sugar Depth: the food-label scanner that names every hidden sugar"
+  description="Sugar Depth is a food-label scanner. Photograph a package's ingredient list and get one verdict, CLEAN, BAD or UGLY, based on added sugars and sweeteners. No barcodes, no product database."
+  path="/"
+  jsonLd={[organization, website, webApplication]}
+>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="kicker">Food-label scanner</span>
+        <h1>Sugar Depth reads the fine print, so sugar <span class="strike">can't hide</span> in it.</h1>
+        <p class="lead">
+          Sugar Depth is a food-label scanner for your phone. Point the camera at a package's ingredient list and it
+          tells you, in one word, whether the food has added sugar or sweeteners:{" "}
+          <strong class="clean">CLEAN</strong>, <strong class="bad">BAD</strong> or <strong class="ugly">UGLY</strong>.
+        </p>
+        <p class="voice">Evaporated cane juice? That's sugar. Brown rice syrup? Also sugar. "Naturally sweetened"? Let's read the label.</p>
+        <div class="cta-row">
+          <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
+          <a class="btn" href="/how-it-works">How verdicts work</a>
+        </div>
+        <p class="plain-note">No barcodes and no product database: it reads the actual label in front of you. Verdicts are Sugar Depth's preferences about sweeteners, not medical advice, and it does not check allergens.</p>
+      </div>
+      <figure class="device" style="margin:0">
+        <div class="device-screen">
+          <Film name="hero-scan" label="Sugar Depth scanning a made-up ingredient list, highlighting the sugars and stamping it UGLY" width={1080} height={1350}>
+            <img src="/brand/cube-scanning.webp" alt="" width="360" height="360" style="object-fit:contain;padding:18%" />
+          </Film>
+        </div>
+        <img class="device-cube" src="/brand/cube-idle.webp" alt="" width="360" height="360" decoding="async" />
+        <figcaption class="device-caption">A scan of a made-up ingredient list. Not a real product.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      {[0, 1].map(() => (
+        <ul>{marquee.map((m) => <li>{m} <em>that's sugar</em></li>)}</ul>
+      ))}
+    </div>
+  </div>
+
+  <section aria-labelledby="how-h">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="kicker">How it works</span>
+        <h2 id="how-h">Three steps. One word.</h2>
+      </div>
+      <ol class="steps">
+        <li class="reveal">
+          <span class="step-n" aria-hidden="true">01</span>
+          <h3>Photograph the ingredient list</h3>
+          <p class="muted">Open the scanner, sign in with Google and point the camera at the ingredients on the package. No barcode needed.</p>
+        </li>
+        <li class="reveal">
+          <span class="step-n" aria-hidden="true">02</span>
+          <h3>It reads every word</h3>
+          <p class="muted">The ingredient list and printed sugar numbers are copied exactly as they appear, and each name is checked against a registry of sugars and sweeteners, including {ADDED_SUGAR_ALIAS_COUNT} names for added sugar.</p>
+        </li>
+        <li class="reveal">
+          <span class="step-n" aria-hidden="true">03</span>
+          <h3>You get one verdict</h3>
+          <p class="muted">CLEAN, BAD or UGLY, with each sugar named in plain words. If the list is cut off or unreadable, it asks you to retake the photo instead of guessing.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="film" aria-labelledby="verdicts-h">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="kicker">The three verdicts</span>
+        <h2 id="verdicts-h">No GOOD tier. No gram cutoff.</h2>
+        <p class="lead">The first rule that matches wins, and the worst ingredient decides. These are Sugar Depth's preferences, not medical findings.</p>
+      </div>
+      <div class="reel reveal">
+        <Film name="verdicts" label="The three verdicts, CLEAN, BAD and UGLY, each shown with the Sugar Depth cube" width={1920} height={1080}>
+          <img src="/media/verdicts-poster.jpg" alt="" width="1920" height="1080" loading="lazy" />
+        </Film>
+      </div>
+      <div class="verdicts">
+        <div class="verdict-card reveal">
+          <img src="/brand/cube-ugly.webp" alt="" width="96" height="96" loading="lazy" decoding="async" />
+          <span class="word ugly">UGLY</span>
+          <ul>
+            <li>Any added sugar, in any amount, under any name</li>
+            <li>Any artificial sweetener: sucralose, aspartame, acesulfame K and others</li>
+            <li>Erythritol or xylitol</li>
+            <li>Drinking alcohol</li>
+          </ul>
+        </div>
+        <div class="verdict-card reveal">
+          <img src="/brand/cube-bad.webp" alt="" width="96" height="96" loading="lazy" decoding="async" />
+          <span class="word bad">BAD</span>
+          <ul>
+            <li>No UGLY trigger, but a plant sweetener: stevia, monk fruit or thaumatin</li>
+            <li>Allulose</li>
+            <li>Another sugar alcohol: sorbitol, maltitol, mannitol, isomalt, lactitol</li>
+          </ul>
+        </div>
+        <div class="verdict-card reveal">
+          <img src="/brand/cube-clean.webp" alt="" width="96" height="96" loading="lazy" decoding="async" />
+          <span class="word clean">CLEAN</span>
+          <ul>
+            <li>A complete ingredient list with nothing sweet added</li>
+            <li>Sugar that comes with milk or fruit is fine</li>
+            <li>Maltodextrin and starches are fine</li>
+          </ul>
+        </div>
+      </div>
+      <p style="margin-top:32px"><a href="/how-it-works">Read the full rule table →</a></p>
+    </div>
+  </section>
+
+  <section aria-labelledby="names-h">
+    <div class="wrap disguise-grid">
+      <div class="section-head">
+        <span class="kicker">Name the disguise</span>
+        <h2 id="names-h">Sugar has a lot of aliases.</h2>
+        <p class="lead">US labels list ingredients by name, and sugar has many. Sugar Depth knows them, and tells you what each one really is.</p>
+        <p><a href="/hidden-sugar-names">See all {ADDED_SUGAR_ALIAS_COUNT} added-sugar names →</a></p>
+      </div>
+      <ul class="disguises">
+        {disguises.map((d) => <li class="reveal"><a href={d.href}><span class="alias">{d.alias}</span><span class="reveal-word">{d.reveal}</span></a></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="result" aria-labelledby="result-h" style="background:var(--paper-sunk)">
+    <div class="wrap hero-grid">
+      <div class="reveal">
+        <span class="kicker">What you see</span>
+        <h2 id="result-h">A verdict you can read in a second.</h2>
+        <p class="lead">The result is set like a Nutrition Facts panel: one word on top, the reason in a sentence, and every ingredient tagged underneath so you can see which one decided it.</p>
+        <p><a href="/how-it-works">How the rules decide →</a></p>
+      </div>
+      <VerdictFacts
+        verdict="UGLY"
+        rule="U1"
+        label="Example label"
+        basis="per ingredient list"
+        why="Evaporated cane juice is sugar with better marketing."
+        rows={[
+          { name: 'Rolled oats' },
+          { name: 'Evaporated cane juice', tag: 'Sugar', tone: 'ugly' },
+          { name: 'Brown rice syrup', tag: 'Sugar', tone: 'ugly' },
+          { name: 'Steviol glycosides', tag: 'Sweetener', tone: 'bad' },
+          { name: 'Milk', tag: 'Natural', tone: 'clean' },
+        ]}
+        foot="Illustration of a result for a made-up ingredient list, not a real product."
+      />
+    </div>
+  </section>
+
+  <section aria-labelledby="guides-h">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="kicker">Ingredient guides</span>
+        <h2 id="guides-h">What's in the fine print</h2>
+      </div>
+      <ul class="cards">
+        {guides.map((g) => (
+          <li><a class="card" href={`/ingredients/${g.id}`}>
+            <span class={`pill ${g.data.verdict.toLowerCase()}`}>{g.data.verdictLabel ?? g.data.verdict}</span>
+            <h3>{g.data.name}</h3>
+            <p>{g.data.summary}</p>
+          </a></li>
+        ))}
+      </ul>
+      <p style="margin-top:24px"><a href="/ingredients">All ingredient guides →</a></p>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap"><ScanCta /></div>
+  </section>
+  <script is:inline data-motion>
+      // Respect reduced motion for the looping films (CSS cannot stop autoplay).
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.querySelectorAll('video[data-film]').forEach(function (v) { v.removeAttribute('autoplay'); v.pause(); });
+      }
+    </script>
+</Base>

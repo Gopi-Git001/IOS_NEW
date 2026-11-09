@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { ORG } from '../config';
+import { breadcrumbs } from '../data/schema';
+const crumbs = [{ name: 'Home', href: '/' }, { name: 'Contact', href: '/contact' }];
+---
+<Base title="Contact Sugar Depth" description="Email Sugar Depth (Martian Dynamics LLC, Leander, Texas) about a wrong verdict, a missing sugar name, privacy or anything else." path="/contact" jsonLd={[breadcrumbs(crumbs)]}>
+  <div class="wrap page-head">
+    <Breadcrumbs items={crumbs} />
+    <span class="kicker">Contact</span>
+    <h1>Found a sugar we missed?</h1>
+    <p class="lead">Email is the best way to reach Sugar Depth. Wrong verdicts, missing ingredient names, privacy requests and press questions all go to the same inbox.</p>
+  </div>
+  <div class="wrap page-body">
+    <div class="sheet" style="max-width:560px">
+      <p style="margin:0 0 16px"><a class="btn primary" href={`mailto:${ORG.email}?subject=Sugar%20Depth`}>Email {ORG.email}</a></p>
+      <p class="small muted" style="margin:0">If you're reporting a verdict, it helps to include a photo of the ingredient list and the verdict you got. Please don't send medical information.</p>
+    </div>
+    <p class="small muted" style="margin-top:24px">{ORG.name}, {ORG.locality}, Texas.</p>
+  </div>
+</Base>

@@ -1,0 +1,89 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Sources from '../../components/Sources.astro';
+import ScanCta from '../../components/ScanCta.astro';
+import { breadcrumbs, ORG_ID, SITE_ID } from '../../data/schema';
+import { abs, CONTENT_UPDATED, SITE_NAME, POLICY_VERSION } from '../../config';
+import type { SourceKey } from '../../data/sources';
+
+export async function getStaticPaths() {
+  const all = await getCollection('ingredients');
+  return all.map((entry) => ({ params: { slug: entry.id }, props: { entry, all } }));
+}
+const { entry, all } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const path = `/ingredients/${entry.id}`;
+const crumbs = [
+  { name: 'Home', href: '/' },
+  { name: 'Ingredients', href: '/ingredients' },
+  { name: d.name, href: path },
+];
+const related = d.related.map((id) => all.find((e) => e.id === id)).filter(Boolean) as typeof all;
+const tone = d.verdict.toLowerCase();
+const article = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.description,
+  url: abs(path),
+  mainEntityOfPage: abs(path),
+  inLanguage: 'en-US',
+  dateModified: CONTENT_UPDATED,
+  datePublished: CONTENT_UPDATED,
+  image: abs('/og/default.png'),
+  author: { '@id': ORG_ID },
+  publisher: { '@id': ORG_ID },
+  isPartOf: { '@id': SITE_ID },
+  about: { '@type': 'Thing', name: d.name },
+};
+---
+<Base title={d.title} description={d.description} path={path} ogType="article" jsonLd={[article, breadcrumbs(crumbs)]}>
+  <div class="wrap page-head">
+    <Breadcrumbs items={crumbs} />
+    <span class="kicker">Ingredient guide</span>
+    <h1>{d.name}</h1>
+    <p class="lead">{d.summary}</p>
+  </div>
+  <div class="wrap page-body two-col">
+    <article class="prose">
+      <Content />
+      <h2>Names and codes on labels</h2>
+      <p>Sugar Depth recognizes these exact names (case doesn't matter){d.codes.length ? ' and codes' : ''}:</p>
+      <ul class="alias-list">
+        {d.aliases.map((a) => <li>{a}</li>)}
+        {d.codes.map((c) => <li class="mono">{c}</li>)}
+      </ul>
+      {d.codes.length > 0 && <p class="small muted" style="margin-top:12px">E numbers are EU codes; INS codes use the same numbers. US labels usually print the name instead.</p>}
+      <p class="callout">Sugar Depth's verdicts are product preferences about sweeteners, not medical findings. Sugar Depth is not medical advice and does not check allergens.</p>
+      <Sources keys={d.sources as SourceKey[]} />
+    </article>
+    <aside class="aside">
+      <div class="sheet">
+        <span class="kicker" style="margin-bottom:8px">{SITE_NAME} verdict</span>
+        <p class={`facts-word ${tone}`} style="margin:0 0 6px;font-size:3.2rem">{d.verdictLabel ? 'CLEAN' : d.verdict}</p>
+        {d.verdictLabel && <p class="small" style="margin:0 0 8px">{d.verdictLabel}</p>}
+        <hr class="rule-5" />
+        <dl class="small" style="margin:0">
+          <dt class="muted">Rule</dt><dd style="margin:0 0 10px"><a href={`/how-it-works#rule-${d.rule}`}>{d.rule}</a> in {POLICY_VERSION}</dd>
+          <dt class="muted">What it is</dt><dd style="margin:0 0 10px">{d.cls}</dd>
+          <dt class="muted">US label treatment</dt><dd style="margin:0">{d.labeling}</dd>
+        </dl>
+        <hr class="rule-4" />
+      </div>
+      {related.length > 0 && (
+        <nav class="sheet" style="margin-top:16px" aria-label="Related guides">
+          <span class="kicker" style="margin-bottom:6px">Related</span>
+          <ul style="list-style:none;padding:0;margin:0">
+            {related.map((r) => <li style="margin:6px 0"><a href={`/ingredients/${r.id}`}>{r.data.name}</a> <span class={`small ${r.data.verdict.toLowerCase()}`}>· {r.data.verdictLabel ?? r.data.verdict}</span></li>)}
+            <li style="margin:6px 0"><a href="/hidden-sugar-names">All hidden sugar names</a></li>
+            <li style="margin:6px 0"><a href="/how-it-works">The full rule table</a></li>
+          </ul>
+        </nav>
+      )}
+    </aside>
+  </div>
+  <div class="wrap" style="padding-bottom:72px"><ScanCta /></div>
+</Base>
