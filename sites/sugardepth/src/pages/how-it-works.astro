@@ -71,15 +71,15 @@ const article = {
     <h2 id="rules" style="margin-top:56px">The rule table</h2>
     <p class="muted prose">Rules are checked from top to bottom. The first one that matches decides.</p>
     <div class="table-wrap">
-      <table class="facts-table">
+      <table class="facts-table" role="table">
         <caption>Sugar Depth {POLICY_VERSION}. First match wins.</caption>
-        <thead><tr><th scope="col">Rule</th><th scope="col">When</th><th scope="col">Result</th></tr></thead>
-        <tbody>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" id="rule-col-rule">Rule</th><th scope="col" role="columnheader" id="rule-col-when">When</th><th scope="col" role="columnheader" id="rule-col-result">Result</th></tr></thead>
+        <tbody role="rowgroup">
           {RULES.map((r) => (
-            <tr id={`rule-${r.id}`}>
-              <td class="rid">{r.id}</td>
-              <td>{r.condition}</td>
-              <td class={`out ${r.outcome} ${tone(r.outcome)}`}>{r.result}</td>
+            <tr id={`rule-${r.id}`} role="row">
+              <td class="rid" role="cell" headers="rule-col-rule"><span class="table-label" aria-hidden="true">Rule</span>{r.id}</td>
+              <td role="cell" headers="rule-col-when"><span class="table-label" aria-hidden="true">When</span>{r.condition}</td>
+              <td class={`out ${r.outcome} ${tone(r.outcome)}`} role="cell" headers="rule-col-result"><span class="table-label" aria-hidden="true">Result</span>{r.result}</td>
             </tr>
           ))}
         </tbody>
@@ -98,16 +98,16 @@ const article = {
     <h2 id="identity" style="margin-top:56px">Identity vs. treatment</h2>
     <p class="muted prose">What an ingredient is, how US labels count it, and how Sugar Depth treats it are three separate questions. Some examples:</p>
     <div class="table-wrap">
-      <table class="facts-table">
+      <table class="facts-table" role="table">
         <caption>Identity, US label treatment and Sugar Depth verdict</caption>
-        <thead><tr><th scope="col">Ingredient</th><th scope="col">What it is</th><th scope="col">US label treatment</th><th scope="col">Sugar Depth</th></tr></thead>
-        <tbody>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" id="identity-col-ingredient">Ingredient</th><th scope="col" role="columnheader" id="identity-col-class">What it is</th><th scope="col" role="columnheader" id="identity-col-label">US label treatment</th><th scope="col" role="columnheader" id="identity-col-verdict">Sugar Depth</th></tr></thead>
+        <tbody role="rowgroup">
           {TREATMENTS.map((t) => (
-            <tr>
-              <td class="rid ingr"><strong>{t.guide ? <a href={`/ingredients/${t.guide}`}>{t.ingredient}</a> : t.ingredient}</strong></td>
-              <td>{t.cls}</td>
-              <td>{t.source ? <a href={S[t.source as keyof typeof S].url}>{t.labeling}</a> : t.labeling}</td>
-              <td class={`out ${tone(t.verdict)}`}>{t.verdict}</td>
+            <tr role="row">
+              <td class="rid ingr" role="cell" headers="identity-col-ingredient"><span class="table-label" aria-hidden="true">Ingredient</span><strong>{t.guide ? <a href={`/ingredients/${t.guide}`}>{t.ingredient}</a> : t.ingredient}</strong></td>
+              <td role="cell" headers="identity-col-class"><span class="table-label" aria-hidden="true">What it is</span>{t.cls}</td>
+              <td role="cell" headers="identity-col-label"><span class="table-label" aria-hidden="true">US label treatment</span>{t.source ? <a href={S[t.source as keyof typeof S].url}>{t.labeling}</a> : t.labeling}</td>
+              <td class={`out ${tone(t.verdict)}`} role="cell" headers="identity-col-verdict"><span class="table-label" aria-hidden="true">Sugar Depth</span>{t.verdict}</td>
             </tr>
           ))}
         </tbody>

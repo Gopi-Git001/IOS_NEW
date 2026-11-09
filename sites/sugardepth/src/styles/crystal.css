@@ -90,7 +90,7 @@ a { text-decoration-color: var(--rule); }
 @media (max-width: 760px) {
   .hero { padding-top: 24px; }
   .crystal-stage { min-height: 280px; grid-template-columns: 1fr 31%; gap: 16px; padding-top: 0; padding-bottom: 70px; margin-bottom: 32px; }
-  .crystal-eyebrow { font-size: 10px; letter-spacing: .13em; }
+  .crystal-eyebrow { font-size: 12px; letter-spacing: .13em; }
   .crystal-word { font-size: clamp(3.8rem,13.4vw,6rem); }
   .crystal-wordline { gap: 6px; margin-top: 12px; }
   .crystal-signoff { font-size: 1.15rem; margin-top: 50px; max-width: 100%; }
@@ -113,9 +113,41 @@ a { text-decoration-color: var(--rule); }
   .verdict-card ul { font-size: 15px; }
 }
 @media (max-width: 640px) {
-  .site-header .wrap { gap: 8px; padding-top: 8px; }
-  .nav { flex-wrap: wrap; overflow: visible; gap: 0 6px; padding-bottom: 8px; }
-  .nav a { font-size: 12px; padding: 7px 6px; }
+  /* Two balanced rows, in DOM order, with no orphan or horizontal nav scroll. */
+  .site-header { position: static; }
+  .site-header .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; padding-block: 8px; }
+  .site-header .wordmark { display: inline-flex; min-height: 44px; align-items: center; justify-self: start; }
+  .header-cta { margin-left: 0; }
+  .header-cta .btn { padding-inline: 14px; }
+  .nav { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); width: 100%; margin: 0; overflow: visible; gap: 0; padding: 0; }
+  .nav a { grid-column: span 2; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 4px; font-size: 12px; line-height: 1.5; text-align: center; white-space: normal; }
+  .nav a:nth-last-child(-n + 2) { grid-column: span 3; }
+  /* Keep the decorative cube in flow, beside the button, not in a 120px void. */
+  .cta-band:not(.cta-editorial) { display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 20px 12px; padding: 24px 20px; }
+  .cta-band:not(.cta-editorial) > div { grid-column: 1 / -1; }
+  .cta-band:not(.cta-editorial) > .btn { grid-column: 1; grid-row: 2; justify-self: start; max-width: 100%; min-width: 0; padding-inline: 14px; font-size: .9375rem; }
+  .cta-band:not(.cta-editorial) .cta-cube { position: static; grid-column: 2; grid-row: 2; width: 64px; height: 64px; object-fit: contain; justify-self: end; }
+  .page-body .btn[href^='mailto:'] { max-width: 100%; padding-inline: 12px; font-size: .875rem; white-space: normal; overflow-wrap: anywhere; }
+  .footer-grid > :first-child { grid-column: 1 / -1; }
+  .site-footer .wordmark { display: inline-flex; align-items: center; min-height: 44px; }
+}
+@media (max-width: 480px) {
+  .disguises a { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .disguises .reveal-word { text-align: left; }
+}
+@media (max-height: 480px) and (orientation: landscape) {
+  .site-header { position: static; }
+}
+@media (max-width: 600px) {
+  /* Retain explicit table/row/cell roles and native headers associations while
+     presenting every field as a labeled block, without sideways scrolling. */
+  .table-wrap { overflow: visible; }
+  .facts-table, .facts-table caption, .facts-table tbody { display: block; }
+  .facts-table thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .facts-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding-block: 20px; border-bottom: 1px solid var(--rule); }
+  .facts-table tbody tr:last-child { border-bottom: 0; }
+  .facts-table td, .facts-table td.rid, .facts-table td.out { display: block; width: auto; min-width: 0; padding: 0; border: 0; white-space: normal; overflow-wrap: anywhere; }
+  .facts-table .table-label { display: block; margin-bottom: 3px; color: var(--muted); font-size: 12px; line-height: 1.5; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 }
 @media (max-width: 360px) { .crystal-word { font-size: 14vw; } }
 @media (prefers-reduced-motion: reduce) { .crystal-stage *, .crystal-stage *::before, .crystal-stage *::after { animation: none !important; } }
@@ -128,7 +160,6 @@ a { text-decoration-color: var(--rule); }
 .editorial-frame figcaption { padding: 12px 16px; font-size: 12px; text-align: center; color: var(--muted); background: var(--paper); }
 .steps-film { max-width: 960px; margin: 40px auto 0; }
 .prose > .steps-film { margin-bottom: 24px; }
-.wrap.editorial-article { padding-inline: clamp(20px, 4vw, 40px); }
 .steps-film > .editorial-image { aspect-ratio: 16 / 9; overflow: hidden; }
 .steps-film > .editorial-image img { height: 100%; object-fit: cover; }
 .verdict-banner { margin: 0 0 48px; }
