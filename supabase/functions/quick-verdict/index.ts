@@ -6,7 +6,7 @@ import { withSupabase } from 'npm:@supabase/server@1.9.2';
 import { askJev } from '../_shared/jev.ts';
 import { env } from '../_shared/env.ts';
 import { allow, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
-import { imageKb, requestTimer, timed } from '../_shared/timing.ts';
+import { clientFields, imageKb, requestTimer, timed } from '../_shared/timing.ts';
 
 export default {
   fetch: timed('quick-verdict', withSupabase({ auth: 'user' }, async (req, ctx) => {
@@ -17,13 +17,15 @@ export default {
 
     let image: unknown;
     let scanId: unknown;
+    let client: unknown;
     try {
-      ({ image, scan_id: scanId } = await req.json());
+      ({ image, scan_id: scanId, client } = await req.json());
     } catch {
       return json({ error: 'Body must be JSON' }, 400);
     }
     timer.mark('body');
     if (typeof scanId === 'string') timer.set({ scan_id: scanId.slice(0, 32) });
+    timer.set(clientFields(client));
     if (!isJpegBase64(image)) {
       return json({ error: 'Send a JPEG photo as base64 in "image"' }, 400);
     }

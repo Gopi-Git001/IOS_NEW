@@ -63,7 +63,9 @@ const Rule = ({ h }: { h: 10 | 5 }) => <View style={[styles.rule, h === 10 ? sty
  * then every sugar and sweetener as an indented row with an (i) that opens why it counts.
  * No gram amounts: an ingredient list doesn't say how much sugar was added.
  */
-export function VerdictContent({ result, listsPending, onPick }: { result: ScanResult; listsPending?: boolean; onPick: (p: Pick) => void }) {
+type ContentProps = { result: ScanResult; listsPending?: boolean; onRetryLists?: () => void; onPick: (p: Pick) => void };
+
+export function VerdictContent({ result, listsPending, onRetryLists, onPick }: ContentProps) {
   const color = verdictColor[result.verdict];
   const sections = SECTIONS.map((s) => ({ ...s, items: ingredientNames(result[s.key]) })).filter((s) => s.items.length > 0);
 
@@ -122,6 +124,20 @@ export function VerdictContent({ result, listsPending, onPick }: { result: ScanR
           <Text style={styles.pendingText}>Listing the sugars...</Text>
         </View>
       )}
+      {!listsPending && onRetryLists && (
+        <View style={styles.pending}>
+          <Text style={styles.pendingText}>Couldn't list the sugars</Text>
+          <Pressable
+            onPress={onRetryLists}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Retry listing the sugars"
+            style={({ pressed }) => [styles.retry, pressed && styles.rowPressed]}
+          >
+            <Text style={styles.retryText}>Retry</Text>
+          </Pressable>
+        </View>
+      )}
     </>
   );
 }
@@ -169,6 +185,8 @@ const styles = StyleSheet.create({
   tagText: { fontFamily: fonts.bold, fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.ink },
   pending: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 },
   pendingText: { fontFamily: fonts.serif, fontSize: 16, color: colors.inkMuted },
+  retry: { borderWidth: 1, borderColor: colors.rule, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
+  retryText: { fontFamily: fonts.bold, fontSize: 14, color: colors.ink },
   button: {
     height: 56,
     marginHorizontal: 14,
