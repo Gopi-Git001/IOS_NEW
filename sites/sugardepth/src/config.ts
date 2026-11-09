@@ -1,6 +1,6 @@
 // Single source of truth for URLs and identity. Change these in one place.
 
-/** Canonical site origin. The domain is not bought yet; every canonical, OG URL, sitemap and JSON-LD id derives from this. */
+/** Canonical site origin (domain owned in Vercel team ak-c306). Every canonical, OG URL, sitemap and JSON-LD id derives from this. */
 export const SITE_URL = 'https://sugardepth.com';
 
 /**
