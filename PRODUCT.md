@@ -27,7 +27,7 @@ One-handed use in stores with mixed lighting; quick repeat scans; phone sign-in 
 - Verdict rules v2: any added sugar, artificial sweetener, erythritol, xylitol or alcohol = UGLY; stevia, monk fruit, allulose or other sugar alcohols = BAD; nothing sweet added = CLEAN.
 - Claude vision lists the ingredients; Jev makes the final call. Supabase backend.
 - Not medical advice; does not check allergens.
-- In-app name is "Reallabel" (chosen by the user 2026-11-06; not trademark-cleared: Real Label Inc. owns reallabel.com for label printing, and a lash serum uses "RealLabel"). Project, repo and URL stay QuickGOB. Former in-app name "Sugar Hunter".
+- Product and in-app name is "Sugar Depth" (sugardepth.com; the app runs at app.sugardepth.com). Former names: "Reallabel" (2026-11-06), "QuickGOB" (still the Supabase function and Vercel project names) and "Sugar Hunter".
 
 ## Brand Commitments
 
