@@ -1,17 +1,18 @@
 {
   "expo": {
-    "name": "QuickGAB",
-    "slug": "quickgab",
+    "name": "Reallabel",
+    "slug": "sugar-hunter",
+    "scheme": "reallabel",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#06080D",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -19,17 +20,32 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "Reallabel",
+      "shortName": "Reallabel",
+      "description": "Point your camera at a food label. Get one sugar verdict: Clean, Bad or Ugly.",
+      "themeColor": "#06080D",
+      "backgroundColor": "#06080D"
     },
     "plugins": [
       "expo-font",
       [
         "expo-camera",
         {
-          "cameraPermission": "QuickGAB uses the camera to read food and drink labels."
+          "cameraPermission": "Reallabel uses the camera to read food and drink labels."
         }
-      ]
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#06080D"
+        }
+      ],
+      "expo-web-browser"
     ],
-    "backgroundColor": "#0B0B0F"
+    "backgroundColor": "#06080D"
   }
 }

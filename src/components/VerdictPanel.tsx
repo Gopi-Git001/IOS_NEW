@@ -1,108 +1,185 @@
-import { BlurView } from 'expo-blur';
-import type { ComponentProps, ReactNode } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
-import { colors, fonts } from '../theme';
+// The result sheet: a frosted glass card that springs up over the frozen photo, set like a
+// Nutrition Facts panel ("Verdict Facts"). The cube perches on its top edge.
+import * as Haptics from 'expo-haptics';
+import { Info } from 'lucide-react-native';
+import { type ReactNode, useEffect, useRef } from 'react';
+import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ingredientNames } from '../lib/display';
+import type { Kind } from '../lib/glossary';
+import { getPrefs } from '../lib/prefs';
+import { colors, fonts, frost } from '../theme';
 import type { ScanResult, Verdict } from '../types';
-import { CubeIcon, DropIcon, LeafIcon, VerdictIcon } from './Icons';
+import { kindColor, kindTag, type Pick } from './GlossaryCard';
+import { CameraIcon } from './Icons';
 
-export const verdictColor: Record<Verdict, string> = { CLEAN: colors.clean, OKAY: colors.okay, BAD: colors.bad };
-const verdictIcon = { CLEAN: 'check', OKAY: 'dash', BAD: 'cross' } as const;
+export const verdictColor: Record<Verdict, string> = { CLEAN: colors.clean, BAD: colors.bad, UGLY: colors.ugly };
+export const verdictWord: Record<Verdict, string> = { CLEAN: 'Clean', BAD: 'Bad', UGLY: 'Ugly' };
 
-type BlurTarget = ComponentProps<typeof BlurView>['blurTarget'];
+const SECTIONS: { kind: Kind; title: string; key: 'addedSugars' | 'sweeteners' | 'naturalSugars' }[] = [
+  { kind: 'added', title: 'Added sugars', key: 'addedSugars' },
+  { kind: 'sweetener', title: 'Sweeteners', key: 'sweeteners' },
+  { kind: 'natural', title: 'Natural sugars', key: 'naturalSugars' },
+];
 
-/** Top-right see-through card (dark tint + light blur): verdict, then the sugar lists that apply. */
-export function VerdictPanel({ result, blurTarget }: { result: ScanResult; blurTarget: BlurTarget }) {
-  const color = verdictColor[result.verdict];
-  const sections: { title: string; items: string[]; icon: ReactNode }[] = [
-    { title: 'Natural sugars', items: result.naturalSugars, icon: <LeafIcon color={colors.textMuted} /> },
-    { title: 'Added sugars', items: result.addedSugars, icon: <CubeIcon color={colors.textMuted} /> },
-    { title: 'Sweeteners', items: result.sweeteners, icon: <DropIcon color={colors.textMuted} /> },
-  ].filter((s) => s.items.length > 0);
+type SheetProps = {
+  children: ReactNode;
+  action: { label: string; onPress: () => void };
+  footer: ReactNode;
+  maxHeight: number;
+  bottom: number;
+  onHeight?: (h: number) => void;
+};
+
+/** The inset sheet shell: content, then a full-width ink button and the footer. */
+export function ResultSheet({ children, action, footer, maxHeight, bottom, onHeight }: SheetProps) {
+  const rise = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(rise, { toValue: 1, friction: 9, tension: 60, useNativeDriver: true }).start();
+  }, [rise]);
+  const translateY = rise.interpolate({ inputRange: [0, 1], outputRange: [420, 0] });
 
   return (
-    <View style={styles.panel}>
-      <BlurView
-        intensity={20}
-        tint="dark"
-        blurTarget={blurTarget}
-        blurMethod="dimezisBlurViewSdk31Plus"
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={styles.verdictRow}>
-        <View style={glyphShadow}>
-          <VerdictIcon kind={verdictIcon[result.verdict]} color={color} size={46} />
-        </View>
-        <View style={styles.verdictText}>
-          <Text style={[styles.verdict, { color }]}>{result.verdict}</Text>
-          <Text style={[styles.headline, { color }]} numberOfLines={2}>
-            {result.headline}
-          </Text>
-        </View>
-      </View>
-
-      {sections.map((s) => (
-        <View key={s.title} style={styles.section}>
-          <View style={[styles.sectionIcon, glyphShadow]}>{s.icon}</View>
-          <View style={styles.sectionBody}>
-            <Text style={styles.sectionTitle}>{s.title}</Text>
-            {s.items.map((item) => (
-              <Text key={item} style={styles.item}>
-                {item}
-              </Text>
-            ))}
-          </View>
-        </View>
-      ))}
-
-      {result.note && (
-        <View style={styles.noteRow}>
-          <Text style={[styles.note, { color }]}>{result.note}</Text>
-        </View>
-      )}
-    </View>
+    <Animated.View
+      style={[styles.sheet, { maxHeight, bottom, transform: [{ translateY }] }]}
+      onLayout={(e) => onHeight?.(e.nativeEvent.layout.height)}
+    >
+      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} showsVerticalScrollIndicator={false} bounces={false}>
+        {children}
+      </ScrollView>
+      <Pressable onPress={action.onPress} accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}>
+        <CameraIcon color={colors.onInk} size={22} />
+        <Text style={styles.buttonText}>{action.label}</Text>
+      </Pressable>
+      {footer}
+    </Animated.View>
   );
 }
 
-// Very light shadow: the tinted card does the readability work, this just keeps edges crisp.
-const textShadow = { textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 2, textShadowOffset: { width: 0, height: 1 } };
+/** Rules of the panel: 10 pt under the title, 5 pt between blocks, hairlines between rows. */
+const Rule = ({ h }: { h: 10 | 5 }) => <View style={[styles.rule, h === 10 ? styles.rule10 : styles.rule5]} />;
 
-// Same light shadow for the SVG icons: iOS shadows follow the drawn shape; Android needs a drop-shadow filter.
-const glyphShadow = Platform.select({
-  ios: { shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 1, shadowOffset: { width: 0, height: 1 } },
-  default: { filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.5))' },
-});
+/**
+ * "Verdict Facts": the verdict word where Calories sit on a real panel, the reason in italics,
+ * then every sugar and sweetener as an indented row with an (i) that opens why it counts.
+ * No gram amounts: an ingredient list doesn't say how much sugar was added.
+ */
+export function VerdictContent({ result, listsPending, onPick }: { result: ScanResult; listsPending?: boolean; onPick: (p: Pick) => void }) {
+  const color = verdictColor[result.verdict];
+  const sections = SECTIONS.map((s) => ({ ...s, items: ingredientNames(result[s.key]) })).filter((s) => s.items.length > 0);
+
+  const pick = (name: string, kind: Kind) => {
+    if (getPrefs().haptics) Haptics.selectionAsync().catch(() => {});
+    onPick({ name, kind });
+  };
+
+  return (
+    <>
+      <Text style={styles.title}>Verdict Facts</Text>
+      <Rule h={10} />
+      <View style={styles.verdictRow} accessible accessibilityRole="header" accessibilityLabel={`${verdictWord[result.verdict]}. ${result.headline}`}>
+        <Text style={[styles.verdict, { color }]} numberOfLines={1} adjustsFontSizeToFit>
+          {verdictWord[result.verdict]}
+        </Text>
+      </View>
+      <Text style={styles.why}>{result.headline}</Text>
+      {result.note && <Text style={styles.note}>{result.note}</Text>}
+
+      {sections.length > 0 && <Rule h={5} />}
+      {sections.map((s, i) => (
+        <View key={s.kind} style={i === sections.length - 1 && styles.lastSection}>
+          <View style={styles.row}>
+            <Text style={styles.rowHead}>{s.title}</Text>
+            <Text style={styles.rowCount}>{s.items.length} found</Text>
+          </View>
+          {s.items.map((item) => (
+            <Pressable
+              key={item}
+              onPress={() => pick(item, s.kind)}
+              accessibilityRole="button"
+              accessibilityLabel={`${item}. Why it counts`}
+              style={({ pressed }) => [styles.row, styles.rowIn, pressed && styles.rowPressed]}
+            >
+              <View style={styles.nameWrap}>
+                <Text style={[styles.alias, { color: kindColor[s.kind] }]} numberOfLines={2}>
+                  {item}
+                </Text>
+                <View style={styles.info}>
+                  <Info size={13} color={colors.inkMuted} strokeWidth={2} />
+                </View>
+              </View>
+              <View style={styles.tag}>
+                <Text style={styles.tagText}>{kindTag[s.kind]}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </View>
+      ))}
+
+      {/* Jev's verdict is in; Claude is still listing the ingredients. */}
+      {listsPending && (
+        <View style={styles.pending}>
+          <ActivityIndicator size="small" color={colors.inkMuted} />
+          <Text style={styles.pendingText}>Listing the sugars...</Text>
+        </View>
+      )}
+    </>
+  );
+}
 
 const styles = StyleSheet.create({
-  panel: {
+  sheet: {
     position: 'absolute',
-    right: 12,
-    width: '54%',
-    minWidth: 210,
-    maxWidth: 320,
-    backgroundColor: 'rgba(11,11,15,0.55)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    borderRadius: 20,
+    left: 8,
+    right: 8,
+    borderRadius: 30,
+    backgroundColor: colors.sheet,
+    paddingTop: 20,
+    ...frost(34),
     overflow: 'hidden',
-    // 16 on every side: the verdict row already adds 16 on top, the last section adds 12 at the bottom.
-    paddingHorizontal: 16,
-    paddingBottom: 4,
   },
-  verdictRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 16 },
-  verdictText: { flex: 1 },
-  verdict: { fontFamily: fonts.extrabold, fontSize: 30, letterSpacing: 0.5, lineHeight: 34, ...textShadow },
-  headline: { fontFamily: fonts.medium, fontSize: 14.5, marginTop: 1, ...textShadow },
-  section: {
+  body: { flexGrow: 0, flexShrink: 1 },
+  bodyContent: { paddingHorizontal: 22, paddingBottom: 14 },
+  title: { fontFamily: fonts.black, fontSize: 30, lineHeight: 32, letterSpacing: -1, color: colors.ink },
+  rule: { backgroundColor: colors.rule },
+  rule10: { height: 2, borderRadius: 1, marginTop: 8, marginBottom: 6 },
+  rule5: { height: 1, marginVertical: 6 },
+  verdictRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 4 },
+  verdict: { flexShrink: 1, fontFamily: fonts.black, fontSize: 72, lineHeight: 72, letterSpacing: -3.2, includeFontPadding: false },
+  why: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 24, color: colors.ink, marginTop: 8, marginBottom: 2 },
+  note: { fontFamily: fonts.serif, fontSize: 15, lineHeight: 21, color: colors.inkMuted, marginTop: 4 },
+  row: {
+    minHeight: 40,
     flexDirection: 'row',
-    gap: 10,
-    paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.divider,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.hairline,
   },
-  sectionIcon: { paddingTop: 1 },
-  sectionBody: { flex: 1, gap: 6 },
-  sectionTitle: { fontFamily: fonts.semibold, fontSize: 15.5, color: colors.text, ...textShadow },
-  item: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, ...textShadow },
-  noteRow: { paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider },
-  note: { fontFamily: fonts.medium, fontSize: 14, ...textShadow },
+  rowIn: { minHeight: 44, paddingLeft: 16 },
+  rowPressed: { backgroundColor: 'rgba(255,255,255,0.08)' },
+  lastSection: { borderBottomWidth: 2, borderBottomColor: colors.rule },
+  rowHead: { fontFamily: fonts.extrabold, fontSize: 15, color: colors.ink },
+  rowCount: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink },
+  nameWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5, paddingRight: 8 },
+  alias: { flexShrink: 1, fontFamily: fonts.bold, fontSize: 15, lineHeight: 20 },
+  info: { opacity: 0.8, marginTop: 1 },
+  tag: { borderWidth: 1, borderColor: colors.rule, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1 },
+  tagText: { fontFamily: fonts.bold, fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.ink },
+  pending: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 },
+  pendingText: { fontFamily: fonts.serif, fontSize: 16, color: colors.inkMuted },
+  button: {
+    height: 56,
+    marginHorizontal: 14,
+    borderRadius: 28,
+    backgroundColor: 'rgba(244,246,251,0.92)',
+    ...frost(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  buttonPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
+  buttonText: { fontFamily: fonts.bold, fontSize: 17, color: colors.onInk },
 });

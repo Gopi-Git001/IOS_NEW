@@ -1,48 +1,55 @@
-// POST { image: <base64 JPEG> }  →  { result: ScanResult, jev: JevCheck } | { error: string }
-// Signed-in users only. Claude vision reads the label → the sugar rules decide → Jev confirms.
+// POST { image: <base64 JPEG> }  ->  { result: ScanResult } | { error: string, code?: string }
+// Signed-in users only. Stage 1 (extraction): Claude vision copies the label literally, with no
+// sorting and no verdict. Stages 2-4 (normalize, classify, policy) run in _shared/rules.ts.
+// Runs alongside quick-verdict (Jev), which makes the actual CLEAN / BAD / UGLY call.
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0';
+import { env } from '../_shared/env.ts';
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
-import { askJev } from '../_shared/jev.ts';
-import { decide, type LabelReading, normalise } from '../_shared/rules.ts';
+import { decide, type LiteralLabel } from '../_shared/rules.ts';
 
-const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
+const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY') });
+
+// Override with the CLAUDE_MODEL secret, e.g. a faster model if the lists feel slow.
+const CLAUDE_MODEL = env('CLAUDE_MODEL') ?? 'claude-opus-5-5';
 
 const MAX_IMAGE_BASE64 = 6_000_000; // ~4.5 MB JPEG; the app sends ~0.3 MB
 
-const list = { type: 'array', items: { type: 'string' } };
+const numOrNull = { anyOf: [{ type: 'number' }, { type: 'null' }] };
+const strOrNull = { anyOf: [{ type: 'string' }, { type: 'null' }] };
 
 const LABEL_SCHEMA = {
   type: 'object',
   additionalProperties: false,
   required: [
-    'is_food_label', 'natural_sugars', 'added_sugars', 'artificial_sweeteners',
-    'sugar_alcohols', 'other_sweeteners', 'contains_alcohol', 'added_sugar_grams',
+    'is_food_label', 'is_readable', 'ingredients_text', 'ingredients_complete', 'total_sugars_g', 'added_sugars_g',
+    'quantity_basis', 'serving_size_text', 'abv_text',
   ],
   properties: {
     is_food_label: { type: 'boolean' },
-    natural_sugars: list,
-    added_sugars: list,
-    artificial_sweeteners: list,
-    sugar_alcohols: list,
-    other_sweeteners: list,
-    contains_alcohol: { type: 'boolean' },
-    added_sugar_grams: { anyOf: [{ type: 'number' }, { type: 'null' }] },
+    is_readable: { type: 'boolean' },
+    ingredients_text: strOrNull,
+    ingredients_complete: { type: 'boolean' },
+    total_sugars_g: numOrNull,
+    added_sugars_g: numOrNull,
+    quantity_basis: { type: 'string', enum: ['per_serving', 'per_100g', 'per_100ml', 'unknown'] },
+    serving_size_text: strOrNull,
+    abv_text: strOrNull,
   },
 };
 
-const SYSTEM = `You read photos of food and drink labels for a sugar-checking app.
-Find the ingredient list (and the nutrition panel if it is visible) and sort every sugar or sweetener you see.
+const SYSTEM = `You transcribe photos of food and drink labels for a sugar-checking app. Copy what is printed. Do not judge, sort or rate anything.
 
-- natural_sugars: sugars that come with whole ingredients, e.g. lactose in milk, fructose in whole fruit.
-- added_sugars: sugars and syrups added as ingredients, e.g. sugar, sucrose, cane sugar, glucose syrup, corn syrup, dextrose, honey, maple syrup, molasses, fruit juice concentrate used to sweeten.
-- artificial_sweeteners: aspartame, sucralose, acesulfame K, saccharin, neotame, advantame, cyclamate (and their E-numbers). Never list these as added sugars.
-- sugar_alcohols: erythritol, xylitol, sorbitol, maltitol, mannitol, isomalt, lactitol. Never list these as added sugars.
-- other_sweeteners: stevia / steviol glycosides, monk fruit, allulose, thaumatin.
-- contains_alcohol: true only if the product contains drinking alcohol (beer, wine, spirits, or an ABV is shown).
-- added_sugar_grams: grams of ADDED sugar per serving, e.g. from "Includes 6g Added Sugars". Use null if it is not shown. Do not guess from total sugars.
+- ingredients_text: the ingredient list copied exactly as printed, in reading order, including parentheses, brackets, percentages and E-numbers. Do not reword, translate, reorder, summarize or add anything. Leave out the word "Ingredients:" and any allergen statement ("Contains: Milk"). Use null if no ingredient list is visible.
+- ingredients_complete: false if any part of the ingredient list runs off the photo, is covered, or can't be read word by word.
+- total_sugars_g: the "Total Sugars" grams as printed, or null if not visible.
+- added_sugars_g: the "Added Sugars" grams as printed (e.g. "Includes 6g Added Sugars" -> 6), or null if not visible. Never estimate it from total sugars. If the panel prints "0g", use 0.
+- quantity_basis: what those grams are per, as printed: per_serving, per_100g or per_100ml; unknown if unclear or no panel.
+- serving_size_text: the serving size as printed, or null.
+- abv_text: alcohol by volume as printed (e.g. "5% ABV", "12% alc./vol."), or null.
+- is_readable: false if the ingredient text is blurry, out of focus, too dark, washed out by glare, or too small to read with confidence. Never guess words you cannot read.
+- is_food_label: false if the photo is not a food or drink label; then use nulls and false.`;
 
-Use the ingredient names as printed, in title case, without percentages.
-Only report what you can actually read. If the photo is not a food or drink label, set is_food_label to false and leave the lists empty.`;
+export const UNREADABLE = "The photo isn't clear enough to read. Hold steady, move closer to the ingredient list, and try again.";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
@@ -60,10 +67,10 @@ export default {
       return json({ error: 'Send a JPEG photo as base64 in "image"' }, 400);
     }
 
-    let reading: LabelReading;
+    let reading: LiteralLabel;
     try {
       const response = await anthropic.beta.messages.create({
-        model: 'claude-opus-5-5',
+        model: CLAUDE_MODEL,
         max_tokens: 4000,
         // Re-runs on a fallback model if a safety classifier declines the request.
         betas: ['server-side-fallback-2026-07-01'],
@@ -75,7 +82,7 @@ export default {
             role: 'user',
             content: [
               { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: image } },
-              { type: 'text', text: 'Read the sugars on this label.' },
+              { type: 'text', text: 'Transcribe this label.' },
             ],
           },
         ],
@@ -94,16 +101,20 @@ export default {
       return json({ error: "That doesn't look like a food label. Fit the ingredient list in the box." }, 422);
     }
 
-    const result = decide(reading);
-
-    // Jev (TypeSafe) confirms. Rules beat Jev: its answer is logged and returned, never applied.
-    const jev = await askJev(normalise(reading), result.verdict, Deno.env.get('TYPESAFE_API_KEY'));
-    if (jev.status === 'disagrees') {
-      console.warn('jev disagrees', { rules: result.verdict, jev: jev.jevVerdict, confidence: jev.confidence, model: jev.model, reading });
-    } else if (jev.status === 'unavailable') {
-      console.warn('jev unavailable', jev.reason);
+    if (!reading.is_readable) {
+      console.log('label unreadable');
+      return json({ error: UNREADABLE, code: 'unreadable' }, 422);
     }
 
-    return json({ result, jev });
+    const decision = decide(reading);
+    const ev = decision.evaluation;
+    console.log('label read', { status: ev.status, verdict: ev.verdict, rule: ev.ruleId, policy: ev.policyVersion, unresolved: ev.unresolved.length });
+
+    if (decision.status === 'unresolved') {
+      // Retake when a better photo would help; otherwise report it plainly (Jev's call can still stand).
+      return json({ error: decision.retake ? UNREADABLE : decision.message, code: decision.retake ? 'unreadable' : 'unresolved', analysis: ev }, 422);
+    }
+    const result = decision.result;
+    return json({ result });
   }),
 };

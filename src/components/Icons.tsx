@@ -9,28 +9,10 @@ export const FlashIcon = ({ size = 24, color = '#fff', on = false }: IconProps &
   </Svg>
 );
 
-export const MoreIcon = ({ size = 24, color = '#fff' }: IconProps) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-    <Circle cx={12} cy={5} r={2} />
-    <Circle cx={12} cy={12} r={2} />
-    <Circle cx={12} cy={19} r={2} />
-  </Svg>
-);
-
 export const CameraIcon = ({ size = 24, color = '#fff' }: IconProps) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.2} strokeLinejoin="round">
     <Path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
     <Circle cx={12} cy={13.5} r={3.6} />
-  </Svg>
-);
-
-/** Filled circle with a check, cross or dash in the middle. */
-export const VerdictIcon = ({ size = 48, color, kind }: { size?: number; color: string; kind: 'check' | 'cross' | 'dash' }) => (
-  <Svg width={size} height={size} viewBox="0 0 48 48">
-    <Circle cx={24} cy={24} r={24} fill={color} />
-    {kind === 'check' && <Path d="M14 24.5l7 7 13-14" stroke="#0B0B0F" strokeWidth={4.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />}
-    {kind === 'cross' && <Path d="M16 16l16 16M32 16 16 32" stroke="#fff" strokeWidth={4.5} strokeLinecap="round" />}
-    {kind === 'dash' && <Path d="M15 24h18" stroke="#0B0B0F" strokeWidth={4.5} strokeLinecap="round" />}
   </Svg>
 );
 
