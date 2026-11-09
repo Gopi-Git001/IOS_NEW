@@ -4,63 +4,89 @@ import Breadcrumbs from '../components/Breadcrumbs.astro';
 import { ORG } from '../config';
 import { breadcrumbs } from '../data/schema';
 const crumbs = [{ name: 'Home', href: '/' }, { name: 'Privacy policy', href: '/privacy' }];
-const N = '[needs your input]';
+const EFFECTIVE = 'November 10, 2026';
 ---
-<Base title="Privacy policy (draft)" description="Draft privacy policy for Sugar Depth: camera and label photos, Google sign-in, Supabase, AI processing by Anthropic, on-device scan history and account deletion." path="/privacy" jsonLd={[breadcrumbs(crumbs)]}>
+<Base title="Privacy policy" description="How Sugar Depth handles your data: Google sign-in, label photos that are never stored, the AI services that read them, retention, deletion and your privacy rights." path="/privacy" jsonLd={[breadcrumbs(crumbs)]}>
   <div class="wrap page-head">
     <Breadcrumbs items={crumbs} />
-    <span class="kicker">Legal · draft</span>
+    <span class="kicker">Legal</span>
     <h1>Privacy policy</h1>
+    <p class="lead">Effective {EFFECTIVE}</p>
   </div>
   <div class="wrap page-body prose">
-    <div class="draft-note" role="note">
-      <strong>Draft, not yet in effect.</strong> This policy has not been reviewed by a lawyer. Items marked <span class="needs">{N}</span> are facts that still need to be confirmed. Effective date: <span class="needs">{N}</span>.
-    </div>
-
-    <p>This policy explains what Sugar Depth (the scanner app and this website), operated by {ORG.name} in {ORG.locality}, Texas ("we"), collects and how it's used. Sugar Depth reads photos of food labels to flag added sugars and sweeteners.</p>
+    <h2>Who we are</h2>
+    <p>Sugar Depth is the food-label scanner at app.sugardepth.com and this website, sugardepth.com. Both are operated by {ORG.name}, based in {ORG.locality}, Texas, United States ("we", "us"). Questions about this policy go to <a href={`mailto:${ORG.email}`}>{ORG.email}</a>.</p>
 
     <h2>What we collect</h2>
-    <h3>Camera and label photos</h3>
-    <p>The scanner uses your device camera only when you open it to photograph a label. Each photo is sent to our backend for reading. Photos of labels are not stored by us after the verdict is returned. <span class="needs">{N} Confirm that no photo is written to Supabase Storage, logs or any database.</span></p>
-    <p>Please photograph only the label. If a photo includes people or other personal details, they are processed the same way.</p>
-    <h3>Google sign-in</h3>
-    <p>You sign in with Google. We receive your basic Google profile information, such as your name, email address and profile picture, to create your account. <span class="needs">{N} Confirm the exact Google OAuth scopes requested.</span></p>
-    <h3>Account data</h3>
-    <p>Your name and settings (preferences such as display options) are saved to your account. <span class="needs">{N} Confirm which fields are stored server-side.</span></p>
-    <h3>Scan history</h3>
-    <p>Your scan history (each verdict and the ingredient names found) is kept on your device only and is not sent to our servers.</p>
-    <h3>This website</h3>
-    <p>This marketing website uses no cookies and no analytics. <span class="needs">{N} Update if analytics are added.</span> Our host may keep standard server logs, such as IP address and browser type, for security.</p>
+    <h3>Your Google sign-in profile</h3>
+    <p>You sign in with Google. We ask Google only for your basic profile, using the <code>openid</code>, <code>email</code> and <code>profile</code> permissions. That gives us your name, email address, profile picture and Google account ID. We can't see your Gmail, contacts, files or anything else in your Google account.</p>
+    <p>On our servers we keep your sign-in record: those profile details, plus when you signed up and when you last signed in. The display name and settings you choose inside the app are saved on your device, not on our servers.</p>
+    <h3>Label photos and the text in them</h3>
+    <p>The scanner uses your camera only when you open it to photograph a label. Each photo goes to our backend, which passes it to the two AI services listed below. They read the ingredient text and decide the verdict. The photo is then discarded. We never save label photos to our database, file storage or logs.</p>
+    <p>The ingredient text and verdict come back to your device, and your scan history is kept there. We don't keep copies of your scan history on our servers.</p>
+    <p>Please photograph only the label. If a photo shows a person or other personal details, it is processed the same way.</p>
+    <h3>Usage and technical data</h3>
+    <ul>
+      <li>To enforce the daily scan limit, we keep a counter tied to your account. It is deleted automatically after about two days.</li>
+      <li>Our backend logs record technical details of each scan, such as the outcome, which rule decided it and any errors. They never include the photo.</li>
+      <li>Our hosting providers keep standard request logs, such as IP address, browser type, time and page requested, for security and troubleshooting.</li>
+    </ul>
+
+    <h2>How we use it</h2>
+    <p>We use this information to sign you in, read your labels and return verdicts, enforce fair-use limits, keep the service secure and answer your messages. We don't use it for advertising and we don't build profiles about you.</p>
 
     <h2>Who processes your data</h2>
     <ul>
-      <li><strong>Supabase</strong> hosts our backend: authentication, account data and the functions that process each scan. <span class="needs">{N} Supabase project region.</span></li>
-      <li><strong>Anthropic</strong> provides the AI model (Claude) that reads the ingredient text from your label photo. The photo is sent to Anthropic's API for this purpose. <span class="needs">{N} Confirm Anthropic's retention terms for your API account and whether data is used for training.</span></li>
-      <li><strong>Verdict checker.</strong> <span class="needs">{N} The scanner also sends the photo to a third-party verdict service (Jev / TypeSafe, per the codebase). Name it here and describe its data handling, or remove this line if it is no longer used.</span></li>
+      <li><strong>Supabase</strong> hosts our backend in the United States (AWS us-east-1). That includes sign-in, your account record and the functions that handle each scan.</li>
+      <li><strong>Anthropic</strong> (Claude) reads the ingredient text from your photo. Under Anthropic's commercial terms, data sent through its API isn't used to train its models and is deleted within 30 days, unless Anthropic must keep it longer for safety or legal reasons.</li>
+      <li><strong>TypeSafe AI</strong> (its Jev model) also looks at your photo to make the CLEAN, BAD or UGLY call. TypeSafe says it doesn't train its models on this data. It processes data in the United States and keeps it only as long as reasonably necessary to provide its service.</li>
       <li><strong>Google</strong> provides sign-in.</li>
       <li><strong>Vercel</strong> hosts this website and the web version of the scanner.</li>
     </ul>
-    <p>We don't sell your personal information and don't use it for advertising.</p>
+    <p>Each provider handles data under its own terms and privacy policy.</p>
+
+    <h2>We don't sell your data</h2>
+    <p>We don't sell your personal information. We don't share it for cross-context behavioral advertising. We don't use it for targeted advertising.</p>
+
+    <h2>Cookies and analytics</h2>
+    <p>This website and the scanner use no analytics tools, no advertising pixels and no tracking cookies. To keep you signed in, the scanner stores a session token in your browser's local storage. Signing out removes it.</p>
 
     <h2>How long we keep it</h2>
-    <p>Account data is kept until you delete your account. <span class="needs">{N} Retention for server logs and backups.</span></p>
+    <ul>
+      <li><strong>Label photos:</strong> not kept by us. They are discarded once the verdict is returned. The AI providers' own retention is described above.</li>
+      <li><strong>Sign-in record:</strong> kept until you delete your account.</li>
+      <li><strong>Scan-limit counter:</strong> about two days.</li>
+      <li><strong>Logs:</strong> kept for a limited time on our providers' standard schedules, then deleted.</li>
+    </ul>
 
     <h2>Deleting your account</h2>
-    <p>You can delete your account from the scanner's menu. This permanently deletes your profile from our servers and clears the scan history on your device. You can also email <a href={`mailto:${ORG.email}`}>{ORG.email}</a> to ask us to delete your data. <span class="needs">{N} Time frame for email deletion requests and backup purge.</span></p>
+    <p>You can delete your account at any time from the scanner's menu. This permanently deletes your sign-in record from our servers and clears the scan history on your device.</p>
+    <p>You can also email <a href={`mailto:${ORG.email}`}>{ORG.email}</a> from the address on your account. We'll delete your account within 30 days and confirm when it's done.</p>
 
     <h2>Children</h2>
-    <p>Sugar Depth is not directed to children under 13, and we don't knowingly collect their information. <span class="needs">{N} Confirm the minimum age.</span></p>
+    <p>Sugar Depth is not for children under 13, and we don't knowingly collect information from them. If you believe a child under 13 has created an account, email us and we'll delete it.</p>
 
-    <h2>Your rights</h2>
-    <p>Depending on where you live, including Texas under the Texas Data Privacy and Security Act, you may have rights to access, correct or delete your personal data. Email us to make a request. <span class="needs">{N} Lawyer review of state-law obligations.</span></p>
+    <h2>Your privacy rights</h2>
+    <p>Depending on where you live, you may have the right to:</p>
+    <ul>
+      <li>know what personal information we have about you, and get a copy of it</li>
+      <li>correct it</li>
+      <li>delete it</li>
+      <li>opt out of its sale, sharing or use for targeted advertising (we don't do any of these)</li>
+    </ul>
+    <p>Laws that grant these rights include the California Consumer Privacy Act and the Texas Data Privacy and Security Act. We honor these requests from every user, wherever you live.</p>
+    <p>To make a request, email <a href={`mailto:${ORG.email}`}>{ORG.email}</a>. We may ask you to confirm the request from the email address on your account. We'll respond within 45 days. If we decline a request, you can appeal by replying to our answer, and we'll respond to your appeal within 60 days. We won't treat you differently for exercising these rights.</p>
+
+    <h2>Security</h2>
+    <p>Data travels over encrypted connections (HTTPS). Access to our backend is limited to what each part of the service needs. No system is perfectly secure, but we work to protect your information and keep only what we need.</p>
 
     <h2>Health information</h2>
-    <p>Sugar Depth does not ask for health information, and its verdicts are not medical advice.</p>
+    <p>Sugar Depth doesn't ask for health information. Please don't send it to us. Our verdicts are not medical advice.</p>
 
     <h2>Changes</h2>
-    <p>We'll post changes here and update the effective date.</p>
+    <p>If we change this policy, we'll post the new version here and update the effective date. If a change materially affects how we use your information, we'll also give notice, for example in the app or by email.</p>
 
     <h2>Contact</h2>
-    <p>{ORG.name}, {ORG.locality}, Texas · <a href={`mailto:${ORG.email}`}>{ORG.email}</a> <span class="needs">{N} Mailing address, if you want one listed.</span></p>
+    <p>{ORG.name}, {ORG.locality}, Texas · <a href={`mailto:${ORG.email}`}>{ORG.email}</a></p>
   </div>
 </Base>
