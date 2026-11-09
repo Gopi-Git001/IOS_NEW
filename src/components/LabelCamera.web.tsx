@@ -1,7 +1,7 @@
 import { type CSSProperties, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { BlurryPhotoError, boxInImage, CROP_MARGIN, type LabelCameraProps, type Rect, type ViewBox, withMargin } from '../lib/photo';
 import { markScan, noteScan } from '../lib/scanTiming';
-import { laplacianVariance, MIN_SHARPNESS, SAMPLE_WIDTH, toGray } from '../lib/sharpness';
+import { autoCaptureStep, initialAutoCapture, lockAutoCapture, laplacianVariance, MIN_SHARPNESS, SAMPLE_WIDTH, toGray } from '../lib/sharpness';
 
 // Browsers stream 640×480 unless asked for more. 4:3 is the phone sensor's full frame.
 const SIZE: MediaTrackConstraints = { width: { ideal: 4032 }, height: { ideal: 3024 } };
@@ -21,14 +21,19 @@ type ImageCaptureCtor = new (track: MediaStreamTrack) => ImageCaptureLike;
 
 let lastUrl: string | null = null;
 let sampler: HTMLCanvasElement | null = null;
+// Survives the result screen unmount. Never auto-scan the same stationary label twice.
+let autoState = initialAutoCapture();
 
 /** The live back camera in the browser, at the highest resolution it offers. Phones use LabelCamera.tsx. */
-export function LabelCamera({ torch, box, onReady, ref }: LabelCameraProps) {
+export function LabelCamera({ torch, box, onReady, autoCapture = false, onAutoCapture, ref }: LabelCameraProps) {
   const video = useRef<HTMLVideoElement>(null);
   const track = useRef<MediaStreamTrack | null>(null);
   const rejected = useRef(false);
   const readyCallback = useRef(onReady);
   const [live, setLive] = useState(false);
+  const canRearm = useRef(true);
+  const autoCallback = useRef(onAutoCapture);
+  autoCallback.current = onAutoCapture;
 
   useEffect(() => {
     readyCallback.current = onReady;
@@ -60,10 +65,49 @@ export function LabelCamera({ torch, box, onReady, ref }: LabelCameraProps) {
     if (live && track.current && video.current) tune(track.current, video.current, torch, box);
   }, [live, torch, box]);
 
+  useEffect(() => {
+    if (!live || !autoCapture || !box) return;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    const timer = setInterval(() => {
+      const v = video.current;
+      if (document.hidden || !v?.videoWidth || v.paused || v.readyState < 2) {
+        autoState = { ...autoState, since: undefined, count: 0, lastAt: undefined };
+        return;
+      }
+      try {
+        const r = boxInImage(box, v.videoWidth, v.videoHeight);
+        canvas.width = 240;
+        canvas.height = Math.max(3, Math.round(240 * r.height * v.videoHeight / (r.width * v.videoWidth)));
+        ctx.drawImage(v, r.x * v.videoWidth, r.y * v.videoHeight, r.width * v.videoWidth, r.height * v.videoHeight, 0, 0, canvas.width, canvas.height);
+        const gray = toGray(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
+        const decision = autoCaptureStep(autoState, {
+          gray, sharpness: laplacianVariance(gray, canvas.width, canvas.height),
+          at: performance.now(), canRearm: canRearm.current,
+        });
+        autoState = decision.state;
+        if (decision.fire) {
+          canRearm.current = false;
+          autoCallback.current?.();
+        }
+      } catch {
+        // Unsupported sampling must not prevent manual capture.
+        autoState = { ...autoState, since: undefined, count: 0, lastAt: undefined };
+      }
+    }, 140);
+    return () => {
+      clearInterval(timer);
+      autoState = { ...autoState, since: undefined, count: 0, lastAt: undefined };
+    };
+  }, [live, autoCapture, box]);
+
   useImperativeHandle(
     ref,
     () => ({
       async capture() {
+        canRearm.current = false;
+        autoState = lockAutoCapture(autoState);
         const v = video.current;
         const t = track.current;
         if (!v || !t || !v.videoWidth) throw new Error('Camera not ready');

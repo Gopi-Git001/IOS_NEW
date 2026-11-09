@@ -164,7 +164,7 @@ export default function App() {
               tagline={tagline}
             />
           ) : (
-            <CameraScreen onCapture={handleCapture} onOpenSheet={setSheet} tagline={tagline} />
+            <CameraScreen onCapture={handleCapture} onOpenSheet={setSheet} tagline={tagline} active={sheet === null} />
           ))}
         {ready && (
           <>

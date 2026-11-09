@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { BookOpen, Feather, FileText, History, Lock, Mail, ShieldCheck, Star, Trash2, Vibrate, Globe } from 'lucide-react-native';
+import { BookOpen, Camera, Feather, FileText, History, Lock, Mail, ShieldCheck, Star, Trash2, Vibrate, Globe } from 'lucide-react-native';
 import { useState } from 'react';
 import { FlatList, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Group, listStyles, openLink, Row, Sheet } from '../components/ListUI';
@@ -68,6 +68,7 @@ function MenuList({ open }: { open: (p: Page) => void }) {
           toggle={{ value: prefs.gentle, onChange: toggle('gentle') }}
         />
         <Row icon={Vibrate} label="Haptics" detail="Vibrate when a verdict appears." toggle={{ value: prefs.haptics, onChange: toggle('haptics') }} />
+        <Row icon={Camera} label="Auto capture" detail="Scan a sharp, steady label automatically on web." toggle={{ value: prefs.autoCapture, onChange: toggle('autoCapture') }} />
       </Group>
 
       <Group title="About">

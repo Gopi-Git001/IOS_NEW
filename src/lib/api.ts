@@ -6,6 +6,8 @@ import type { JevVerdict, ScanResult } from '../types';
 import { type Photo, type Rect, toPixels } from './photo';
 import { noteScan, scanTimingId } from './scanTiming';
 import { supabase } from './supabase';
+import { postScan } from './scanTransport';
+import { readScanStream, type ScanEvent } from './scanStream';
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
 async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
@@ -24,6 +26,18 @@ async function messageFrom(error: unknown, fallback: string) {
 
 /** Thrown by readLabel when the photo is too blurry, dark or cut off to read. */
 export class UnreadableError extends Error {}
+
+/** False only for a missing rollout endpoint. Never retry a possibly-paid request. */
+export async function streamScan(image: string, onEvent: (event: ScanEvent) => void): Promise<boolean> {
+  const response = await postScan({ image, scan_id: scanTimingId() });
+  if (response.status === 404) return false;
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(typeof body?.error === 'string' ? body.error : "Couldn't read the label. Try again.");
+  }
+  await readScanStream(response, onEvent);
+  return true;
+}
 
 /** Jev rejects any side over 1568 px or under 280 px. */
 const MAX_SIDE = 1568;
@@ -54,6 +68,7 @@ async function encodeForUpload({ uri, width, height }: Photo, crop: Rect | undef
   }
   if (Math.max(width, height) > MAX_SIDE) ctx.resize(height > width ? { height: MAX_SIDE } : { width: MAX_SIDE });
   const rendered = await ctx.renderAsync();
+  noteScan({ upload_px: `${rendered.width}x${rendered.height}` });
   const { base64 } = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: UPLOAD_QUALITY, base64: true });
   if (!base64) throw new Error('Could not prepare the photo.');
   return base64;

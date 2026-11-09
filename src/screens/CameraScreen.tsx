@@ -1,7 +1,9 @@
 import { useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { type ComponentRef, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { type ComponentRef, useEffect, useRef, useState } from 'react';
+import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { warmScan } from '../lib/scanTransport';
+import { usePrefs } from '../lib/prefs';
 import { notify } from '../lib/confirm';
 import { BlurryPhotoError, type LabelCameraHandle, type Photo, type ViewBox } from '../lib/photo';
 import { markScan, noteScan, startScanTiming } from '../lib/scanTiming';
@@ -12,9 +14,12 @@ import { FlashIcon } from '../components/Icons';
 import { LabelCamera } from '../components/LabelCamera';
 import { brand, colors, fonts } from '../theme';
 
-type Props = { onCapture: (photo: Photo) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string };
+type Props = { onCapture: (photo: Photo) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string; active?: boolean };
 
-export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
+export function CameraScreen({ onCapture, onOpenSheet, tagline, active = true }: Props) {
+  const prefs = usePrefs();
+  const shooting = useRef(false);
+  useEffect(() => { warmScan(); }, []);
   const [permission, requestPermission] = useCameraPermissions();
   const camera = useRef<LabelCameraHandle>(null);
   const root = useRef<ComponentRef<typeof View>>(null);
@@ -44,13 +49,15 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
   }
 
   const shoot = async () => {
-    if (!camera.current || !ready || busy) return;
+    if (!camera.current || !ready || busy || shooting.current || !active) return;
+    shooting.current = true;
     setBusy(true);
     startScanTiming();
     try {
       const photo = await camera.current.capture();
       markScan('captured');
       noteScan({ photo_px: `${photo.width}x${photo.height}` });
+      if (Platform.OS !== 'web') noteScan({ capture_path: 'native' });
       // After the shot, so the buzz can't shake the phone while the photo is taken.
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       setTorch(false);
@@ -59,13 +66,14 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
       if (e instanceof BlurryPhotoError) notify('Photo is blurry', 'Hold the phone steady and tap again.');
       else notify('Could not take photo', 'Please try again.');
     } finally {
+      shooting.current = false;
       setBusy(false);
     }
   };
 
   return (
     <View ref={root} style={styles.fill}>
-      <LabelCamera ref={camera} torch={torch} box={box} onReady={() => setReady(true)} />
+      <LabelCamera ref={camera} torch={torch} box={box} onReady={() => setReady(true)} autoCapture={prefs.autoCapture && active && !busy && ready} onAutoCapture={shoot} />
       <Scrims />
 
       <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
@@ -97,7 +105,7 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
             <View style={styles.frameBase} />
           </View>
           <Glass style={styles.hint}>
-            <Text style={styles.hintText}>Fit the ingredient list in the panel</Text>
+            <Text style={styles.hintText}>{prefs.autoCapture && Platform.OS === 'web' ? 'Fit the ingredients · Hold steady' : 'Fit the ingredient list in the panel'}</Text>
           </Glass>
         </View>
 

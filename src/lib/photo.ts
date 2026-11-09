@@ -15,6 +15,9 @@ export type LabelCameraProps = {
   torch: boolean;
   box: ViewBox | null;
   onReady: () => void;
+  /** Web only. Native keeps the manual shutter. */
+  autoCapture?: boolean;
+  onAutoCapture?: () => void;
   ref?: Ref<LabelCameraHandle>;
 };
 
