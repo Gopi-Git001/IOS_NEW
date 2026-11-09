@@ -1,0 +1,47 @@
+---
+import { ORG, POLICY_VERSION, REGISTRY_VERSION, TAGLINE, APP_URL } from '../config';
+import { getCollection } from 'astro:content';
+const guides = (await getCollection('ingredients')).sort((a, b) => a.data.order - b.data.order).slice(0, 6);
+const year = 2026;
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="wordmark" href="/">Sugar Depth</a>
+        <p style="margin-top:14px" class="voice small">{TAGLINE}</p>
+        <p class="small">
+          Sugar Depth is a food-label scanner that flags added sugar and sweeteners. Its verdicts are product
+          preferences, not medical advice, and it does not check allergens.
+        </p>
+        <p class="small">Rules {POLICY_VERSION} · ingredient registry {REGISTRY_VERSION}</p>
+      </div>
+      <div>
+        <h2>Product</h2>
+        <ul>
+          <li><a href={APP_URL}>Open the scanner</a></li>
+          <li><a href="/how-it-works">How verdicts work</a></li>
+          <li><a href="/hidden-sugar-names">Hidden sugar names</a></li>
+          <li><a href="/faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Ingredient guides</h2>
+        <ul>
+          {guides.map((g) => <li><a href={`/ingredients/${g.id}`}>{g.data.name}</a></li>)}
+          <li><a href="/ingredients">All guides</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Company</h2>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/privacy">Privacy (draft)</a></li>
+          <li><a href="/terms">Terms (draft)</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="small" style="margin-top:32px">© {year} {ORG.name}, {ORG.locality}, Texas.</p>
+  </div>
+</footer>

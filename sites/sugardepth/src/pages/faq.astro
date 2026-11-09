@@ -1,0 +1,64 @@
+---
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import ScanCta from '../components/ScanCta.astro';
+import { breadcrumbs } from '../data/schema';
+import { APP_URL } from '../config';
+const crumbs = [{ name: 'Home', href: '/' }, { name: 'FAQ', href: '/faq' }];
+// Visible HTML only. Deliberately no FAQPage schema.
+---
+<Base title="Sugar Depth FAQ" description="Answers about Sugar Depth: how the CLEAN, BAD and UGLY verdicts work, why a 0 g label can be UGLY, why stevia is BAD, what happens to your photos, and what Sugar Depth doesn't check." path="/faq" jsonLd={[breadcrumbs(crumbs)]}>
+  <div class="wrap page-head">
+    <Breadcrumbs items={crumbs} />
+    <span class="kicker">FAQ</span>
+    <h1>Questions, answered plainly.</h1>
+  </div>
+  <div class="wrap page-body prose">
+    <h2 id="what">What is Sugar Depth?</h2>
+    <p>A food-label scanner. You photograph the ingredient list on a package and it tells you whether the food has added sugar or sweeteners, as one verdict: CLEAN, BAD or UGLY.</p>
+
+    <h2 id="barcode">Does it scan barcodes?</h2>
+    <p>No. Sugar Depth has no product database. It reads the ingredient list printed on the package in front of you, so it works on any label it can read, including store brands and imports.</p>
+
+    <h2 id="zero-grams">Why is a label with 0 g of sugar UGLY?</h2>
+    <p>Two common reasons. First, artificial sweeteners like <a href="/ingredients/sucralose">sucralose</a> aren't sugar, so they never show up in the sugar lines, but they make a label UGLY. Second, US labels may round under 0.5 g of sugar down to 0 g, so a small amount of listed sugar can still print as zero. Sugar Depth goes by the ingredient list.</p>
+
+    <h2 id="little">It's only a little sugar. Why UGLY?</h2>
+    <p>Sugar Depth's rules have no gram cutoff and no GOOD tier. Any added sugar, under any name and in any amount, makes a label UGLY. That's a deliberate choice, not a health claim.</p>
+
+    <h2 id="stevia">Why is stevia BAD instead of CLEAN?</h2>
+    <p>Because it's still a sweetener. Plant sweeteners (<a href="/ingredients/stevia">stevia</a>, <a href="/ingredients/monk-fruit">monk fruit</a>, thaumatin), <a href="/ingredients/allulose">allulose</a> and most sugar alcohols are BAD: not added sugar, but added to make the food sweet. If stevia is paired with erythritol, the label is UGLY.</p>
+
+    <h2 id="fruit">Does fruit or milk count?</h2>
+    <p>No. Sugar that comes with whole foods like milk, yogurt, fruit, dried fruit, single-strength juice and fruit puree is allowed in CLEAN. <a href="/ingredients/juice-concentrate">Juice concentrate</a> and lactose listed as its own ingredient are added sugar.</p>
+
+    <h2 id="maltodextrin">Is maltodextrin sugar?</h2>
+    <p>No. It's a nonsweet starch polymer under federal rules, and it's allowed in CLEAN. <a href="/ingredients/maltodextrin">Read the maltodextrin guide</a>.</p>
+
+    <h2 id="unclear">What if the photo is blurry or the list is cut off?</h2>
+    <p>Sugar Depth asks you to retake the photo rather than guessing. The exception: if the visible part already lists sugar or an UGLY sweetener, the verdict is UGLY, because the hidden part can only add more.</p>
+
+    <h2 id="medical">Is this medical advice?</h2>
+    <p>No. The verdicts are Sugar Depth's preferences about sweeteners, not medical or safety findings. FDA permits the sweeteners Sugar Depth flags. Talk to a clinician about your own diet.</p>
+
+    <h2 id="allergens">Does it check allergens?</h2>
+    <p>No. Sugar Depth only looks for sugars and sweeteners. Always check the label yourself for allergens.</p>
+
+    <h2 id="photos">What happens to my photo?</h2>
+    <p>The photo is sent to Sugar Depth's backend and to AI services that read the label text and return a verdict. The details, including what is kept and for how long, are in the <a href="/privacy">privacy policy</a> (currently a draft).</p>
+
+    <h2 id="signin">How do I sign in?</h2>
+    <p>With your Google account, in the scanner at <a href={APP_URL}>{APP_URL.replace('https://', '')}</a>.</p>
+
+    <h2 id="delete">Can I delete my account?</h2>
+    <p>Yes. Account deletion is available in the scanner's menu. It deletes your profile and the scan history on your device. See the <a href="/privacy">privacy policy</a>.</p>
+
+    <h2 id="countries">Does it work outside the US?</h2>
+    <p>Its ingredient registry is in English and also recognizes EU sweetener E numbers like E955. The label-rule explanations on this site follow US FDA rules.</p>
+
+    <h2 id="wrong">I got a wrong verdict. What now?</h2>
+    <p>Please <a href="/contact">email a photo of the ingredient list</a> and the verdict you got. Missing ingredient names get added to the registry.</p>
+
+    <div style="margin-top:48px"><ScanCta /></div>
+  </div>
+</Base>

@@ -1,0 +1,871 @@
+/* Sugar Depth — the verdict set like a Nutrition Facts panel, cut in glass (DESIGN.md + src/theme.ts).
+   Paper for content is a frosted dark sheet; glass is for controls; one colored word carries the verdict. */
+
+:root {
+  --bg: #06080d;
+  --bg-2: #0b0b0f;
+  --ink: #f4f6fb;
+  --muted: rgba(244, 246, 251, 0.76);
+  --faint: rgba(244, 246, 251, 0.62);
+  --rule: rgba(255, 255, 255, 0.34);
+  --hair: rgba(255, 255, 255, 0.12);
+  --sheet: rgba(16, 20, 30, 0.62);
+  --glass: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --on-ink: #0a0d14;
+  --clean: #5be49b;
+  --bad: #ffc24d;
+  --ugly: #ff7a66;
+  --sans: 'Libre Franklin', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --serif: 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
+  --max: 1160px;
+  --radius: 22px;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.6;
+  font-weight: 400;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Ambient colored light behind the glass. Fixed, no JS, no images. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -20vmax;
+  z-index: -1;
+  background:
+    radial-gradient(38vmax 30vmax at 12% 8%, rgba(255, 122, 102, 0.16), transparent 70%),
+    radial-gradient(34vmax 28vmax at 92% 22%, rgba(255, 194, 77, 0.09), transparent 70%),
+    radial-gradient(40vmax 34vmax at 70% 96%, rgba(91, 228, 155, 0.1), transparent 70%),
+    linear-gradient(180deg, #06080d 0%, #0b0b0f 100%);
+  pointer-events: none;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: rgba(255, 255, 255, 0.4);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+a:hover {
+  text-decoration-color: currentColor;
+}
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+img,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+.skip:focus {
+  left: 12px;
+  top: 12px;
+  z-index: 100;
+  background: var(--ink);
+  color: var(--on-ink);
+  padding: 8px 14px;
+  border-radius: 999px;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ---------- type ---------- */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--sans);
+  font-weight: 900;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5em;
+  text-wrap: balance;
+}
+h1 {
+  font-size: clamp(2.5rem, 6.4vw, 5.25rem);
+  letter-spacing: -0.035em;
+}
+h2 {
+  font-size: clamp(1.75rem, 3.6vw, 2.75rem);
+}
+h3 {
+  font-size: 1.3rem;
+  letter-spacing: -0.01em;
+}
+p {
+  margin: 0 0 1em;
+  text-wrap: pretty;
+}
+.lead {
+  font-size: clamp(1.1rem, 1.6vw, 1.3rem);
+  color: var(--muted);
+  max-width: 40em;
+}
+.voice {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+  line-height: 1.35;
+  color: var(--ink);
+}
+.kicker {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 18px;
+}
+.muted {
+  color: var(--muted);
+}
+.small {
+  font-size: 0.875rem;
+}
+.prose {
+  max-width: 44em;
+}
+.prose h2 {
+  margin-top: 1.8em;
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+}
+.prose h3 {
+  margin-top: 1.6em;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.2em;
+  margin: 0 0 1em;
+}
+.prose li {
+  margin: 0.3em 0;
+}
+.prose a {
+  text-decoration-color: rgba(255, 255, 255, 0.55);
+}
+code,
+.mono {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.ugly {
+  color: var(--ugly);
+}
+.bad {
+  color: var(--bad);
+}
+.clean {
+  color: var(--clean);
+}
+
+/* ---------- header ---------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(6, 8, 13, 0.72);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--hair);
+}
+.site-header .wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 66px;
+  flex-wrap: wrap;
+}
+.wordmark {
+  display: inline-flex;
+  flex-direction: column;
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 1.32rem;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.wordmark::after {
+  content: '';
+  display: block;
+  height: 4px;
+  background: var(--ink);
+  margin-top: 4px;
+}
+.nav {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.nav a {
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+.nav a:hover,
+.nav a[aria-current='page'] {
+  color: var(--ink);
+  background: var(--glass);
+}
+
+/* ---------- glass controls ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 1rem;
+  text-decoration: none;
+  padding: 14px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--ink);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 14px 34px rgba(0, 0, 0, 0.34);
+  white-space: nowrap;
+}
+.btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.btn.primary {
+  background: rgba(244, 246, 251, 0.94);
+  color: var(--on-ink);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+.btn.primary:hover {
+  background: #fff;
+}
+.btn.sm {
+  padding: 9px 16px;
+  font-size: 0.9rem;
+}
+.shutter {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.9), inset 0 0 0 9px currentColor;
+}
+.btn.primary .shutter {
+  box-shadow: inset 0 0 0 3px #f4f6fb, inset 0 0 0 9px var(--on-ink);
+}
+
+/* ---------- sheets (frosted content) ---------- */
+.sheet {
+  background: var(--sheet);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 16px 40px rgba(0, 0, 0, 0.38);
+  padding: 28px;
+}
+
+/* Rules, not boxes: 10 under titles, 5 between blocks, 1 between rows, 4 to close. */
+.rule-10 {
+  border: 0;
+  border-top: 10px solid var(--ink);
+  margin: 10px 0 12px;
+}
+.rule-5 {
+  border: 0;
+  border-top: 5px solid var(--ink);
+  margin: 12px 0;
+}
+.rule-4 {
+  border: 0;
+  border-top: 4px solid var(--ink);
+  margin: 12px 0 0;
+}
+
+/* ---------- Verdict Facts panel ---------- */
+.facts {
+  max-width: 440px;
+  width: 100%;
+  padding: 22px 24px 20px;
+}
+.facts-title {
+  font-weight: 900;
+  font-size: 2.3rem;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 0;
+}
+.facts-sub {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 0.85rem;
+  gap: 12px;
+}
+.facts-verdict {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.facts-word {
+  font-weight: 900;
+  font-size: clamp(3.6rem, 9vw, 4.6rem);
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+}
+.facts-why {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.12rem;
+  line-height: 1.35;
+  margin: 12px 0 4px;
+}
+.facts-rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.facts-rows li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 7px 0 7px 14px;
+  border-top: 1px solid var(--rule);
+  font-size: 0.95rem;
+}
+.facts-rows li:first-child {
+  border-top: 0;
+}
+.tag {
+  flex: none;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 1px 6px 0;
+  text-transform: uppercase;
+}
+.tag.none {
+  color: var(--faint);
+}
+.facts-foot {
+  font-size: 0.78rem;
+  color: var(--faint);
+  margin-top: 8px;
+}
+
+/* ---------- sections ---------- */
+section {
+  padding: 72px 0;
+}
+.section-head {
+  max-width: 46em;
+  margin-bottom: 36px;
+}
+.hero {
+  padding: 72px 0 56px;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+}
+.hero h1 {
+  font-size: clamp(2.6rem, 5.8vw, 4.9rem);
+}
+.hero .voice {
+  margin: 22px 0 28px;
+  padding-left: 16px;
+  border-left: 4px solid var(--ugly);
+}
+.cta-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.plain-note {
+  font-size: 0.9rem;
+  color: var(--faint);
+  margin-top: 18px;
+  max-width: 36em;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  counter-reset: step;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.steps li {
+  position: relative;
+}
+.step-n {
+  font-weight: 900;
+  font-size: 3.4rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  display: block;
+  padding-bottom: 8px;
+  border-bottom: 5px solid var(--ink);
+  margin-bottom: 14px;
+}
+
+.verdicts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.verdict-card .word {
+  font-weight: 900;
+  font-size: clamp(2.6rem, 5vw, 3.6rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  display: block;
+  padding-bottom: 10px;
+  border-bottom: 10px solid currentColor;
+  margin-bottom: 16px;
+}
+.verdict-card ul {
+  padding-left: 1.1em;
+  margin: 0 0 0.6em;
+  color: var(--muted);
+}
+
+/* Disguise list: "evaporated cane juice → That's sugar." */
+.disguises {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: 5px solid var(--ink);
+}
+.disguises li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 0;
+}
+.disguises .alias {
+  font-weight: 800;
+  font-size: clamp(1.15rem, 2.4vw, 1.6rem);
+  letter-spacing: -0.01em;
+}
+.disguises .reveal {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  text-align: right;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.card {
+  display: block;
+  text-decoration: none;
+  height: 100%;
+  padding: 20px 20px 18px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+a.card:hover {
+  background: rgba(30, 36, 50, 0.7);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.card h3 {
+  margin: 10px 0 6px;
+}
+.card p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+.pill {
+  display: inline-block;
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  padding: 3px 9px 2px;
+  border-radius: 999px;
+  border: 1.5px solid currentColor;
+}
+
+/* ---------- tables (Nutrition Facts style) ---------- */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+table.facts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  border-top: 10px solid var(--ink);
+  border-bottom: 4px solid var(--ink);
+}
+.facts-table caption {
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--faint);
+  padding: 0 0 8px;
+  caption-side: top;
+}
+.facts-table th,
+.facts-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.facts-table thead th {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 5px solid var(--ink);
+}
+.facts-table td.rid {
+  font-weight: 900;
+  white-space: nowrap;
+}
+.facts-table td.ingr {
+  white-space: normal;
+  font-weight: 400;
+}
+.facts-table td.out {
+  font-weight: 900;
+  min-width: 7em;
+}
+.out.RETAKE,
+.out.UNRESOLVED {
+  color: var(--muted);
+}
+
+.alias-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+.alias-list li {
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.92rem;
+}
+
+.callout {
+  border-left: 4px solid var(--ink);
+  padding: 4px 0 4px 16px;
+  margin: 24px 0;
+  color: var(--muted);
+}
+.draft-note {
+  border: 1px solid var(--bad);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin: 0 0 28px;
+  background: rgba(255, 194, 77, 0.07);
+}
+.needs {
+  color: var(--bad);
+  font-weight: 700;
+}
+
+.breadcrumbs ol {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0;
+  margin: 0 0 22px;
+  font-size: 0.88rem;
+  color: var(--faint);
+}
+.breadcrumbs li + li::before {
+  content: '/';
+  margin-right: 6px;
+  opacity: 0.6;
+}
+
+.page-head {
+  padding: 56px 0 8px;
+}
+.page-head h1 {
+  font-size: clamp(2.3rem, 5.2vw, 4rem);
+}
+.page-body {
+  padding: 24px 0 72px;
+}
+.two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 48px;
+  align-items: start;
+}
+.aside {
+  position: sticky;
+  top: 90px;
+}
+
+.sources {
+  font-size: 0.92rem;
+}
+.sources li {
+  margin: 0.4em 0;
+}
+
+.cta-band {
+  text-align: left;
+  padding: 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.cta-band h2 {
+  margin: 0 0 6px;
+}
+
+/* ---------- footer ---------- */
+.site-footer {
+  border-top: 1px solid var(--hair);
+  padding: 44px 0 56px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, 1fr);
+  gap: 32px;
+}
+.site-footer h2 {
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 800;
+  margin: 0 0 10px;
+}
+.site-footer ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.site-footer li {
+  margin: 6px 0;
+}
+.site-footer a {
+  text-decoration: none;
+}
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px) {
+  .hero-grid,
+  .two-col {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .aside {
+    position: static;
+  }
+  .steps,
+  .verdicts {
+    grid-template-columns: 1fr;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 640px) {
+  body {
+    font-size: 16px;
+  }
+  .wrap {
+    padding: 0 18px;
+  }
+  .site-header .wrap {
+    gap: 6px 12px;
+    padding-top: 10px;
+    padding-bottom: 8px;
+  }
+  .nav {
+    order: 3;
+    width: 100%;
+    margin-left: -12px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-right: 24px;
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+  }
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+  .nav a {
+    white-space: nowrap;
+    padding: 6px 10px;
+  }
+  .header-cta {
+    margin-left: auto;
+  }
+  section {
+    padding: 52px 0;
+  }
+  .hero {
+    padding: 40px 0 36px;
+  }
+  .sheet {
+    padding: 20px;
+  }
+  .facts {
+    padding: 18px 18px 16px;
+  }
+  .disguises li {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .disguises .reveal {
+    text-align: left;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+  .cta-band {
+    padding: 24px;
+  }
+  .facts-table {
+    font-size: 0.88rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* Tables written in MDX guides get the same Nutrition Facts rules. */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  border-top: 10px solid var(--ink);
+  border-bottom: 4px solid var(--ink);
+  margin: 8px 0 20px;
+  display: block;
+  overflow-x: auto;
+}
+.prose th,
+.prose td {
+  text-align: left;
+  vertical-align: top;
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.prose thead th {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 5px solid var(--ink);
+}
+
+/* Rule tables on phones: rule id and result on one line, the condition underneath. */
+@media (max-width: 640px) {
+  .facts-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .facts-table tr {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .facts-table th,
+  .facts-table td {
+    border: 0;
+    padding: 0;
+  }
+  .facts-table td.out {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+  .facts-table td:not(.rid):not(.out) {
+    grid-column: 1 / -1;
+  }
+  .facts-table td.ingr {
+    white-space: normal;
+  }
+}

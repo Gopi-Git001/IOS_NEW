@@ -1,0 +1,11 @@
+---
+import { APP_URL } from '../config';
+const { title = 'Point it at a label.', text = 'Open the scanner, photograph the ingredient list, get one verdict.' } = Astro.props as { title?: string; text?: string };
+---
+<div class="sheet cta-band">
+  <div>
+    <h2>{title}</h2>
+    <p class="muted" style="margin:0">{text}</p>
+  </div>
+  <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
+</div>

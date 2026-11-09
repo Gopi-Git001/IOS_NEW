@@ -1,0 +1,131 @@
+---
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import Sources from '../components/Sources.astro';
+import ScanCta from '../components/ScanCta.astro';
+import { RULES, TREATMENTS } from '../data/rules';
+import { S } from '../data/sources';
+import { breadcrumbs, ORG_ID } from '../data/schema';
+import { POLICY_VERSION, REGISTRY_VERSION, CONTENT_UPDATED, abs } from '../config';
+const crumbs = [{ name: 'Home', href: '/' }, { name: 'How it works', href: '/how-it-works' }];
+const tone = (v: string) => (v.startsWith('UGLY') ? 'ugly' : v.startsWith('BAD') ? 'bad' : v.includes('CLEAN') ? 'clean' : '');
+const article = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'How Sugar Depth verdicts work: the full rule table',
+  description: 'The ordered rules Sugar Depth uses to call a food label CLEAN, BAD or UGLY.',
+  url: abs('/how-it-works'),
+  mainEntityOfPage: abs('/how-it-works'),
+  dateModified: CONTENT_UPDATED,
+  datePublished: CONTENT_UPDATED,
+  image: abs('/og/default.png'),
+  author: { '@id': ORG_ID },
+  publisher: { '@id': ORG_ID },
+};
+---
+<Base
+  title="How Sugar Depth verdicts work: the full CLEAN, BAD, UGLY rule table"
+  description="The ordered rules Sugar Depth uses to judge a food label: any added sugar, artificial sweetener, erythritol, xylitol or alcohol is UGLY; stevia, monk fruit, allulose and other sugar alcohols are BAD; nothing sweet added is CLEAN."
+  path="/how-it-works"
+  jsonLd={[article, breadcrumbs(crumbs)]}
+>
+  <div class="wrap page-head">
+    <Breadcrumbs items={crumbs} />
+    <span class="kicker">The rulebook · {POLICY_VERSION}</span>
+    <h1>How verdicts work</h1>
+    <p class="lead">
+      Sugar Depth gives a food label one of three verdicts. <strong class="ugly">UGLY</strong> means it lists any added
+      sugar, any artificial sweetener, erythritol, xylitol or drinking alcohol. <strong class="bad">BAD</strong> means no
+      UGLY trigger, but stevia, monk fruit, thaumatin, allulose or another sugar alcohol.
+      <strong class="clean">CLEAN</strong> means a complete ingredient list with nothing sweet added.
+    </p>
+    <p class="voice">There is no GOOD tier. There is no gram cutoff. A pinch of sugar is still sugar.</p>
+  </div>
+
+  <div class="wrap page-body">
+    <div class="prose">
+      <h2 id="pipeline">What happens to your photo</h2>
+      <ol>
+        <li><strong>Reading.</strong> An AI vision model (Anthropic's Claude) copies the ingredient list and the printed sugar numbers exactly as they appear. It doesn't sort anything or give a verdict.</li>
+        <li><strong>Cleaning up.</strong> The text is split into ingredients, including ones nested in brackets, "and/or" choices, lead-ins like "Contains 2% or less of", footnote marks and E or INS codes.</li>
+        <li><strong>Matching.</strong> Each ingredient is matched to one versioned registry ({REGISTRY_VERSION}) by its exact name, never by a fragment. "Sugar" never matches "sugar alcohol", and "maltodextrin" never matches "resistant maltodextrin".</li>
+        <li><strong>Deciding.</strong> The ordered rules below produce the verdict, the rule that fired, and the printed words that triggered it.</li>
+      </ol>
+      <p>
+        A separate verdict checker also looks at the photo and makes the final call; the rules below decide when that
+        checker is unavailable or unsure, so in rare cases the verdict shown can differ from what the rules alone would give.
+      </p>
+    </div>
+
+    <h2 id="rules" style="margin-top:56px">The rule table</h2>
+    <p class="muted prose">Rules are checked from top to bottom. The first one that matches decides.</p>
+    <div class="table-wrap">
+      <table class="facts-table">
+        <caption>Sugar Depth {POLICY_VERSION}. First match wins.</caption>
+        <thead><tr><th scope="col">Rule</th><th scope="col">When</th><th scope="col">Result</th></tr></thead>
+        <tbody>
+          {RULES.map((r) => (
+            <tr id={`rule-${r.id}`}>
+              <td class="rid">{r.id}</td>
+              <td>{r.condition}</td>
+              <td class={`out ${r.outcome} ${tone(r.outcome)}`}>{r.result}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <h3>Why UGLY is checked before a cut-off list</h3>
+      <p>A cut-off list can only hide more ingredients, never fewer. So if the visible part already lists sugar, the label is UGLY even though the rest is missing. If nothing UGLY is visible and the list is cut off, Sugar Depth asks for a retake instead of guessing CLEAN.</p>
+      <h3>Blends and the worst ingredient</h3>
+      <p>Every ingredient inside a blend is checked, so "sweetener blend (erythritol, stevia leaf extract)" is UGLY because of the erythritol. Stevia never overrides a worse ingredient.</p>
+      <h3>What the rules don't do</h3>
+      <p>The rules make no guesses from an ingredient's position in the list, its amount, or a brand's intent. Sugar listed last counts the same as sugar listed first.</p>
+    </div>
+
+    <h2 id="identity" style="margin-top:56px">Identity vs. treatment</h2>
+    <p class="muted prose">What an ingredient is, how US labels count it, and how Sugar Depth treats it are three separate questions. Some examples:</p>
+    <div class="table-wrap">
+      <table class="facts-table">
+        <caption>Identity, US label treatment and Sugar Depth verdict</caption>
+        <thead><tr><th scope="col">Ingredient</th><th scope="col">What it is</th><th scope="col">US label treatment</th><th scope="col">Sugar Depth</th></tr></thead>
+        <tbody>
+          {TREATMENTS.map((t) => (
+            <tr>
+              <td class="rid ingr"><strong>{t.guide ? <a href={`/ingredients/${t.guide}`}>{t.ingredient}</a> : t.ingredient}</strong></td>
+              <td>{t.cls}</td>
+              <td>{t.source ? <a href={S[t.source as keyof typeof S].url}>{t.labeling}</a> : t.labeling}</td>
+              <td class={`out ${tone(t.verdict)}`}>{t.verdict}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <h2 id="quantities">Quantities</h2>
+      <ul>
+        <li>Total Sugars and Added Sugars are kept separate, along with their basis: per serving, per 100 g, per 100 ml, or unknown.</li>
+        <li>Missing grams stay missing. They are never turned into 0.</li>
+        <li>A printed <strong>0 g</strong> doesn't cancel a listed added sugar. US labels may round amounts under 0.5 g down to zero (<a href={S.nutritionLabel.url}>21 CFR 101.9</a>), and the result says so.</li>
+        <li>If the panel shows Added Sugars above 0 g but no added sugar was found in a complete list, the result is UGLY and the contradiction is reported.</li>
+        <li>Grams never change the verdict on their own. There is no "only a little" exception.</li>
+      </ul>
+
+      <h2 id="limits">Limits</h2>
+      <ul>
+        <li><strong>Not medical advice.</strong> The verdicts are Sugar Depth's preferences about added sugars and sweeteners. They are not safety findings, and they are not a diet plan.</li>
+        <li><strong>No allergen checks.</strong> Always read the label yourself for allergens.</li>
+        <li><strong>Only what's printed.</strong> Sugar Depth reads the label in the photo. It has no product database, so it can't know about a recipe change the label doesn't show.</li>
+        <li><strong>Unreadable means retake.</strong> A blurry, glare-covered or cut-off list gets a request to retake the photo, not a guess.</li>
+        <li><strong>Unknown names.</strong> An unrecognized ingredient that sounds sweet (or an unknown sweetener code from E950 to E969) leaves the result unresolved. Unrecognized ingredients with no sweet signal don't block CLEAN, and are listed for transparency.</li>
+        <li><strong>Juice needs context.</strong> "Juice from concentrate" and "fruit puree concentrate" come back unresolved, because the label alone doesn't say whether they count as added sugar. See <a href="/ingredients/juice-concentrate">juice concentrate</a>.</li>
+        <li><strong>US labels first.</strong> Label treatment notes follow US FDA rules. E numbers are recognized, but other countries' labeling rules aren't described here.</li>
+      </ul>
+      <p>Browse the <a href="/ingredients">ingredient guides</a> or the full list of <a href="/hidden-sugar-names">hidden sugar names</a>.</p>
+      <Sources keys={['addedSugarsRule', 'addedSugarsQA', 'allulose', 'rareSugars', 'maltodextrin', 'fiber', 'nutritionLabel', 'sweeteners']} />
+    </div>
+    <div style="margin-top:48px"><ScanCta /></div>
+  </div>
+</Base>

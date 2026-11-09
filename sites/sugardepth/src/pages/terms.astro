@@ -1,0 +1,59 @@
+---
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { ORG } from '../config';
+import { breadcrumbs } from '../data/schema';
+const crumbs = [{ name: 'Home', href: '/' }, { name: 'Terms of use', href: '/terms' }];
+const N = '[needs your input]';
+---
+<Base title="Terms of use (draft)" description="Draft terms of use for Sugar Depth: what the verdicts mean, no medical or allergen advice, your account, acceptable use and liability." path="/terms" jsonLd={[breadcrumbs(crumbs)]}>
+  <div class="wrap page-head">
+    <Breadcrumbs items={crumbs} />
+    <span class="kicker">Legal · draft</span>
+    <h1>Terms of use</h1>
+  </div>
+  <div class="wrap page-body prose">
+    <div class="draft-note" role="note">
+      <strong>Draft, not yet in effect.</strong> These terms have not been reviewed by a lawyer. Items marked <span class="needs">{N}</span> still need decisions. Effective date: <span class="needs">{N}</span>.
+    </div>
+
+    <p>These terms cover your use of Sugar Depth, the food-label scanner and this website, provided by {ORG.name} ("we"). By using Sugar Depth you agree to them.</p>
+
+    <h2>What Sugar Depth is</h2>
+    <p>Sugar Depth reads the ingredient list in a photo of a food label and returns a verdict (CLEAN, BAD or UGLY) under the rules published on <a href="/how-it-works">how it works</a>. The verdicts reflect Sugar Depth's own preferences about added sugars and sweeteners.</p>
+
+    <h2>Not medical advice, no allergen checks</h2>
+    <p>Sugar Depth is for general information only. It is not medical, nutritional or dietary advice and is not a substitute for advice from a qualified professional. It does not check allergens. Always read the product label yourself before eating something, especially if you have an allergy or a medical condition.</p>
+
+    <h2>Accuracy</h2>
+    <p>Sugar Depth uses AI to read label photos, and it can misread text, miss ingredients or return a wrong verdict. Labels can also change. Sugar Depth is provided "as is" without warranties of any kind, to the extent the law allows.</p>
+
+    <h2>Your account</h2>
+    <p>You sign in with Google and are responsible for activity on your account. You can delete your account at any time from the scanner's menu. We may suspend accounts that misuse the service.</p>
+
+    <h2>Acceptable use</h2>
+    <ul>
+      <li>Use Sugar Depth for photographing food labels.</li>
+      <li>Don't upload photos of other people or content you don't have the right to share.</li>
+      <li>Don't try to overload, reverse engineer or get around limits on the service, or use it to build a competing database.</li>
+    </ul>
+
+    <h2>Price</h2>
+    <p><span class="needs">{N} Is Sugar Depth free? Any planned paid features or limits.</span></p>
+
+    <h2>Satire and brand names</h2>
+    <p>Sugar Depth uses a satirical voice about ingredients. Mentions of brand names, such as Splenda, describe how ingredients are sold and don't imply any affiliation or endorsement.</p>
+
+    <h2>Limitation of liability</h2>
+    <p>To the extent the law allows, {ORG.name} is not liable for indirect, incidental or consequential damages arising from your use of Sugar Depth. <span class="needs">{N} Liability cap amount and lawyer review.</span></p>
+
+    <h2>Governing law</h2>
+    <p>These terms are governed by the laws of the State of Texas. <span class="needs">{N} Confirm venue (e.g. Williamson County, Texas) and any dispute-resolution clause.</span></p>
+
+    <h2>Changes</h2>
+    <p>We may update these terms and will post the new version here with a new effective date.</p>
+
+    <h2>Contact</h2>
+    <p><a href={`mailto:${ORG.email}`}>{ORG.email}</a></p>
+  </div>
+</Base>

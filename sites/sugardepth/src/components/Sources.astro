@@ -1,0 +1,10 @@
+---
+import { S, type SourceKey } from '../data/sources';
+const { keys, heading = 'Sources' } = Astro.props as { keys: SourceKey[]; heading?: string };
+---
+<section class="sources" style="padding:24px 0 0" aria-labelledby="sources-h">
+  <h2 id="sources-h" style="font-size:1.3rem">{heading}</h2>
+  <ol>
+    {keys.map((k) => <li><a href={S[k].url}>{S[k].title}</a>, {S[k].publisher}.</li>)}
+  </ol>
+</section>

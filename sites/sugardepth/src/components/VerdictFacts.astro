@@ -1,0 +1,37 @@
+---
+// The verdict set like a Nutrition Facts panel (DESIGN.md "Verdict Facts panel").
+type Row = { name: string; tag?: 'Sugar' | 'Sweetener' | 'Natural'; tone?: 'ugly' | 'bad' | 'clean' };
+interface Props {
+  verdict: 'CLEAN' | 'BAD' | 'UGLY';
+  why: string;
+  rows: Row[];
+  label?: string;
+  basis?: string;
+  foot?: string;
+  rule?: string;
+}
+const { verdict, why, rows, label = 'Your label', basis = 'ingredient list', foot, rule } = Astro.props;
+const tone = verdict.toLowerCase();
+---
+<figure class="sheet facts" style="margin:0">
+  <p class="facts-title" aria-hidden="true">Verdict Facts</p>
+  <hr class="rule-10" />
+  <div class="facts-sub"><span>{label}</span><span>{basis}</span></div>
+  <hr class="rule-5" />
+  <div class="facts-verdict">
+    <span class={`facts-word ${tone}`}>{verdict}</span>
+    {rule && <span class="small muted mono">rule {rule}</span>}
+  </div>
+  <p class="facts-why">{why}</p>
+  <hr class="rule-5" />
+  <ul class="facts-rows">
+    {rows.map((r) => (
+      <li>
+        <span class={r.tone}>{r.name}</span>
+        {r.tag ? <span class={`tag ${r.tone ?? ''}`}>{r.tag}</span> : <span class="tag none">—</span>}
+      </li>
+    ))}
+  </ul>
+  <hr class="rule-4" />
+  {foot && <figcaption class="facts-foot">{foot}</figcaption>}
+</figure>
