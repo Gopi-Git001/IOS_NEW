@@ -82,3 +82,22 @@ test('RETRY for photo problems, never a verdict', () => {
     assert.equal(d.evaluation.verdict, 'RETRY');
   }
 });
+
+test('sugar stacking and the first sugar place ride on the result, without touching the verdict', () => {
+  const r = done(label('Whole Grain Oats, Sugar, Corn Syrup, Honey, Salt', { added_sugars_g: 3, quantity_basis: 'per_serving' }));
+  assert.equal(r.verdict, 'OKAY');
+  assert.deepEqual(r.sugarStacking, { distinct: 3, stacked: true, firstPosition: 2, firstNested: false, ingredientCount: 5 });
+  assert.deepEqual(r.analysis?.sugarStacking, r.sugarStacking);
+  // One sugar, nested: placed, not stacked.
+  assert.deepEqual(done(label('Almonds, Chocolate Chips (Cocoa, Cane Sugar), Salt')).sugarStacking, { distinct: 1, stacked: false, firstPosition: 2, firstNested: true, ingredientCount: 3 });
+});
+
+test('the result has no sugarStacking field when the place can\'t be trusted or there is no added sugar', () => {
+  const cutOff = done(label('Oats, Sugar, Honey', { ingredients_complete: false }));
+  assert.equal(cutOff.verdict, 'BAD');
+  assert.equal('sugarStacking' in cutOff, false);
+  assert.equal('sugarStacking' in done(label('Whole Milk, Strawberries')), false);
+  assert.equal('sugarStacking' in done(label('Haver, suiker', { ingredients_english: [{ printed: 'Haver', english: 'oats' }, { printed: 'suiker', english: 'sugar' }] })), false);
+  const retry = decide(label('Water, Salt', { ingredients_complete: false }));
+  assert.equal(retry.evaluation.sugarStacking, null);
+});

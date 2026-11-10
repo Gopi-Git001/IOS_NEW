@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { Info } from 'lucide-react-native';
 import { type ReactNode, useEffect, useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ingredientNames } from '../lib/display';
+import { ingredientNames, sugarStackingLine } from '../lib/display';
 import type { Kind } from '../lib/glossary';
 import { getPrefs } from '../lib/prefs';
 import { colors, crystal, fonts, frost } from '../theme';
@@ -72,6 +72,7 @@ type ContentProps = { result: ScanResult; listsPending?: boolean; onRetryLists?:
 
 export function VerdictContent({ result, listsPending, onRetryLists, onPick }: ContentProps) {
   const sections = SECTIONS.map((s) => ({ ...s, items: ingredientNames(result[s.key]) })).filter((s) => s.items.length > 0);
+  const stacking = sugarStackingLine(result);
 
   const pick = (name: string, kind: Kind) => {
     if (getPrefs().haptics) Haptics.selectionAsync().catch(() => {});
@@ -85,6 +86,17 @@ export function VerdictContent({ result, listsPending, onRetryLists, onPick }: C
       <CrystalVerdict verdict={result.verdict} />
       <Text style={styles.why}>{result.headline}</Text>
       {result.note && <Text style={styles.note}>{result.note}</Text>}
+      {/* Sugar stacking and where the first added sugar sits. Absent when the server couldn't place it. */}
+      {stacking && (
+        <View style={styles.stack}>
+          {stacking.badge && (
+            <View style={styles.tag}>
+              <Text style={[styles.tagText, styles.stackTagText]}>{stacking.badge}</Text>
+            </View>
+          )}
+          <Text style={styles.stackText}>{stacking.line}</Text>
+        </View>
+      )}
 
       {sections.length > 0 && <Rule h={5} />}
       {sections.map((s, i) => (
@@ -164,6 +176,9 @@ const styles = StyleSheet.create({
   rule5: { height: 1, marginVertical: 6 },
   why: { fontFamily: fonts.serif, fontSize: 23, lineHeight: 28, color: crystal.ink, marginTop: 0, marginBottom: 2, paddingTop: 9, borderTopWidth: 1, borderTopColor: crystal.ink },
   note: { fontFamily: fonts.serif, fontSize: 16, lineHeight: 22, color: crystal.muted, marginTop: 4 },
+  stack: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8, rowGap: 4, marginTop: 8, marginBottom: 2 },
+  stackTagText: { color: crystal.BAD.deep },
+  stackText: { flexShrink: 1, fontFamily: fonts.medium, fontSize: 13, lineHeight: 18, color: crystal.muted },
   row: {
     minHeight: 40,
     flexDirection: 'row',
