@@ -1,16 +1,17 @@
 // Post-build checks on dist/: every page has a unique title, description and canonical; JSON-LD parses;
 // main content is present in the HTML (no JS needed); internal links resolve; robots and sitemap exist.
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const dist = new URL('../dist/', import.meta.url).pathname;
+const dist = fileURLToPath(new URL('../dist/', import.meta.url));
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
 const pages = walk(dist).filter((f) => f.endsWith('.html'));
 const errors = [];
 const seen = { title: new Map(), desc: new Map() };
 
 for (const file of pages) {
-  const rel = file.slice(dist.length - 1);
+  const rel = `/${file.slice(dist.length).split(sep).join('/')}`;
   const html = readFileSync(file, 'utf8');
   const title = html.match(/<title>([^<]*)<\/title>/)?.[1];
   const desc = html.match(/<meta name="description" content="([^"]*)"/)?.[1];
@@ -34,7 +35,14 @@ for (const file of pages) {
     if (!ok) errors.push(`${rel}: broken internal link ${p}`);
     if (p.length > 1 && p.endsWith('/')) errors.push(`${rel}: internal link with trailing slash ${p} (site uses no trailing slashes)`);
   }
-  if (/<script(?![^>]*(?:application\/ld\+json|data-motion))[^>]*>/.test(html)) errors.push(`${rel}: ships a non-JSON-LD <script> (only the data-motion reduced-motion helper is allowed)`);
+  // One exact Google tag is allowed. replace() drops a single copy; a second copy or any other script still fails.
+  const allowedGtm = [
+    '<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K8262PBN"></script>',
+    "<script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date());</script>",
+  ];
+  let scripts = html;
+  for (const tag of allowedGtm) scripts = scripts.replace(tag, '');
+  if (/<script(?![^>]*(?:application\/ld\+json|data-motion))[^>]*>/.test(scripts)) errors.push(`${rel}: ships a non-JSON-LD <script> (only the data-motion helper and the two approved Google tag scripts are allowed)`);
 }
 for (const f of ['robots.txt', 'sitemap-index.xml', 'og/default.png', 'favicon.svg', 'how-it-works/index.html', 'privacy/index.html', 'terms/index.html']) if (!existsSync(join(dist, f))) errors.push(`missing ${f}`);
 
