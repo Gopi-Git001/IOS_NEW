@@ -2,7 +2,10 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import ScanCta from '../components/ScanCta.astro';
+import CrystalVerdict from '../components/CrystalVerdict.astro';
+import EditorialImage from '../components/EditorialImage.astro';
 import Film from '../components/Film.astro';
+import FilmMotion from '../components/FilmMotion.astro';
 import { APP_URL } from '../config';
 import { organization, website, webApplication } from '../data/schema';
 import { ADDED_SUGAR_ALIAS_COUNT } from '../data/sugars';
@@ -24,6 +27,9 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
   jsonLd={[organization, website, webApplication]}
 >
   <section class="hero">
+    <div class="wrap">
+      <CrystalVerdict interactive />
+    </div>
     <div class="wrap hero-grid">
       <div>
         <span class="kicker">Food-label scanner</span>
@@ -40,15 +46,6 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
         </div>
         <p class="plain-note">No barcodes and no product database: it reads the actual label in front of you. Verdicts are Sugar Depth's preferences about sweeteners, not medical advice, and it does not check allergens.</p>
       </div>
-      <figure class="device" style="margin:0">
-        <div class="device-screen">
-          <Film name="hero-scan" label="Sugar Depth scanning a made-up ingredient list, highlighting the sugars and stamping it UGLY" width={1080} height={1350}>
-            <img src="/brand/cube-scanning.webp" alt="" width="360" height="360" style="object-fit:contain;padding:18%" />
-          </Film>
-        </div>
-        <img class="device-cube" src="/brand/cube-idle.webp" alt="" width="360" height="360" decoding="async" />
-        <figcaption class="device-caption">A scan of a made-up ingredient list. Not a real product.</figcaption>
-      </figure>
     </div>
   </section>
 
@@ -83,24 +80,28 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
           <p class="muted">CLEAN, BAD or UGLY, with each sugar named in plain words. If the list is cut off or unreadable, it asks you to retake the photo instead of guessing.</p>
         </li>
       </ol>
+      <figure class="editorial-frame steps-film">
+        <Film name="three-steps" label="A label is photographed, its ingredient names are read, and a glossy verdict appears." width={1280} height={720}>
+          <EditorialImage name="label" alt="A clear glass slab magnifies fine print on a cream package beside a sugar cube." sizes="(max-width: 760px) calc(100vw - 40px), 960px" />
+        </Film>
+        <figcaption>A scan of a made-up ingredient list. Not a real product.</figcaption>
+      </figure>
     </div>
   </section>
 
   <section class="film" aria-labelledby="verdicts-h">
     <div class="wrap">
+      <figure class="editorial-frame verdict-banner">
+        <EditorialImage name="slabs" alt="" />
+      </figure>
       <div class="section-head reveal">
         <span class="kicker">The three verdicts</span>
         <h2 id="verdicts-h">No GOOD tier. No gram cutoff.</h2>
         <p class="lead">The first rule that matches wins, and the worst ingredient decides. These are Sugar Depth's preferences, not medical findings.</p>
       </div>
-      <div class="reel reveal">
-        <Film name="verdicts" label="The three verdicts, CLEAN, BAD and UGLY, each shown with the Sugar Depth cube" width={1920} height={1080}>
-          <img src="/media/verdicts-poster.jpg" alt="" width="1920" height="1080" loading="lazy" />
-        </Film>
-      </div>
       <div class="verdicts">
-        <div class="verdict-card reveal">
-          <img src="/brand/cube-ugly.webp" alt="" width="96" height="96" loading="lazy" decoding="async" />
+        <div class="verdict-card tone-ugly reveal">
+          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>UGLY</b></div>
           <span class="word ugly">UGLY</span>
           <ul>
             <li>Any added sugar, in any amount, under any name</li>
@@ -109,8 +110,8 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
             <li>Drinking alcohol</li>
           </ul>
         </div>
-        <div class="verdict-card reveal">
-          <img src="/brand/cube-bad.webp" alt="" width="96" height="96" loading="lazy" decoding="async" />
+        <div class="verdict-card tone-bad reveal">
+          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>BAD</b></div>
           <span class="word bad">BAD</span>
           <ul>
             <li>No UGLY trigger, but a plant sweetener: stevia, monk fruit or thaumatin</li>
@@ -118,8 +119,8 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
             <li>Another sugar alcohol: sorbitol, maltitol, mannitol, isomalt, lactitol</li>
           </ul>
         </div>
-        <div class="verdict-card reveal">
-          <img src="/brand/cube-clean.webp" alt="" width="96" height="96" loading="lazy" decoding="async" />
+        <div class="verdict-card tone-clean reveal">
+          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>CLEAN</b></div>
           <span class="word clean">CLEAN</span>
           <ul>
             <li>A complete ingredient list with nothing sweet added</li>
@@ -143,6 +144,9 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
       <ul class="disguises">
         {disguises.map((d) => <li class="reveal"><a href={d.href}><span class="alias">{d.alias}</span><span class="reveal-word">{d.reveal}</span></a></li>)}
       </ul>
+      <figure class="editorial-frame aliases-figure">
+        <EditorialImage name="aliases" alt="Six clear glass trays containing sugar cubes, golden syrup, brown sugar, pale agave syrup, dark malt syrup and white powder." sizes="(max-width: 760px) calc(100vw - 40px), 560px" />
+      </figure>
     </div>
   </section>
 
@@ -183,12 +187,7 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
   </section>
 
   <section style="padding-top:0">
-    <div class="wrap"><ScanCta /></div>
+    <div class="wrap"><ScanCta graphic /></div>
   </section>
-  <script is:inline data-motion>
-      // Respect reduced motion for the looping films (CSS cannot stop autoplay).
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        document.querySelectorAll('video[data-film]').forEach(function (v) { v.removeAttribute('autoplay'); v.pause(); });
-      }
-    </script>
+  <FilmMotion />
 </Base>

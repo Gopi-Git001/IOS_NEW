@@ -28,7 +28,7 @@ const EFFECTIVE = 'November 10, 2026';
     <h3>Usage and technical data</h3>
     <ul>
       <li>To enforce the daily scan limit, we keep a counter tied to your account. Old counters are deleted regularly; they hold only a count and a date.</li>
-      <li>Our backend logs record technical details of each scan, such as the outcome, which rule decided it and any errors. They never include the photo.</li>
+      <li>Our backend logs record technical details of each scan, such as the outcome, which rule decided it and any errors. The app also sends timing for each scan (how long each step took, the photo's size in pixels and kilobytes, your platform and connection type) so we can make scans faster. These logs never include the photo.</li>
       <li>Our hosting providers keep standard request logs, such as IP address, browser type, time and page requested, for security and troubleshooting.</li>
     </ul>
 

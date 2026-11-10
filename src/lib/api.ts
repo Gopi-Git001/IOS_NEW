@@ -1,16 +1,20 @@
 import { Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
-import { FunctionsHttpError } from '@supabase/supabase-js';
+import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import type { JevVerdict, ScanResult } from '../types';
+import { type CaptureMeta, type Photo, type Rect, toPixels } from './photo';
+import { noteScan, scanTimingId } from './scanTiming';
 import { supabase } from './supabase';
+import { postScan } from './scanTransport';
+import { requestScanStream, RetryableScanError, type ScanEvent } from './scanStream';
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
-async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string }> {
+async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
   if (error instanceof FunctionsHttpError) {
     try {
       const body = await error.context.clone().json();
-      if (typeof body?.error === 'string') return { message: body.error, code: typeof body.code === 'string' ? body.code : undefined };
+      if (typeof body?.error === 'string') return { message: body.error, code: typeof body.code === 'string' ? body.code : undefined, timing: body.timing };
     } catch {}
   }
   return { message: fallback };
@@ -23,39 +27,120 @@ async function messageFrom(error: unknown, fallback: string) {
 /** Thrown by readLabel when the photo is too blurry, dark or cut off to read. */
 export class UnreadableError extends Error {}
 
-const MAX_SIDE = 1280;
+/** Thrown by readLabel when the lists timed out, the connection dropped or the server failed: worth a retry. */
+export class RetryableReadError extends Error {}
+
+/** The verdict is already on screen by then, so the lists get a short leash. */
+const LISTS_TIMEOUT_MS = 12_000;
+const READ_FAILED = "Couldn't read the label. Try again.";
+
+/** A single streamed upload, retaining the live reader's timeout and explicit lists retry. */
+export async function streamScan(image: string, onEvent: (event: ScanEvent) => void, client?: CaptureMeta): Promise<boolean> {
+  try {
+    return await requestScanStream(
+      (signal) => postScan({ image, scan_id: scanTimingId(), client }, signal),
+      onEvent,
+      LISTS_TIMEOUT_MS,
+    );
+  } catch (error) {
+    if (error instanceof RetryableScanError) throw new RetryableReadError(error.message);
+    throw error;
+  }
+}
+
+/** Jev rejects any side over 1568 px or under 280 px. */
+const MAX_SIDE = 1568;
+const MIN_SIDE = 280;
+const UPLOAD_QUALITY = 0.85;
 
 /**
- * Shrinks the photo once so its LONGEST side is 1280 px (Jev rejects any side over 1568 px, and
- * portrait phone photos resized by width alone came out 1280x1707) and returns it as base64 JPEG.
+ * Crops the photo to the guide box (when known) so the label text gets the pixels, shrinks it so its
+ * LONGEST side is at most 1568 px (portrait photos resized by width alone come out too tall), and
+ * returns it as base64 JPEG. The full photo stays on screen; only this copy is uploaded.
  */
-export async function preparePhoto(photoUri: string): Promise<string> {
-  const original = await ImageManipulator.manipulate(photoUri).renderAsync();
-  const portrait = original.height > original.width;
-  const longest = Math.max(original.width, original.height);
-  const ctx = ImageManipulator.manipulate(photoUri);
-  if (longest > MAX_SIDE) ctx.resize(portrait ? { height: MAX_SIDE } : { width: MAX_SIDE });
+export async function preparePhoto(photo: Photo): Promise<string> {
+  // The web camera already cropped, scaled and encoded the upload in one pass.
+  if (photo.upload) return photo.upload;
+  try {
+    return await encodeForUpload(photo, photo.crop);
+  } catch (e) {
+    if (!photo.crop) throw e;
+    return encodeForUpload(photo, undefined);
+  }
+}
+
+async function encodeForUpload({ uri, width, height }: Photo, crop: Rect | undefined): Promise<string> {
+  if (!width || !height) ({ width, height } = await ImageManipulator.manipulate(uri).renderAsync());
+  const ctx = ImageManipulator.manipulate(uri);
+  const rect = crop && toPixels(crop, width, height);
+  if (rect && Math.min(rect.width, rect.height) >= MIN_SIDE) {
+    ctx.crop(rect);
+    ({ width, height } = rect);
+  }
+  if (Math.max(width, height) > MAX_SIDE) ctx.resize(height > width ? { height: MAX_SIDE } : { width: MAX_SIDE });
   const rendered = await ctx.renderAsync();
-  const { base64 } = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.7, base64: true });
+  noteScan({ upload_px: `${rendered.width}x${rendered.height}` });
+  const { base64 } = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: UPLOAD_QUALITY, base64: true });
   if (!base64) throw new Error('Could not prepare the photo.');
   return base64;
 }
 
 /** Fast path: Jev makes the CLEAN / BAD / UGLY call straight from the photo. Never throws. */
-export async function quickVerdict(image: string): Promise<JevVerdict> {
-  const { data, error } = await supabase.functions.invoke<{ jev: JevVerdict }>('quickgob-quick-verdict', { body: { image } });
-  if (error || !data?.jev) return { status: 'unavailable', reason: await messageFrom(error, 'quick-verdict failed') };
+export async function quickVerdict(image: string, client?: CaptureMeta): Promise<JevVerdict> {
+  const { data, error } = await supabase.functions.invoke<{ jev: JevVerdict; timing?: unknown }>('quickgob-quick-verdict', {
+    body: { image, scan_id: scanTimingId(), client },
+  });
+  if (error || !data?.jev) {
+    const e = await errorFrom(error, 'quick-verdict failed');
+    noteScan({ quick_verdict_server: e.timing, quick_verdict_error: e.message });
+    return { status: 'unavailable', reason: e.message };
+  }
+  noteScan({ quick_verdict_server: data.timing });
   return data.jev;
 }
 
 /** Detail path: Claude lists the sugars, and the rules give a backstop verdict. */
-export async function readLabel(image: string): Promise<ScanResult> {
-  const { data, error } = await supabase.functions.invoke<{ result: ScanResult }>('quickgob-scan-label', { body: { image } });
-  if (error || !data?.result) {
-    const e = await errorFrom(error, "Couldn't read the label. Try again.");
-    throw e.code === 'unreadable' ? new UnreadableError(e.message) : new Error(e.message);
+export async function readLabel(image: string, client?: CaptureMeta): Promise<ScanResult> {
+  const started = performance.now();
+  const outcome = (result: string) => noteScan({ scan_label_outcome: result, scan_label_ms: Math.round(performance.now() - started) });
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      outcome('timeout');
+      reject(new RetryableReadError(READ_FAILED));
+    }, LISTS_TIMEOUT_MS);
+  });
+
+  const attempt = async (): Promise<ScanResult> => {
+    const { data, error } = await supabase.functions.invoke<{ result: ScanResult; timing?: unknown }>('quickgob-scan-label', {
+      body: { image, scan_id: scanTimingId(), client },
+      signal: controller.signal,
+    });
+    if (controller.signal.aborted) throw new RetryableReadError(READ_FAILED);
+    if (error instanceof FunctionsFetchError) {
+      outcome('network');
+      throw new RetryableReadError(READ_FAILED);
+    }
+    if (error || !data?.result) {
+      const e = await errorFrom(error, READ_FAILED);
+      const status = error instanceof FunctionsHttpError || error instanceof FunctionsRelayError ? error.context.status : 0;
+      outcome(status ? `http_${status}` : 'error');
+      noteScan({ scan_label_server: e.timing, scan_label_error: e.code ?? e.message });
+      if (e.code === 'unreadable') throw new UnreadableError(e.message);
+      throw status >= 500 || error instanceof FunctionsRelayError ? new RetryableReadError(READ_FAILED) : new Error(e.message);
+    }
+    outcome('ok');
+    noteScan({ scan_label_server: data.timing });
+    return data.result;
+  };
+
+  try {
+    return await Promise.race([attempt(), deadline]);
+  } finally {
+    clearTimeout(timer);
   }
-  return data.result;
 }
 
 export async function deleteAccount() {

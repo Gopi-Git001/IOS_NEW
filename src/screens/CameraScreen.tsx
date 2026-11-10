@@ -1,22 +1,60 @@
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { type ComponentRef, useEffect, useRef, useState } from 'react';
+import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { warmScan } from '../lib/scanTransport';
+import { usePrefs } from '../lib/prefs';
 import { notify } from '../lib/confirm';
+import { BlurryPhotoError, type LabelCameraHandle, type Photo, type ViewBox } from '../lib/photo';
+import { markScan, noteScan, startScanTiming } from '../lib/scanTiming';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { Glass } from '../components/Glass';
 import { FlashIcon } from '../components/Icons';
+import { LabelCamera } from '../components/LabelCamera';
 import { brand, colors, fonts } from '../theme';
 
-type Props = { onCapture: (photoUri: string) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string };
+const HINT = 'Fit the ingredient list in the panel';
+const NO_FLASH = 'Flash not available on this camera';
+const NO_FLASH_MS = 3000;
 
-export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
+/** `active` is false while a result covers this screen: it stays mounted so the camera can keep running. */
+type Props = { active: boolean; onCapture: (photo: Photo) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string };
+
+export function CameraScreen({ active, onCapture, onOpenSheet, tagline }: Props) {
+  const prefs = usePrefs();
+  const shooting = useRef(false);
+  useEffect(() => { if (active) warmScan(); }, [active]);
   const [permission, requestPermission] = useCameraPermissions();
-  const camera = useRef<CameraView>(null);
+  const camera = useRef<LabelCameraHandle>(null);
+  const root = useRef<ComponentRef<typeof View>>(null);
+  const frame = useRef<ComponentRef<typeof View>>(null);
+  const [box, setBox] = useState<ViewBox | null>(null);
   const [torch, setTorch] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
+  const [noFlash, setNoFlash] = useState(false);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!noFlash) return;
+    const timer = setTimeout(() => setNoFlash(false), NO_FLASH_MS);
+    return () => clearTimeout(timer);
+  }, [noFlash]);
+
+  const onTorchSupport = (supported: boolean) => {
+    setTorchSupported(supported);
+    if (!supported) setTorch(false);
+  };
+  const onTorchFailed = () => {
+    setTorch(false);
+    setNoFlash(true);
+  };
+
+  const measureBox = () =>
+    root.current?.measureInWindow((rootX, rootY, viewWidth, viewHeight) =>
+      frame.current?.measureInWindow((x, y, width, height) => setBox({ x: x - rootX, y: y - rootY, width, height, viewWidth, viewHeight })),
+    );
 
   if (!permission) return <View style={styles.fill} />;
 
@@ -33,27 +71,40 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
   }
 
   const shoot = async () => {
-    if (!camera.current || !ready || busy) return;
+    if (!camera.current || !ready || busy || shooting.current || !active) return;
+    shooting.current = true;
     setBusy(true);
+    startScanTiming();
     try {
-      const photo = await camera.current.takePictureAsync({ quality: 0.7 });
+      const photo = await camera.current.capture();
+      markScan('captured');
+      noteScan({ photo_px: `${photo.width}x${photo.height}` });
+      if (Platform.OS !== 'web') noteScan({ capture_path: 'native' });
+      // After the shot, so the buzz can't shake the phone while the photo is taken.
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       setTorch(false);
-      onCapture(photo.uri);
-    } catch {
-      notify('Could not take photo', 'Please try again.');
+      onCapture(photo);
+    } catch (e) {
+      if (e instanceof BlurryPhotoError) notify('Photo is blurry', 'Hold the phone steady and tap again.');
+      else notify('Could not take photo', 'Please try again.');
     } finally {
+      shooting.current = false;
       setBusy(false);
     }
   };
 
   return (
-    <View style={styles.fill}>
-      <CameraView
+    <View ref={root} style={styles.fill} pointerEvents={active ? 'auto' : 'none'} aria-hidden={!active}>
+      <LabelCamera
         ref={camera}
-        style={StyleSheet.absoluteFill}
-        facing="back"
-        enableTorch={torch}
-        onCameraReady={() => setReady(true)}
+        torch={torch}
+        box={box}
+        active={active}
+        onReadyChange={setReady}
+        onTorchSupport={onTorchSupport}
+        onTorchFailed={onTorchFailed}
+        autoCapture={prefs.autoCapture && active && !busy && ready}
+        onAutoCapture={shoot}
       />
       <Scrims />
 
@@ -64,15 +115,17 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
             <ProfileButton
               onOpen={onOpenSheet}
               leading={
-                <Pressable
-                  hitSlop={8}
-                  onPress={() => setTorch((t) => !t)}
-                  accessibilityRole="button"
-                  accessibilityLabel={torch ? 'Turn flash off' : 'Turn flash on'}
-                  style={[styles.flash, torch && styles.flashOn]}
-                >
-                  <FlashIcon on={torch} size={20} color={torch ? '#FFD24A' : '#FFFFFF'} />
-                </Pressable>
+                torchSupported ? (
+                  <Pressable
+                    hitSlop={8}
+                    onPress={() => setTorch((t) => !t)}
+                    accessibilityRole="button"
+                    accessibilityLabel={torch ? 'Turn flash off' : 'Turn flash on'}
+                    style={[styles.flash, torch && styles.flashOn]}
+                  >
+                    <FlashIcon on={torch} size={20} color={torch ? '#FFD24A' : '#FFFFFF'} />
+                  </Pressable>
+                ) : undefined
               }
             />
           }
@@ -80,13 +133,13 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
 
         <View style={styles.middle} pointerEvents="none">
           {/* The scan frame borrows the Nutrition Facts panel: heavy top bar, hairline sides, a medium base rule. */}
-          <View style={styles.frame}>
+          <View ref={frame} onLayout={measureBox} style={styles.frame}>
             <View style={styles.frameTop} />
             <Text style={styles.frameLabel}>Ingredients</Text>
             <View style={styles.frameBase} />
           </View>
           <Glass style={styles.hint}>
-            <Text style={styles.hintText}>Fit the ingredient list in the panel</Text>
+            <Text style={styles.hintText}>{noFlash ? NO_FLASH : prefs.autoCapture && Platform.OS === 'web' ? 'Fit the ingredients · Hold steady' : HINT}</Text>
           </Glass>
         </View>
 
@@ -105,10 +158,7 @@ function Shutter({ onPress, disabled, busy }: { onPress: () => void; disabled: b
   const spring = (toValue: number) => Animated.spring(scale, { toValue, friction: 5, tension: 260, useNativeDriver: true }).start();
   return (
     <Pressable
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-        onPress();
-      }}
+      onPress={onPress}
       onPressIn={() => spring(0.88)}
       onPressOut={() => spring(1)}
       disabled={disabled}
