@@ -343,3 +343,106 @@ test('classify keeps the printed text and blend path', () => {
   assert.equal(c.found.sugar_alcohol[0].literal, 'Erythritol');
   assert.deepEqual(c.found.sugar_alcohol[0].path, ['Stevia Blend']);
 });
+
+// Sugar stacking and the place of the first added sugar. Information only: the verdicts above don't read it.
+const stack = (text: string | null, over: Partial<LiteralLabel> = {}) => evaluate(label(text, over)).sugarStacking;
+const at = (firstPosition: number, ingredientCount: number, distinct: number, firstNested = false) =>
+  ({ distinct, stacked: distinct >= 2, firstPosition, firstNested, ingredientCount });
+
+test('stacking: one added sugar is placed but not stacked', () => {
+  assert.deepEqual(stack('Oats, Cane Sugar, Salt'), at(2, 3, 1));
+  assert.deepEqual(stack('Sugar, Cocoa, Salt'), at(1, 3, 1));
+});
+
+test('stacking: 2 or more different added sugars are stacked', () => {
+  assert.deepEqual(stack('Whole Grain Oats, Sugar, Corn Syrup, Honey, Salt'), at(2, 5, 3));
+  assert.deepEqual(stack('Wheat Flour, Water, Dextrose, Yeast, Maltose'), at(3, 5, 2));
+  // "First sugar at ingredient 2 of 14".
+  assert.deepEqual(
+    stack('Whole Grain Wheat, Sugar, Rice, Corn Syrup, Salt, Canola Oil, Honey, Cinnamon, Soy Lecithin, Baking Soda, Caramel Color, Vitamin E, Zinc, Iron'),
+    at(2, 14, 3),
+  );
+});
+
+test('stacking: aliases of one registry entry count once', () => {
+  // Each name is listed under Added sugars, but they are all the "sugar" entry.
+  const ev = evaluate(label('Flour, Sugar, Cane Sugar, Brown Sugar, Molasses, Salt'));
+  assert.deepEqual(ev.found.added_sugar.map((e) => e.literal), ['Sugar', 'Cane Sugar', 'Brown Sugar', 'Molasses']);
+  assert.deepEqual(ev.sugarStacking, at(2, 6, 1));
+  assert.deepEqual(stack('Oats, Glucose Syrup, Corn Syrup Solids'), at(2, 3, 1));
+  assert.deepEqual(stack('Oats, Sugar, Organic Sugar, SUGAR'), at(2, 4, 1));
+  // One alias more of another entry makes it stacking.
+  assert.deepEqual(stack('Flour, Sugar, Cane Sugar, Dextrose, Salt'), at(2, 5, 2));
+});
+
+test('stacking: a sub-ingredient in brackets takes the place of the ingredient it is inside', () => {
+  assert.deepEqual(stack('Almonds, Chocolate Chips (Unsweetened Chocolate, Cane Sugar, Cocoa Butter), Sea Salt, Honey'), at(2, 4, 2, true));
+  // Sub-ingredients don't add to the count, at any depth or bracket style.
+  assert.deepEqual(stack('Enriched Flour (Wheat Flour, Niacin, Iron), Filling [Corn Syrup, Dextrose {Corn}, Water], Salt'), at(2, 3, 2, true));
+  assert.deepEqual(stack('Dark Chocolate (Cocoa Mass, Sugar, Cocoa Butter, Emulsifier (Soy Lecithin)), Almonds, Sea Salt'), at(1, 3, 1, true));
+  // An added sugar with a qualifier in brackets is the ingredient itself, not a sub-ingredient.
+  assert.deepEqual(stack('Salt, Sugar (Cane)'), at(2, 2, 1));
+  // The first hit decides "inside": a later nested sugar doesn't.
+  assert.deepEqual(stack('Sugar, Sprinkles (Dextrose, Corn Starch)'), at(1, 2, 2));
+});
+
+test('stacking: lead-ins and "and/or" keep the count right', () => {
+  assert.deepEqual(stack('Water, Contains 2% or less of: Sugar, Salt'), at(2, 3, 1));
+  assert.deepEqual(stack('Wheat Flour, Sugar and/or Dextrose'), at(2, 3, 2));
+});
+
+test('stacking: only what the rules treat as added sugar counts', () => {
+  // Sweeteners and sugar alcohols aren't added sugars.
+  assert.deepEqual(stack('Water, Sucralose, Sugar, Erythritol, Stevia'), at(3, 5, 1));
+  // Tagatose is a rare sugar the rules grade as added sugar; allulose is not.
+  assert.deepEqual(stack('Cocoa, Tagatose, Sugar'), at(2, 3, 2));
+  assert.deepEqual(stack('Cocoa, Allulose, Sugar'), at(3, 3, 1));
+  // Juice concentrates are one entry; with another sugar they stack.
+  assert.deepEqual(stack('Oats, Apple Juice Concentrate, Pear Juice Concentrate'), at(2, 3, 1));
+  assert.deepEqual(stack('Oats, Apple Juice Concentrate, Honey'), at(2, 3, 2));
+  // A 100% juice product has no added sugar, so there is nothing to place.
+  assert.equal(stack('Water, Grape Juice Concentrate, Pear Juice Concentrate, Natural Flavors, Citric Acid'), null);
+  // Milk and fruit are natural sugars.
+  assert.equal(stack('Whole Milk, Strawberries'), null);
+});
+
+test('stacking: nothing rather than a guess', () => {
+  // Cut-off list: more ingredients may sit before or after what was read.
+  assert.equal(stack('Oats, Sugar, Honey', { ingredients_complete: false }), null);
+  // Non-English list.
+  assert.equal(stack('Haver, suiker, honing', { ingredients_english: [{ printed: 'Haver', english: 'oats' }, { printed: 'suiker', english: 'sugar' }, { printed: 'honing', english: 'honey' }] }), null);
+  // RETRY: not a label, unreadable, no list.
+  assert.equal(stack('Oats, Sugar, Honey', { is_food_label: false }), null);
+  assert.equal(stack('Oats, Sugar, Honey', { is_readable: false }), null);
+  assert.equal(stack(null, perServing(6)), null);
+  // Added sugar on the panel only: no ingredient to place.
+  assert.equal(stack('Water, Salt', perServing(6)), null);
+  // The count can't be trusted: a bracket that never closes, an allergen statement, component lists.
+  assert.equal(stack('Chocolate Chips (Sugar, Cocoa Butter, Almonds, Honey, Salt'), null);
+  assert.equal(stack('Oats, Sugar), Honey'), null);
+  assert.equal(stack('Oats, Sugar, Honey. Contains: Milk, Soy'), null);
+  assert.equal(stack('Oats, Sugar, Honey. May contain traces of nuts'), null);
+  assert.equal(stack('Crust: Wheat Flour, Sugar, Butter. Filling: Apples, Corn Syrup'), null);
+});
+
+test('stacking never changes a verdict', () => {
+  const same = (text: string, over: Partial<LiteralLabel>, verdict: string, rule: string) => {
+    const ev = evaluate(label(text, over));
+    assert.equal(ev.verdict, verdict);
+    assert.equal(ev.ruleId, rule);
+    return ev;
+  };
+  // Three stacked sugars at 2 g per serving stay OKAY; one sugar over 4 g stays BAD.
+  assert.equal(same('Oats, Sugar, Honey, Corn Syrup', perServing(2), 'OKAY', 'O1-added-sugar-up-to-4g').sugarStacking?.stacked, true);
+  assert.equal(same('Oats, Sugar', perServing(6), 'BAD', 'X1-added-sugar-over-4g').sugarStacking?.stacked, false);
+  // A cut-off list keeps its verdict and reports no place.
+  assert.equal(same('Oats, Sugar, Honey', { ingredients_complete: false }, 'BAD', 'X2-added-sugar-no-grams').sugarStacking, null);
+  // Resolving one top-level ingredient at a time finds exactly what resolving the whole list does.
+  for (const c of CASES) {
+    const text = c.label.ingredients_text;
+    if (!text) continue;
+    const cl = classify(text, c.label.ingredients_english);
+    assert.deepEqual(cl.groups.flat(), cl.all, c.name);
+    assert.equal(cl.groups.length, parseIngredients(text).length, c.name);
+  }
+});

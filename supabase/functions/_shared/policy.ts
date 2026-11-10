@@ -18,7 +18,7 @@
 //   O4-O5  unknown sweetener / 2+ unrecognised ingredients   -> OKAY
 //   C1     complete list, nothing sweet                       -> CLEAN
 import { type Entry, type IngredientClass, REGISTRY_VERSION } from './ingredients.ts';
-import { baseKey, parseIngredients, type Resolved, resolveAll, translationsFrom } from './normalize.ts';
+import { baseKey, type ParsedItem, parseIngredients, type Resolved, resolveAll, translationsFrom } from './normalize.ts';
 
 export const POLICY_VERSION = 'rules-v3';
 
@@ -70,6 +70,23 @@ export type Evidence = {
   note?: string;
 };
 
+/**
+ * "Sugar stacking" (2 or more different added sugars on one list) and where the first added sugar sits.
+ * Information only: it never changes a verdict. Null whenever the place can't be trusted.
+ */
+export type SugarStacking = {
+  /** Different added-sugar registry entries listed. Two aliases of one entry ("Sugar", "Cane Sugar") count once. */
+  distinct: number;
+  /** True when 2 or more different added sugars are listed. */
+  stacked: boolean;
+  /** 1-based place, among the top-level ingredients, of the first one that is or holds an added sugar. */
+  firstPosition: number;
+  /** True when that first added sugar is a sub-ingredient in brackets ("Chocolate Chips (Sugar, Cocoa)"). */
+  firstNested: boolean;
+  /** How many top-level ingredients the list has. */
+  ingredientCount: number;
+};
+
 export type Evaluation = {
   status: 'decided' | 'retry';
   verdict: Verdict;
@@ -88,6 +105,8 @@ export type Evaluation = {
   missing: string[];
   warnings: string[];
   explanation: string;
+  /** Null for RETRY, a cut-off or non-English list, a list with no added sugar, or one that can't be counted. */
+  sugarStacking: SugarStacking | null;
 };
 
 const SWEET_CLASSES = [
@@ -121,7 +140,11 @@ function isJuiceProduct(all: Resolved[]) {
 
 /** Stages 2-3 only: parse and classify, no verdict. Exported for tests and debugging. */
 export function classify(text: string, english?: IngredientName[] | null) {
-  const resolved = resolveAll(parseIngredients(text), [], translationsFrom(english));
+  const items = parseIngredients(text);
+  const translations = translationsFrom(english);
+  // One top-level ingredient at a time (same result as resolving the whole list), so each hit keeps its place.
+  const groups = items.map((it) => resolveAll([it], [], translations));
+  const resolved = groups.flat();
   const juiceProduct = isJuiceProduct(resolved);
   const found = Object.fromEntries(SWEET_CLASSES.map((c) => [c, [] as Evidence[]])) as Evaluation['found'];
   const seen = new Set<string>();
@@ -144,6 +167,51 @@ export function classify(text: string, english?: IngredientName[] | null) {
     sweetUnknowns: unknown.filter((r) => r.sweetSignal).map((r) => r.literal),
     otherUnknowns: unknown.filter((r) => !r.sweetSignal).map((r) => r.literal),
     all: resolved,
+    items,
+    groups,
+  };
+}
+
+const BRACKET_PAIRS: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
+
+/** False when a bracket never closes or closes twice: the parser can't tell sub-ingredients from ingredients then. */
+function bracketsBalance(text: string) {
+  const open: string[] = [];
+  for (const ch of text) {
+    if ('([{'.includes(ch)) open.push(ch);
+    else if (BRACKET_PAIRS[ch] && open.pop() !== BRACKET_PAIRS[ch]) return false;
+  }
+  return open.length === 0;
+}
+
+/**
+ * Label text that isn't one ingredient: an allergen or storage statement ("Contains: Milk", "May contain nuts"),
+ * or the heading of a component list ("Filling: Apples"), where the order starts again.
+ */
+const NOT_AN_INGREDIENT = /^(?:contains?|may contain|allerg\w*|manufactured|distributed|made (?:in|on)|store|keep|best before)\b|:/;
+
+/**
+ * Sugar stacking and the place of the first added sugar, from the ordered ingredient list. Returns null
+ * rather than guess: a cut-off list, a non-English list (places are counted on the printed English list
+ * only), no added sugar in the list, or a list whose ingredients can't be counted reliably.
+ */
+export function sugarStacking(
+  label: Pick<LiteralLabel, 'ingredients_text' | 'ingredients_english' | 'ingredients_complete'>,
+  c: { items: ParsedItem[]; groups: Resolved[][] } | null,
+  addedSugars: Evidence[],
+): SugarStacking | null {
+  if (!c || !addedSugars.length || !label.ingredients_complete || label.ingredients_english?.length) return null;
+  if (!bracketsBalance(label.ingredients_text ?? '') || c.items.some((it) => NOT_AN_INGREDIENT.test(it.key))) return null;
+  const ids = new Set(addedSugars.map((e) => e.id));
+  const isAdded = (r: Resolved) => r.entry !== null && ids.has(r.entry.id);
+  const at = c.groups.findIndex((g) => g.some(isAdded));
+  if (at < 0) return null;
+  return {
+    distinct: ids.size,
+    stacked: ids.size >= 2,
+    firstPosition: at + 1,
+    firstNested: c.groups[at].find(isAdded)!.path.length > 0,
+    ingredientCount: c.items.length,
   };
 }
 
@@ -186,21 +254,23 @@ export function evaluate(label: LiteralLabel): Evaluation {
   if (quantity.basis === 'unknown' && (quantity.addedSugarsG !== null || quantity.totalSugarsG !== null)) missing.push('quantity_basis');
 
   const unknownSweeteners = c?.sweetUnknowns ?? [];
+  const addedSugars = [...found.added_sugar, ...found.rare_sugar.filter((e) => e.treatment === 'added_sugar')];
+  // Reported next to the verdict; nothing below reads it, so it can't change one.
+  const stacking = sugarStacking(label, c, addedSugars);
   const base = {
     policyVersion: POLICY_VERSION, registryVersion: REGISTRY_VERSION, found, quantity, missing, warnings,
     unresolved: [...unknownSweeteners, ...(c?.otherUnknowns ?? [])], unknownSweeteners,
   };
   const retry = (ruleId: string, explanation: string): Evaluation =>
-    ({ ...base, status: 'retry', verdict: 'RETRY', ruleId, triggers: [], explanation });
+    ({ ...base, status: 'retry', verdict: 'RETRY', ruleId, triggers: [], explanation, sugarStacking: null });
   const decided = (verdict: ShownVerdict, ruleId: string, triggers: Evidence[], explanation: string): Evaluation =>
-    ({ ...base, status: 'decided', verdict, ruleId, triggers, explanation });
+    ({ ...base, status: 'decided', verdict, ruleId, triggers, explanation, sugarStacking: stacking });
 
   // R1-R2: can't evaluate at all.
   if (!label.is_food_label) return retry('R1-not-food', "This doesn't look like a food label.");
   if (!label.is_readable) return retry('R2-unreadable', "The ingredient text isn't clear enough to read.");
 
   // Classification facts used below.
-  const addedSugars = [...found.added_sugar, ...found.rare_sugar.filter((e) => e.treatment === 'added_sugar')];
   const artificial = found.non_sugar_sweetener.filter((e) => e.subtype === 'artificial');
   const noAlcoholClaim = claimsNoAlcohol(label.abv_text);
   const alcohol = noAlcoholClaim ? [] : found.drinking_alcohol;

@@ -1,33 +1,38 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Sources from '../../components/Sources.astro';
 import ScanCta from '../../components/ScanCta.astro';
 import { breadcrumbs, ORG_ID, SITE_ID } from '../../data/schema';
-import { abs, CONTENT_UPDATED, SITE_NAME, POLICY_VERSION } from '../../config';
-import type { SourceKey } from '../../data/sources';
+import { abs, CONTENT_UPDATED, SITE_NAME } from '../../config';
+import { getGuides, type Guide } from '../../data/guides';
+import { pillText, POLICY_VERSION, REGISTRY_VERSION, toneClass } from '../../data/ingredients';
 
+// One page per registry entry (see src/data/guides.ts), plus the hand-written guides about a single alias.
 export async function getStaticPaths() {
-  const all = await getCollection('ingredients');
-  return all.map((entry) => ({ params: { slug: entry.id }, props: { entry, all } }));
+  const all = await getGuides();
+  return all.map((guide) => ({ params: { slug: guide.slug }, props: { guide, all } }));
 }
-const { entry, all } = Astro.props;
-const { Content } = await render(entry);
-const d = entry.data;
-const path = `/ingredients/${entry.id}`;
+const { guide, all } = Astro.props as { guide: Guide; all: Guide[] };
+const { page } = guide;
+const Content = guide.doc ? (await render(guide.doc)).Content : null;
+const path = `/ingredients/${guide.slug}`;
 const crumbs = [
   { name: 'Home', href: '/' },
   { name: 'Ingredients', href: '/ingredients' },
-  { name: d.name, href: path },
+  { name: guide.name, href: path },
 ];
-const related = d.related.map((id) => all.find((e) => e.id === id)).filter(Boolean) as typeof all;
-const tone = d.verdict.toLowerCase();
+const related = guide.related.map((slug) => all.find((g) => g.slug === slug)!);
+// Hand-written guides about one name on this entry's list, and the entry page a name guide belongs to.
+const nameGuides = guide.aliasGuide ? [] : all.filter((g) => g.aliasGuide && g.page.id === page.id);
+const parent = guide.aliasGuide ? all.find((g) => !g.aliasGuide && g.page.id === page.id)! : null;
+const rules = [...new Set(page.outcomes.map((o) => o.rule))];
 const article = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: d.title,
-  description: d.description,
+  headline: guide.title,
+  description: guide.description,
   url: abs(path),
   mainEntityOfPage: abs(path),
   inLanguage: 'en-US',
@@ -37,52 +42,98 @@ const article = {
   author: { '@id': ORG_ID },
   publisher: { '@id': ORG_ID },
   isPartOf: { '@id': SITE_ID },
-  about: { '@type': 'Thing', name: d.name },
+  about: { '@type': 'Thing', name: guide.name },
 };
 ---
-<Base title={d.title} description={d.description} path={path} ogType="article" jsonLd={[article, breadcrumbs(crumbs)]}>
+<Base title={guide.title} description={guide.description} path={path} ogType="article" jsonLd={[article, breadcrumbs(crumbs)]}>
   <div class="wrap page-head">
     <Breadcrumbs items={crumbs} />
     <span class="kicker">Ingredient guide</span>
-    <h1>{d.name}</h1>
-    <p class="lead">{d.summary}</p>
+    <h1>{guide.name}</h1>
+    <p class="lead">{guide.summary}</p>
   </div>
   <div class="wrap page-body two-col">
     <article class="prose">
-      <Content />
-      <h2>Names and codes on labels</h2>
-      <p>Sugar Depth recognizes these exact names (case doesn't matter){d.codes.length ? ' and codes' : ''}:</p>
-      <ul class="alias-list">
-        {d.aliases.map((a) => <li>{a}</li>)}
-        {d.codes.map((c) => <li class="mono">{c}</li>)}
-      </ul>
-      {d.codes.length > 0 && <p class="small muted" style="margin-top:12px">E numbers are EU codes; INS codes use the same numbers. US labels usually print the name instead.</p>}
-      <p class="callout">Sugar Depth's verdicts are product preferences about sweeteners, not medical findings. Sugar Depth is not medical advice and does not check allergens.</p>
-      <Sources keys={d.sources as SourceKey[]} />
+      {Content ? <Content /> : (
+        <>
+          <h2>What it is</h2>
+          <p>{page.classSentence}{page.note && ` ${page.note}`}</p>
+          <h2>How US labels count it</h2>
+          <p>{page.labelingSentence}</p>
+        </>
+      )}
+
+      <h2 id="rules">{Content ? `The rules that apply (${POLICY_VERSION})` : `How ${SITE_NAME} treats it`}</h2>
+      <p>
+        {parent ? <>{guide.name} is one of the names for <a href={`/ingredients/${parent.slug}`}>{parent.name.toLowerCase()}</a> in {SITE_NAME}'s registry. </> : null}
+        {SITE_NAME} runs every scanned label through the same ordered rules ({POLICY_VERSION}). For this ingredient:
+      </p>
+      <div class="table-wrap">
+        <table class="facts-table outcomes" role="table">
+          <caption>{guide.name} under {POLICY_VERSION}. The worst ingredient on a label decides.</caption>
+          <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">When</th><th scope="col" role="columnheader">Verdict</th><th scope="col" role="columnheader">Rule</th></tr></thead>
+          <tbody role="rowgroup">
+            {page.outcomes.map((o) => (
+              <tr role="row">
+                <td role="cell">{o.when.replace(/(\d) (g|ml)\b/g, '$1\u00a0$2')}.</td>
+                <td class={`out ${toneClass(o.verdict)}`} role="cell">{o.verdict}</td>
+                <td class="mono" role="cell">{o.rule}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {Content && page.note && <p class="small muted" style="margin-top:12px">Registry note: {page.note}</p>}
+
+      <h2 id="names">Names and codes on labels</h2>
+      {guide.aliases.length > 0 && (
+        <>
+          <p>{SITE_NAME} recognizes {guide.aliasGuide ? 'these related names' : guide.aliases.length === 1 ? 'this exact name' : `these ${guide.aliases.length} exact names`} (case doesn't matter){guide.codes.length ? ' and codes' : ''}:</p>
+          <ul class="alias-list">
+            {guide.aliases.map((a) => <li>{a}</li>)}
+            {guide.codes.map((c) => <li class="mono">{c}</li>)}
+          </ul>
+        </>
+      )}
+      {page.patterns.length > 0 && !guide.aliasGuide && (
+        <>
+          <p style="margin-top:16px">{guide.aliases.length ? 'It also matches' : `${SITE_NAME} matches`} this wording for any fruit or vegetable:</p>
+          <ul>
+            {page.patterns.map((p) => <li>"{p.pattern}", such as {p.example}</li>)}
+          </ul>
+        </>
+      )}
+      {guide.codes.length > 0 && <p class="small muted" style="margin-top:12px">E numbers are EU codes; INS codes use the same numbers. US labels usually print the name instead.</p>}
+      {parent && <p style="margin-top:16px"><a href={`/ingredients/${parent.slug}`}>All {parent.aliases.length} names for {parent.name.toLowerCase()}</a></p>}
+      {nameGuides.length > 0 && (
+        <p style="margin-top:16px">Guides to names on this list: {nameGuides.map((g, i) => <>{i > 0 && ', '}<a href={`/ingredients/${g.slug}`}>{g.name}</a></>)}.</p>
+      )}
+      <p class="callout">{SITE_NAME}'s verdicts are product preferences about sweeteners, not medical findings. {SITE_NAME} is not medical advice and does not check allergens.</p>
+      <Sources keys={guide.sources} />
+      <p class="small muted">Names, class and rules from the {SITE_NAME} ingredient registry {REGISTRY_VERSION} and {POLICY_VERSION}.</p>
     </article>
     <aside class="aside">
       <div class="sheet">
         <span class="kicker" style="margin-bottom:8px">{SITE_NAME} verdict</span>
-        <p class={`facts-word ${tone}`} style="margin:0 0 6px;font-size:3.2rem">{d.verdictLabel ? 'CLEAN' : d.verdict}</p>
-        {d.verdictLabel && <p class="small" style="margin:0 0 8px">{d.verdictLabel}</p>}
+        <p class={`facts-word ${toneClass(page.verdict.tone)}`} style={`margin:0 0 6px;font-size:${page.verdict.word.length > 5 ? '2rem;line-height:1.05;letter-spacing:-0.03em' : '3.2rem'}`}>{page.verdict.word}</p>
+        {page.verdict.label !== page.verdict.word && <p class="small" style="margin:0 0 8px">{page.verdict.label}</p>}
         <hr class="rule-5" />
         <dl class="small" style="margin:0">
-          <dt class="muted">Rule</dt><dd style="margin:0 0 10px"><a href={`/how-it-works#rule-${d.rule}`}>{d.rule}</a> in {POLICY_VERSION}</dd>
-          <dt class="muted">What it is</dt><dd style="margin:0 0 10px">{d.cls}</dd>
-          <dt class="muted">US label treatment</dt><dd style="margin:0">{d.labeling}</dd>
+          <dt class="muted">{rules.length > 1 ? 'Rules' : 'Rule'}</dt><dd style="margin:0 0 10px">{rules.map((r, i) => <>{i > 0 && ', '}<a class="mono" href="#rules">{r.split('-')[0]}</a></>)} in {POLICY_VERSION}</dd>
+          <dt class="muted">What it is</dt><dd style="margin:0 0 10px">{page.classLabel}</dd>
+          <dt class="muted">US label treatment</dt><dd style="margin:0">{page.labelingLabel}</dd>
         </dl>
         <hr class="rule-4" />
       </div>
-      {related.length > 0 && (
-        <nav class="sheet" style="margin-top:16px" aria-label="Related guides">
-          <span class="kicker" style="margin-bottom:6px">Related</span>
-          <ul style="list-style:none;padding:0;margin:0">
-            {related.map((r) => <li style="margin:6px 0"><a href={`/ingredients/${r.id}`}>{r.data.name}</a> <span class={`small ${r.data.verdict.toLowerCase()}`}>· {r.data.verdictLabel ?? r.data.verdict}</span></li>)}
-            <li style="margin:6px 0"><a href="/hidden-sugar-names">All hidden sugar names</a></li>
-            <li style="margin:6px 0"><a href="/how-it-works">The full rule table</a></li>
-          </ul>
-        </nav>
-      )}
+      <nav class="sheet" style="margin-top:16px" aria-label="Related guides">
+        <span class="kicker" style="margin-bottom:6px">Related</span>
+        <ul style="list-style:none;padding:0;margin:0">
+          {related.map((r) => <li style="margin:6px 0"><a href={`/ingredients/${r.slug}`}>{r.name}</a> <span class={`small ${toneClass(r.page.verdict.tone)}`}>· {pillText(r.page)}</span></li>)}
+          <li style="margin:6px 0"><a href="/ingredients">All ingredients</a></li>
+          <li style="margin:6px 0"><a href="/hidden-sugar-names">All hidden sugar names</a></li>
+          <li style="margin:6px 0"><a href="/how-it-works">How verdicts work</a></li>
+        </ul>
+      </nav>
     </aside>
   </div>
   <div class="wrap" style="padding-bottom:72px"><ScanCta /></div>
