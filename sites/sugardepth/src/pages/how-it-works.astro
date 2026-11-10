@@ -3,6 +3,9 @@ import Base from '../layouts/Base.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Sources from '../components/Sources.astro';
 import ScanCta from '../components/ScanCta.astro';
+import EditorialImage from '../components/EditorialImage.astro';
+import Film from '../components/Film.astro';
+import FilmMotion from '../components/FilmMotion.astro';
 import { RULES, TREATMENTS } from '../data/rules';
 import { S } from '../data/sources';
 import { breadcrumbs, ORG_ID } from '../data/schema';
@@ -29,20 +32,23 @@ const article = {
   path="/how-it-works"
   jsonLd={[article, breadcrumbs(crumbs)]}
 >
-  <div class="wrap page-head">
+  <div class="wrap page-head editorial-article">
     <Breadcrumbs items={crumbs} />
     <span class="kicker">The rulebook · {POLICY_VERSION}</span>
     <h1>How verdicts work</h1>
     <p class="lead">
       Sugar Depth gives a food label one of three verdicts. <strong class="ugly">UGLY</strong> means it lists any added
       sugar, any artificial sweetener, erythritol, xylitol or drinking alcohol. <strong class="bad">BAD</strong> means no
-      UGLY trigger, but stevia, monk fruit, thaumatin, allulose or another sugar alcohol.
+      UGLY trigger, but stevia, monk fruit, thaumatin, allulose or another sugar alcohol.{" "}
       <strong class="clean">CLEAN</strong> means a complete ingredient list with nothing sweet added.
     </p>
     <p class="voice">There is no GOOD tier. There is no gram cutoff. A pinch of sugar is still sugar.</p>
+    <figure class="editorial-frame label-figure">
+      <EditorialImage name="label" alt="A thick clear glass slab rests over fine print on a cream food package, with a sugar cube beside it." />
+    </figure>
   </div>
 
-  <div class="wrap page-body">
+  <div class="wrap page-body editorial-article">
     <div class="prose">
       <h2 id="pipeline">What happens to your photo</h2>
       <ol>
@@ -51,6 +57,11 @@ const article = {
         <li><strong>Matching.</strong> Each ingredient is matched to one versioned registry ({REGISTRY_VERSION}) by its exact name, never by a fragment. "Sugar" never matches "sugar alcohol", and "maltodextrin" never matches "resistant maltodextrin".</li>
         <li><strong>Deciding.</strong> The ordered rules below produce the verdict, the rule that fired, and the printed words that triggered it.</li>
       </ol>
+      <figure class="editorial-frame steps-film">
+        <Film name="three-steps" label="Three illustrated stages: photograph the label, read the ingredient names, and reveal one verdict." width={1280} height={720}>
+          <EditorialImage name="label" alt="Clear glass magnifies the ingredient print on a cream package beside a sugar cube." sizes="(max-width: 760px) calc(100vw - 40px), 800px" />
+        </Film>
+      </figure>
       <p>
         A separate verdict checker also looks at the photo and makes the final call; the rules below decide when that
         checker is unavailable or unsure, so in rare cases the verdict shown can differ from what the rules alone would give.
@@ -60,15 +71,15 @@ const article = {
     <h2 id="rules" style="margin-top:56px">The rule table</h2>
     <p class="muted prose">Rules are checked from top to bottom. The first one that matches decides.</p>
     <div class="table-wrap">
-      <table class="facts-table">
+      <table class="facts-table" role="table">
         <caption>Sugar Depth {POLICY_VERSION}. First match wins.</caption>
-        <thead><tr><th scope="col">Rule</th><th scope="col">When</th><th scope="col">Result</th></tr></thead>
-        <tbody>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" id="rule-col-rule">Rule</th><th scope="col" role="columnheader" id="rule-col-when">When</th><th scope="col" role="columnheader" id="rule-col-result">Result</th></tr></thead>
+        <tbody role="rowgroup">
           {RULES.map((r) => (
-            <tr id={`rule-${r.id}`}>
-              <td class="rid">{r.id}</td>
-              <td>{r.condition}</td>
-              <td class={`out ${r.outcome} ${tone(r.outcome)}`}>{r.result}</td>
+            <tr id={`rule-${r.id}`} role="row">
+              <td class="rid" role="cell" headers="rule-col-rule"><span class="table-label" aria-hidden="true">Rule</span>{r.id}</td>
+              <td role="cell" headers="rule-col-when"><span class="table-label" aria-hidden="true">When</span>{r.condition}</td>
+              <td class={`out ${r.outcome} ${tone(r.outcome)}`} role="cell" headers="rule-col-result"><span class="table-label" aria-hidden="true">Result</span>{r.result}</td>
             </tr>
           ))}
         </tbody>
@@ -87,16 +98,16 @@ const article = {
     <h2 id="identity" style="margin-top:56px">Identity vs. treatment</h2>
     <p class="muted prose">What an ingredient is, how US labels count it, and how Sugar Depth treats it are three separate questions. Some examples:</p>
     <div class="table-wrap">
-      <table class="facts-table">
+      <table class="facts-table" role="table">
         <caption>Identity, US label treatment and Sugar Depth verdict</caption>
-        <thead><tr><th scope="col">Ingredient</th><th scope="col">What it is</th><th scope="col">US label treatment</th><th scope="col">Sugar Depth</th></tr></thead>
-        <tbody>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" id="identity-col-ingredient">Ingredient</th><th scope="col" role="columnheader" id="identity-col-class">What it is</th><th scope="col" role="columnheader" id="identity-col-label">US label treatment</th><th scope="col" role="columnheader" id="identity-col-verdict">Sugar Depth</th></tr></thead>
+        <tbody role="rowgroup">
           {TREATMENTS.map((t) => (
-            <tr>
-              <td class="rid ingr"><strong>{t.guide ? <a href={`/ingredients/${t.guide}`}>{t.ingredient}</a> : t.ingredient}</strong></td>
-              <td>{t.cls}</td>
-              <td>{t.source ? <a href={S[t.source as keyof typeof S].url}>{t.labeling}</a> : t.labeling}</td>
-              <td class={`out ${tone(t.verdict)}`}>{t.verdict}</td>
+            <tr role="row">
+              <td class="rid ingr" role="cell" headers="identity-col-ingredient"><span class="table-label" aria-hidden="true">Ingredient</span><strong>{t.guide ? <a href={`/ingredients/${t.guide}`}>{t.ingredient}</a> : t.ingredient}</strong></td>
+              <td role="cell" headers="identity-col-class"><span class="table-label" aria-hidden="true">What it is</span>{t.cls}</td>
+              <td role="cell" headers="identity-col-label"><span class="table-label" aria-hidden="true">US label treatment</span>{t.source ? <a href={S[t.source as keyof typeof S].url}>{t.labeling}</a> : t.labeling}</td>
+              <td class={`out ${tone(t.verdict)}`} role="cell" headers="identity-col-verdict"><span class="table-label" aria-hidden="true">Sugar Depth</span>{t.verdict}</td>
             </tr>
           ))}
         </tbody>
@@ -128,4 +139,5 @@ const article = {
     </div>
     <div style="margin-top:48px"><ScanCta /></div>
   </div>
+  <FilmMotion />
 </Base>

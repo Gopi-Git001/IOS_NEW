@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FlatList, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Group, listStyles, openLink, Row, Sheet } from '../components/ListUI';
 import { verdictColor } from '../components/VerdictPanel';
+import { CrystalSlab } from '../components/CrystalVerdict';
 import { links } from '../config';
 import { applyStrictMode, ingredientSummary } from '../lib/display';
 import { confirmAction } from '../lib/confirm';
@@ -102,11 +103,10 @@ function HistoryList() {
       ListEmptyComponent={<Text style={styles.empty}>No scans yet. Your last 50 scans will show here.</Text>}
       renderItem={({ item, index }) => {
         const result = applyStrictMode(item.result, strict);
-        const color = verdictColor[result.verdict];
         return (
           <View style={[styles.historyRow, index === 0 && styles.first, index === history.length - 1 && styles.last]}>
-            <View style={[listStyles.badge, styles.historyBadge, { backgroundColor: `${color}1F` }]}>
-              <Text style={[listStyles.badgeText, { color }]}>{result.verdict}</Text>
+            <View style={styles.historyBadge} accessible accessibilityLabel={result.verdict}>
+              <CrystalSlab verdict={result.verdict} compact />
             </View>
             <View style={listStyles.rowText}>
               <Text style={listStyles.rowLabel} numberOfLines={1}>
