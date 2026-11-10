@@ -133,8 +133,23 @@ describe("the site's source", () => {
   });
 
   test('the versions shown on the site come from the generated registry data, not a typed string', () => {
+    for (const file of files.filter((f) => /\.(astro|ts|mjs|mdx)$/.test(f))) {
+      assert.doesNotMatch(readFileSync(file, 'utf8'), /registry-\d{4}/, `${relative(root, file)} types a registry version`);
+    }
+    assert.doesNotMatch(readFileSync(join(site, 'src/config.ts'), 'utf8'), /['"`]rules-v/);
+    for (const page of ['src/components/Footer.astro', 'src/pages/how-it-works.astro']) {
+      assert.match(readFileSync(join(site, page), 'utf8'), /import \{[^}]*\bPOLICY_VERSION\b[^}]*\} from '\.\.\/data\/ingredients';/, `${page} should read the versions from data/ingredients`);
+    }
+  });
+
+  // astro.config.mjs imports src/config.ts with plain Node. If that import fails, Astro falls back to Vite, which
+  // reads the Expo app's tsconfig at the repo root; on Vercel only the site's dependencies are installed, so
+  // "expo/tsconfig.base" is missing and the build stops with "Unable to load your Astro config".
+  test('src/config.ts has no imports, so astro.config.mjs can load it with plain Node', () => {
     const config = readFileSync(join(site, 'src/config.ts'), 'utf8');
-    assert.match(config, /export \{ POLICY_VERSION, REGISTRY_VERSION \} from '\.\/data\/ingredients';/);
-    assert.doesNotMatch(config, /['"](rules-v|registry-)/);
+    assert.match(readFileSync(join(site, 'astro.config.mjs'), 'utf8'), /from '\.\/src\/config\.ts'/);
+    assert.doesNotMatch(config, /^\s*import\s/m);
+    assert.doesNotMatch(config, /^\s*export\s[^;\n]*\sfrom\s/m);
+    assert.doesNotMatch(config, /\b(import|require)\(/);
   });
 });

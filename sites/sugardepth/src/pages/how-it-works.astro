@@ -7,11 +7,11 @@ import EditorialImage from '../components/EditorialImage.astro';
 import Film from '../components/Film.astro';
 import FilmMotion from '../components/FilmMotion.astro';
 import { RULES, TREATMENT_ROWS } from '../data/rules';
-import { MAX_OKAY_ADDED_G, pageById, toneClass, type IngredientPage } from '../data/ingredients';
+import { MAX_OKAY_ADDED_G, pageById, POLICY_VERSION, REGISTRY_VERSION, toneClass, type IngredientPage } from '../data/ingredients';
 import { S } from '../data/sources';
 import { PRE_V3_MEDIA_NOTE } from '../data/media';
 import { breadcrumbs, ORG_ID } from '../data/schema';
-import { POLICY_VERSION, REGISTRY_VERSION, CONTENT_UPDATED, abs } from '../config';
+import { CONTENT_UPDATED, abs } from '../config';
 const crumbs = [{ name: 'Home', href: '/' }, { name: 'How it works', href: '/how-it-works' }];
 const G = MAX_OKAY_ADDED_G;
 // The identity table: each row is read from the registry, and its entries must agree with each other.

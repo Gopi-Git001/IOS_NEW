@@ -20,11 +20,11 @@ export const ORG = {
   email: 'support@sugardepth.com',
 };
 
-/**
- * Versions of the rulebook these pages describe. Read from the generated registry data
- * (src/data/ingredients.generated.json, written from policy.ts and ingredients.ts), so they can't be typed wrong here.
- */
-export { POLICY_VERSION, REGISTRY_VERSION } from './data/ingredients';
+// The rules and registry versions these pages describe are not kept here: import POLICY_VERSION and REGISTRY_VERSION
+// from './data/ingredients', which reads them from the generated registry data.
+// Keep this file free of imports. astro.config.mjs loads it with plain Node; an import Node can't resolve by itself
+// makes Astro fall back to Vite, which then reads the Expo app's tsconfig at the repo root and fails on Vercel,
+// where only this folder's dependencies are installed.
 
 /** Date the content was last reviewed against the rulebook (ISO). */
 export const CONTENT_UPDATED = '2026-11-10';

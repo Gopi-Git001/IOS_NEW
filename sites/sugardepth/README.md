@@ -20,7 +20,7 @@ npm run preview
 
 | What | Where |
 |---|---|
-| Site URL, scanner URL (`APP_URL`), company details, content date | `src/config.ts` (the rules and registry versions are re-exported from the generated data) |
+| Site URL, scanner URL (`APP_URL`), company details, content date | `src/config.ts`. Keep it free of imports: `astro.config.mjs` loads it with plain Node. The rules and registry versions come from the generated data (`src/data/ingredients.ts`) |
 | Rule table on `/how-it-works` | `src/data/rules.ts`: plain-word conditions written by hand from `RULES.md`; ids, order and outcomes are checked against `policy.ts` by `tests/unit/site-rules.test.ts` |
 | Identity-vs-treatment table | `TREATMENT_ROWS` in `src/data/rules.ts` lists registry ids; the cells come from the generated data |
 | Note under films and screenshots recorded before rules-v3 | `src/data/media.ts` (delete it and its uses once the media is re-recorded) |
