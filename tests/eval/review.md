@@ -9,6 +9,11 @@ per-serving "Includes X g Added Sugars" line on the photo.
 
 Tally: 37 photos, 27 match, 10 need a change (4 verdicts, 3 lists only, 3 DECIDE items), 0 can't read.
 
+**APPROVED Nov 9, 2026:** all 37 proposed answers below are now in labels.json with `verified: true`
+(51 = CLEAN; 52 = BAD, no fermentation exception; 60 = BAD, names kept in French). 17 and 55 were set to
+`photo_status: "replace"` (photo too small) and added to PHOTOS-TO-TAKE.md, so they aren't scored until retaken.
+58 now tests a panel-dominated photo with a small rotated ingredient list (BAD), not a panel-only photo.
+
 | id | ingredients as read | added sugar g | current answer | proposed answer | match? | notes |
 |---|---|---|---|---|---|---|
 | 12-hard-boiled-eggs | none visible (front of the carton: "Organic Brown Eggs, 12 large") | not visible | CLEAN · — / — / — | RETRY · — / — / — | NO (verdict) | R3-no-ingredient-list. To keep CLEAN, retake a side of the carton that prints "Ingredients: eggs". |

@@ -12,7 +12,7 @@
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -59,7 +59,7 @@
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -135,7 +135,7 @@
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -160,7 +160,7 @@
       ],
       "expected_added_sugars": [],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -237,7 +237,7 @@
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -260,7 +260,7 @@
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -279,12 +279,12 @@
       "product": "Eggs (carton label)",
       "category": "protein",
       "tests": "No ingredient list, simple whole food",
-      "expected_verdict": "CLEAN",
+      "expected_verdict": "RETRY",
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [],
-      "verified": false,
-      "notes": "",
+      "verified": true,
+      "notes": "Photo is the carton front with no ingredient list, so R3 (retake). A side that prints \"Ingredients: eggs\" would be CLEAN.",
       "source": {
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
@@ -308,7 +308,7 @@
       "expected_sweeteners": [
         "Stevia Leaf Extract"
       ],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -333,7 +333,7 @@
       "expected_sweeteners": [
         "Stevia Leaf Extract"
       ],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -378,14 +378,14 @@
       "product": "Hermesetas Stevia sweetener (erythritol + steviol glycosides)",
       "category": "sweetener",
       "tests": "Pure stevia product",
-      "expected_verdict": "BAD",
+      "expected_verdict": "OKAY",
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [
         "Erythritol",
         "Steviol Glycosides"
       ],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -421,7 +421,8 @@
         "image": "https://images.openfoodfacts.org/images/products/04918202/ingredients_en.7.full.jpg"
       },
       "off_ingredients_text": "CARBONATED WATER, HIGH FRUCTOSE CORN SYRUP, CARAMEL COLOR, PHOSPHORIC ACID, NATURAL FLAVORS, CAFFEINE.",
-      "photo_status": "ok"
+      "photo_status": "replace",
+      "photo_issue": "Photo too small (519x168 px, 16 KB); Claude read it as unreadable in the Nov 9 one-photo eval. Retake the can's ingredient list filling the frame."
     },
     {
       "id": "18-sprite",
@@ -461,7 +462,7 @@
       "expected_sweeteners": [
         "Aspartame"
       ],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -487,7 +488,7 @@
         "Aspartame",
         "Acesulfame Potassium"
       ],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -540,7 +541,7 @@
         "Sucralose",
         "Acesulfame Potassium"
       ],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -624,7 +625,7 @@
       "expected_sweeteners": [
         "Stevia Leaf Extract"
       ],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -649,8 +650,10 @@
         "Sugar",
         "Glucose"
       ],
-      "expected_sweeteners": [],
-      "verified": false,
+      "expected_sweeteners": [
+        "Sucralose"
+      ],
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -723,14 +726,14 @@
       "product": "vitaminwater zero",
       "category": "drink",
       "tests": "Sugar alcohol + stevia",
-      "expected_verdict": "BAD",
+      "expected_verdict": "OKAY",
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [
         "Erythritol",
         "Stevia Leaf Extract"
       ],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -757,7 +760,7 @@
         "Sugar"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -782,7 +785,7 @@
       "expected_sweeteners": [
         "Aspartame"
       ],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -831,9 +834,12 @@
       "tests": "Alcohol is BAD regardless of sugar",
       "expected_verdict": "BAD",
       "expected_natural_sugars": [],
-      "expected_added_sugars": [],
+      "expected_added_sugars": [
+        "Cane Sugar",
+        "Cherry Juice Concentrate"
+      ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -856,7 +862,7 @@
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -883,7 +889,7 @@
         "Brown Sugar Syrup"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -936,7 +942,7 @@
         "Brown Sugar Syrup"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -963,7 +969,7 @@
         "Honey"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -987,10 +993,11 @@
       "expected_added_sugars": [
         "Brown Rice Syrup",
         "Cane Syrup",
-        "Cane Sugar"
+        "Cane Sugar",
+        "Barley Malt Extract"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -1018,7 +1025,7 @@
         "Erythritol",
         "Steviol Glycosides"
       ],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -1129,7 +1136,7 @@
         "Sugar"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -1156,7 +1163,7 @@
         "Sugar"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -1181,7 +1188,7 @@
         "High Fructose Corn Syrup"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -1207,7 +1214,7 @@
         "Organic Molasses"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -1233,7 +1240,7 @@
         "High Fructose Corn Syrup"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -1306,11 +1313,11 @@
       "product": "Athletic Brewing non-alcoholic beer",
       "category": "edge",
       "tests": "ABV <0.5% must NOT trigger alcohol",
-      "expected_verdict": null,
+      "expected_verdict": "CLEAN",
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -1329,12 +1336,19 @@
       "product": "GT's Synergy kombucha",
       "category": "edge",
       "tests": "Trace alcohol + fruit juice; judged on sugar",
-      "expected_verdict": null,
-      "expected_natural_sugars": [],
-      "expected_added_sugars": [],
+      "expected_verdict": "BAD",
+      "expected_natural_sugars": [
+        "Passion Fruit Puree",
+        "Orange Juice",
+        "Guava Juice",
+        "Kiwi Juice"
+      ],
+      "expected_added_sugars": [
+        "Cane Sugar"
+      ],
       "expected_sweeteners": [],
-      "verified": false,
-      "notes": "",
+      "verified": true,
+      "notes": "Cane sugar is labelled \"used for fermentation\"; no fermentation exception (decided Nov 9), so added sugar with no grams = X2 BAD.",
       "source": {
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
@@ -1382,7 +1396,7 @@
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -1408,7 +1422,7 @@
         "High Fructose Corn Syrup"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -1420,7 +1434,8 @@
         "derived_from": "17-coca-cola",
         "effect": "glare"
       },
-      "photo_status": "ok"
+      "photo_status": "replace",
+      "photo_issue": "Photo too small (519x168 px, a glare copy of 17). Take a real Coke can photo with glare across the ingredient list, list filling the frame."
     },
     {
       "id": "56-curved-gatorade",
@@ -1464,7 +1479,7 @@
         "Brown Sugar Syrup"
       ],
       "expected_sweeteners": [],
-      "verified": false,
+      "verified": true,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
@@ -1481,15 +1496,19 @@
     {
       "id": "58-nutrition-panel-only",
       "photo": "photos/58-nutrition-panel-only.jpg",
-      "product": "Malt-O-Meal Frosted Flakes: nutrition panel only",
+      "product": "Malt-O-Meal Frosted Flakes: nutrition panel with a small rotated ingredient list",
       "category": "photo-quality",
-      "tests": "Needs the ingredient list",
-      "expected_verdict": "RETRY",
+      "tests": "Panel dominates the photo; the small, rotated ingredient list beside it must still be read, and about 15 g added sugar per serving (over 4 g) is BAD",
+      "expected_verdict": "BAD",
       "expected_natural_sugars": [],
-      "expected_added_sugars": [],
+      "expected_added_sugars": [
+        "Sugar",
+        "Corn Syrup",
+        "Barley Malt Extract"
+      ],
       "expected_sweeteners": [],
-      "verified": false,
-      "notes": "",
+      "verified": true,
+      "notes": "Not a panel-only photo: the ingredient list is visible at the right, rotated. \"Includes 1? g Added Sugars 30%\" (second digit under glare, about 15 g). The id is kept for history; a true panel-only test needs a new photo with the list out of frame.",
       "source": {
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
@@ -1522,12 +1541,16 @@
       "product": "An imported product with a non-English label",
       "category": "photo-quality",
       "tests": "Non-English ingredient list",
-      "expected_verdict": null,
-      "expected_natural_sugars": [],
-      "expected_added_sugars": [],
+      "expected_verdict": "BAD",
+      "expected_natural_sugars": [
+        "Lait \u00e9cr\u00e9m\u00e9 en poudre"
+      ],
+      "expected_added_sugars": [
+        "Sucre"
+      ],
       "expected_sweeteners": [],
-      "verified": false,
-      "notes": "",
+      "verified": true,
+      "notes": "French label, nutrition per 100 g only, so the added-sugar grams per serving can't be read (X2 BAD). Names kept as printed: skim milk powder, sugar.",
       "source": {
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
