@@ -14,15 +14,16 @@ import { Glass } from '../components/Glass';
 import { FlashIcon } from '../components/Icons';
 import { LabelCamera } from '../components/LabelCamera';
 import { brand, colors, fonts } from '../theme';
+import { freeScansLabel } from '../lib/guestTrial';
 
 const HINT = 'Fit the ingredient list in the panel';
 const NO_FLASH = 'Flash not available on this camera';
 const NO_FLASH_MS = 3000;
 
 /** `active` is false while a result covers this screen: it stays mounted so the camera can keep running. */
-type Props = { active: boolean; onCapture: (photo: Photo) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string };
+type Props = { active: boolean; onCapture: (photo: Photo) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string; freeScans?: number; onSignIn?: () => void };
 
-export function CameraScreen({ active, onCapture, onOpenSheet, tagline }: Props) {
+export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScans, onSignIn }: Props) {
   const prefs = usePrefs();
   const shooting = useRef(false);
   useEffect(() => { if (active) warmScan(); }, [active]);
@@ -67,6 +68,9 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline }: Props)
         <Pressable style={styles.permissionButton} onPress={requestPermission}>
           <Text style={styles.permissionButtonText}>Allow camera</Text>
         </Pressable>
+        {onSignIn && <Pressable onPress={onSignIn} accessibilityRole="button" hitSlop={8}>
+          <Text style={styles.permissionSignIn}>Sign in with Google first</Text>
+        </Pressable>}
       </SafeAreaView>
     );
   }
@@ -105,7 +109,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline }: Props)
         onReadyChange={setReady}
         onTorchSupport={onTorchSupport}
         onTorchFailed={onTorchFailed}
-        autoCapture={prefs.autoCapture && active && !busy && ready}
+        autoCapture={prefs.autoCapture && (!onSignIn || (freeScans ?? 0) > 0) && active && !busy && ready}
         onAutoCapture={shoot}
       />
       <Scrims />
@@ -146,6 +150,12 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline }: Props)
         </View>
 
         <View style={styles.bottom}>
+          {freeScans !== undefined && <Glass style={styles.trial}>
+            <Text style={styles.hintText}>{freeScansLabel(freeScans)}</Text>
+            <Pressable onPress={onSignIn} accessibilityRole="button" hitSlop={8}>
+              <Text style={styles.trialLink}>Sign in</Text>
+            </Pressable>
+          </Glass>}
           <Shutter onPress={shoot} disabled={!(ready || testPhotoEnabled) || busy} busy={busy} />
           <Footer />
         </View>
@@ -180,7 +190,7 @@ const styles = StyleSheet.create({
   // Sits on top of the live camera, so it must stay see-through.
   overlay: { flex: 1 },
   middle: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 40 },
-  frame: { width: '80%', aspectRatio: 1.3, borderWidth: 1, borderColor: 'rgba(255,255,255,0.92)' },
+  frame: { width: '80%', maxWidth: 520, aspectRatio: 1.3, borderWidth: 1, borderColor: 'rgba(255,255,255,0.92)' },
   frameTop: { position: 'absolute', left: -1, right: -1, top: -1, height: 10, backgroundColor: '#FFFFFF' },
   frameBase: { position: 'absolute', left: -1, right: -1, bottom: -1, height: 5, backgroundColor: '#FFFFFF' },
   frameLabel: {
@@ -200,6 +210,8 @@ const styles = StyleSheet.create({
   flash: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   flashOn: { backgroundColor: 'rgba(251,191,36,0.22)' },
   bottom: { alignItems: 'center', paddingTop: 8 },
+  trial: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, marginBottom: 12 },
+  trialLink: { fontFamily: fonts.bold, fontSize: 14, color: colors.text, textDecorationLine: 'underline' },
   shutterSlot: { marginBottom: 10 },
   shutter: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center' },
   shutterInner: { width: 66, height: 66, borderRadius: 33, backgroundColor: '#FFFFFF' },
@@ -215,4 +227,5 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   permissionButtonText: { fontFamily: fonts.bold, fontSize: 16, color: colors.onInk },
+  permissionSignIn: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink, marginTop: 12, textDecorationLine: 'underline' },
 });

@@ -2,7 +2,8 @@
   "version": "5",
   "specifiers": {
     "npm:@supabase/server@1.9.2": "1.9.2_@supabase+supabase-js@2.118.0",
-    "npm:@supabase/supabase-js@2.118.0": "2.118.0"
+    "npm:@supabase/supabase-js@2.118.0": "2.118.0",
+    "npm:jpeg-js@0.4.4": "0.4.4"
   },
   "npm": {
     "@supabase/auth-js@2.118.0": {
@@ -70,11 +71,19 @@
     "jose@6.2.15": {
       "integrity": "sha512-qdF6ewcZARtef63fJ9AKKZPgxw+t7USH6HLXYcD4CrdmSvDp79rpJSPFEKc90QBeGS63u1KQtN2MZQHC0yDIzA=="
     },
+    "jpeg-js@0.4.4": {
+      "integrity": "sha512-WZzeDOEtTOBK4Mdsar0IqEU5sMr3vSV2RqkAIzUEV2BHnUfKGyswWFPFwK5EeDo93K3FohSHbLAjj0s1Wzd+dg=="
+    },
     "std-env@4.3.0": {
       "integrity": "sha512-OtU/EgQ1kIm5KwqQpBC6ZEMXrZRui11w8zgfTWp8cdO9B8OaPsbA8bTHO2P+HNo1VlUTGMVBwPhydu6poeXiag=="
     },
     "tslib@2.8.1": {
       "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="
     }
+  },
+  "workspace": {
+    "dependencies": [
+      "npm:jpeg-js@0.4.4"
+    ]
   }
 }

@@ -9,6 +9,7 @@ import { supabase } from './supabase';
 import { postScan } from './scanTransport';
 import { requestScanStream, RetryableScanError, type ScanEvent } from './scanStream';
 import { normalizeJev, normalizeResult } from './verdicts';
+import { parseGuestQuota } from './guestTrial';
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
 async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
@@ -158,13 +159,35 @@ export async function deleteAccount() {
 
 /** Testing builds skip phone verification: set EXPO_PUBLIC_GUEST_MODE=1 at build time. */
 export const guestMode = process.env.EXPO_PUBLIC_GUEST_MODE === '1';
+/** Visitor trial is web-only, independently opt-in, and also requires server consent. */
+export const guestTrialFlag = Platform.OS === 'web' && process.env.EXPO_PUBLIC_GUEST_SCANS === '1';
 
-/** Starts a test session with no phone check (the server must also allow it). Returns an error message or null. */
+export async function guestConfig() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const { data, error } = await supabase.functions.invoke('quickgob-phone-auth', { body: { action: 'guest_config' }, signal: controller.signal });
+    return !error && data?.enabled === true ? parseGuestQuota({ limit: data.limit, remaining: data.limit }) : null;
+  } catch { return null; }
+  finally { clearTimeout(timer); }
+}
+
+export async function getGuestQuota() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await postScan({ action: 'guest_status' }, controller.signal);
+    return response.ok ? parseGuestQuota(await response.json()) : null;
+  } catch { return null; }
+  finally { clearTimeout(timer); }
+}
+
+/** Starts an opt-in guest session (the server must also allow it). Returns an error message or null. */
 export async function signInAsGuest(): Promise<string | null> {
   const { data, error } = await supabase.functions.invoke<{ token_hash: string }>('quickgob-phone-auth', { body: { action: 'guest' } });
-  if (error || !data?.token_hash) return messageFrom(error, 'Could not start a test session.');
+  if (error || !data?.token_hash) return messageFrom(error, 'Free scans are unavailable. Sign in with Google.');
   const { error: authError } = await supabase.auth.verifyOtp({ token_hash: data.token_hash, type: 'email' });
-  return authError ? 'Could not start a test session.' : null;
+  return authError ? 'Free scans are unavailable. Sign in with Google.' : null;
 }
 
 const NATIVE_REDIRECT = 'reallabel://auth';
