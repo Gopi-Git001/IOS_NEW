@@ -35,7 +35,7 @@ export const webApplication = {
   operatingSystem: 'Web browser',
   browserRequirements: 'Requires a camera and a modern web browser.',
   description:
-    'Sugar Depth reads the ingredient list in a photo of a food label and gives one verdict: CLEAN, BAD or UGLY, based on added sugars and sweeteners. It does not use barcodes or a product database.',
+    'Sugar Depth reads the ingredient list in a photo of a food label and gives one verdict: CLEAN, OKAY or BAD, based on added sugars and sweeteners. It does not use barcodes or a product database.',
   featureList: [
     'Reads the printed ingredient list from a photo',
     'Flags added sugars under any of their label names',

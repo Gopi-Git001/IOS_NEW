@@ -8,6 +8,7 @@ import { breadcrumbs, ORG_ID, SITE_ID } from '../../data/schema';
 import { abs, CONTENT_UPDATED, SITE_NAME } from '../../config';
 import { getGuides, type Guide } from '../../data/guides';
 import { pillText, POLICY_VERSION, REGISTRY_VERSION, toneClass } from '../../data/ingredients';
+import { ruleHref } from '../../data/rules';
 
 // One page per registry entry (see src/data/guides.ts), plus the hand-written guides about a single alias.
 export async function getStaticPaths() {
@@ -77,7 +78,7 @@ const article = {
               <tr role="row">
                 <td role="cell">{o.when.replace(/(\d) (g|ml)\b/g, '$1\u00a0$2')}.</td>
                 <td class={`out ${toneClass(o.verdict)}`} role="cell">{o.verdict}</td>
-                <td class="mono" role="cell">{o.rule}</td>
+                <td class="mono" role="cell"><a href={ruleHref(o.rule)}>{o.rule}</a></td>
               </tr>
             ))}
           </tbody>

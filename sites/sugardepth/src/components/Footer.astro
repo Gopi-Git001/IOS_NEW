@@ -1,5 +1,6 @@
 ---
-import { ORG, POLICY_VERSION, REGISTRY_VERSION, TAGLINE, APP_URL } from '../config';
+import { ORG, TAGLINE, APP_URL } from '../config';
+import { POLICY_VERSION, REGISTRY_VERSION } from '../data/ingredients';
 import { getFeaturedGuides } from '../data/guides';
 const guides = (await getFeaturedGuides()).slice(0, 6);
 const year = 2026;
