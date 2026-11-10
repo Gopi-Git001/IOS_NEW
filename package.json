@@ -46,6 +46,7 @@
     "lottie": "node scripts/make-lottie.mjs",
     "timing:report": "node scripts/scan-timing-report.mjs",
     "tokens": "node scripts/sync-tokens.mjs",
+    "ingredients": "npx -y tsx sites/sugardepth/scripts/sync-ingredients.ts",
     "test": "npm run test:unit && npm run test:backend",
     "test:unit": "npx -y tsx --test tests/unit/*.test.ts supabase/functions/_shared/*.test.ts src/lib/*.test.ts",
     "test:backend": "node scripts/test-backend.mjs",

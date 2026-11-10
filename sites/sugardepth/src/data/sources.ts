@@ -47,6 +47,11 @@ export const S = {
     publisher: 'Electronic Code of Federal Regulations (eCFR)',
     url: 'https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-101/subpart-A/section-101.9',
   },
+  euAdditives: {
+    title: 'Regulation (EC) No 1333/2008 on food additives, Annex II (E numbers; sweeteners are E420, E421 and E950 to E969)',
+    publisher: 'EUR-Lex, European Union',
+    url: 'https://eur-lex.europa.eu/eli/reg/2008/1333/oj',
+  },
 } satisfies Record<string, Source>;
 
 export type SourceKey = keyof typeof S;
