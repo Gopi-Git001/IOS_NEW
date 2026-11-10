@@ -1189,6 +1189,50 @@ table.facts-table {
   text-align: center;
 }
 @media (max-width: 640px) {
-  .phone.p1 { margin-top: 24px; }
-  .phone.p3 { margin-top: 48px; }
+  .screens {
+    grid-template-columns: minmax(0, 260px);
+    justify-content: center;
+    justify-items: center;
+    gap: 28px;
+  }
+  .phone,
+  .phone.p1,
+  .phone.p3 {
+    width: 260px;
+    max-width: 100%;
+    margin-top: 0;
+  }
+  .plain-note,
+  .card p,
+  .small,
+  .site-footer,
+  .sources,
+  .sources li,
+  .alias-list li,
+  .breadcrumbs ol { font-size: 16px; }
+  .kicker,
+  .pill,
+  .device-caption,
+  .screens figcaption,
+  .site-footer h2 { font-size: 13px; }
+  .site-footer li a,
+  .breadcrumbs a,
+  .sources a,
+  .aside nav a,
+  .alias-list a,
+  .prose a:not(.btn),
+  .wrap p > a:not(.btn) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .alias-list li {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 14px;
+    box-sizing: border-box;
+  }
 }

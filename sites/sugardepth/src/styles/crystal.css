@@ -120,8 +120,9 @@ a { text-decoration-color: var(--rule); }
   .header-cta { margin-left: 0; }
   .header-cta .btn { padding-inline: 14px; }
   .nav { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); width: 100%; margin: 0; overflow: visible; gap: 0; padding: 0; }
-  .nav a { grid-column: span 2; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 4px; font-size: 12px; line-height: 1.5; text-align: center; white-space: normal; }
-  .nav a:nth-last-child(-n + 2) { grid-column: span 3; }
+  .nav a { grid-column: span 3; display: flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 10px 8px; font-size: 14px; line-height: 1.25; text-align: center; white-space: normal; }
+  /* The long label gets its own centered row so it wraps to two lines at most. */
+  .nav a:nth-child(3) { grid-column: 1 / -1; }
   /* Keep the decorative cube in flow, beside the button, not in a 120px void. */
   .cta-band:not(.cta-editorial) { display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 20px 12px; padding: 24px 20px; }
   .cta-band:not(.cta-editorial) > div { grid-column: 1 / -1; }
@@ -190,4 +191,41 @@ a { text-decoration-color: var(--rule); }
   .cta-editorial > .editorial-image img { min-height: 0; height: 190px; }
   .cta-editorial > div { padding: 24px 24px 0; }
   .cta-editorial > .btn { grid-column: 1; margin: 24px 24px 0; }
+}
+@media (max-width: 640px) {
+  .crystal-slab-label,
+  .verdict-card .mini-slab span,
+  .facts-verdict .mini-slab span { font-size: 11px; }
+  .crystal-eyebrow,
+  .crystal-controls label,
+  .editorial-frame figcaption,
+  .scan-example figcaption { font-size: 13px; }
+  .verdict-card ul,
+  .facts-table,
+  .facts-table td,
+  .facts-table th,
+  .facts-table caption { font-size: 16px; }
+  .facts-table .table-label { font-size: 13px; }
+  .facts-table a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .label-figure .editorial-image,
+  .steps-film > .editorial-image {
+    aspect-ratio: auto;
+    height: auto;
+    overflow: visible;
+  }
+  .label-figure img,
+  .steps-film > .editorial-image img,
+  .cta-editorial > .editorial-image img {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    object-fit: contain;
+    object-position: center;
+  }
 }
