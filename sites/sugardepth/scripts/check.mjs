@@ -42,7 +42,15 @@ for (const file of pages) {
   ];
   let scripts = html;
   for (const tag of allowedGtm) scripts = scripts.replace(tag, '');
-  if (/<script(?![^>]*(?:application\/ld\+json|data-motion))[^>]*>/.test(scripts)) errors.push(`${rel}: ships a non-JSON-LD <script> (only the data-motion helper and the two approved Google tag scripts are allowed)`);
+  // The home page may load one bundled module: the "try it" widget (components/TryIt.astro).
+  if (rel === '/index.html') scripts = scripts.replace(/<script type="module" src="\/_astro\/TryIt\.[^"]+\.js"><\/script>/, '');
+  if (/<script(?![^>]*(?:application\/ld\+json|data-motion))[^>]*>/.test(scripts)) errors.push(`${rel}: ships a non-JSON-LD <script> (only the data-motion helper, the two approved Google tag scripts and the home page's try-it module are allowed)`);
+}
+{
+  // The try-it widget must be useful before its script runs: the sample verdicts are in the HTML.
+  const home = readFileSync(join(dist, 'index.html'), 'utf8');
+  const panels = (home.match(/class="sheet facts tryit-facts tone-[a-z]+" data-verdict="(?:CLEAN|OKAY|BAD)"/g) || []).length;
+  if (panels === 0) errors.push(`/index.html: expected the try-it sample verdicts in the static HTML, found ${panels}`);
 }
 for (const f of ['robots.txt', 'sitemap-index.xml', 'og/default.png', 'favicon.svg', 'how-it-works/index.html', 'privacy/index.html', 'terms/index.html']) if (!existsSync(join(dist, f))) errors.push(`missing ${f}`);
 

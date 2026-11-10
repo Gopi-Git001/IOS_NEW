@@ -1,6 +1,6 @@
 # Sugar Depth marketing site
 
-Static Astro site for **sugardepth.com**: home, the verdict rules page, ingredient guides, hidden sugar names, about, FAQ, privacy and terms drafts, contact and a 404. Every page is plain HTML and CSS: no client JavaScript, self-hosted fonts (Libre Franklin, Newsreader via `@fontsource`).
+Static Astro site for **sugardepth.com**: home, the verdict rules page, ingredient guides, hidden sugar names, about, FAQ, privacy and terms drafts, contact and a 404. Every page is plain HTML and CSS with self-hosted fonts (Libre Franklin, Newsreader via `@fontsource`). The only bundled client JavaScript is the home page's "try it" widget.
 
 ## Run it
 
@@ -14,7 +14,7 @@ npm run build      # builds dist/ and runs scripts/check.mjs
 npm run preview
 ```
 
-`scripts/check.mjs` fails the build if a page is missing a title, description or canonical, has duplicate titles or descriptions, has more than one `<h1>`, has invalid JSON-LD, links to a missing internal page, or ships a `<script>` other than JSON-LD.
+`scripts/check.mjs` fails the build if a page is missing a title, description or canonical, has duplicate titles or descriptions, has more than one `<h1>`, has invalid JSON-LD, links to a missing internal page, or ships a `<script>` other than JSON-LD, the approved Google tag scripts and the home page's try-it module. It also fails if the try-it sample verdicts are missing from the home page's static HTML.
 
 ## Where things live
 
@@ -26,6 +26,7 @@ npm run preview
 | Note under films and screenshots recorded before rules-v3 | `src/data/media.ts` (delete it and its uses once the media is re-recorded) |
 | Ingredient pages, added-sugar names, registry and rules versions | `src/data/ingredients.generated.json`, generated from `supabase/functions/_shared/ingredients.ts` and `policy.ts` by `scripts/sync-ingredients.ts`. Read through `src/data/ingredients.ts`. Never edit the JSON by hand |
 | One-line blurbs on `/hidden-sugar-names` | `src/data/sugars.ts` (keyed by registry id) |
+| Home page "try it" widget | `src/components/TryIt.astro`, `src/lib/tryIt.ts`, `src/styles/tryit.css`; tests in `tests/unit/try-it.test.ts` at the repo root |
 | Government sources | `src/data/sources.ts` |
 | Hand-written ingredient guides | `src/content/ingredients/*.mdx`, merged with the generated page in `src/data/guides.ts` |
 | JSON-LD (Organization, WebSite, WebApplication, BreadcrumbList; Article on guides) | `src/data/schema.ts`, pages |
@@ -43,6 +44,8 @@ Every entry in the scanner's ingredient registry gets `/ingredients/<slug>`, plu
 - To write a guide by hand for an entry, add `src/content/ingredients/<slug>.mdx` with `entry: <registry id>`. The file name must be the entry's slug. The body replaces the generated "What it is" and "How US labels count it" sections; the facts panel, names, verdict table and sources still come from the registry. `casing` lists registry names to print with capitals (`Splenda`, `E955`).
 - A guide about one name of an entry (`evaporated-cane-juice.mdx`, `entry: sugar`) uses its own file name as the slug and sets `name` and `aliases`, which must be aliases of that entry.
 - The build fails if a guide points at an entry, alias, code, source or related page that does not exist.
+
+The try-it widget is the exception: `src/lib/tryIt.ts` imports the scanner's rules directly from `supabase/functions/_shared/` (`normalize.ts`, `ingredients.ts`, `policy.ts`), so it needs the whole repository at build time and picks up rule changes on the next site build. The sample verdicts are rendered at build time and switch with CSS, so they work without JavaScript; the paste box runs the same rules in the browser and sends nothing anywhere.
 
 `public/og/default.png` (1200×630) is the default share image. The scanner app links to `https://sugardepth.com/og/default.png`, so keep that path. To regenerate it, convert the `@fontsource` `.woff` files to TTF (see the comment in `scripts/og.mjs`), then run `OG_FONT_DIR=/path/to/ttf npm run og` and commit the output.
 
