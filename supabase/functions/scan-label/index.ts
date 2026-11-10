@@ -7,9 +7,11 @@ import { env } from '../_shared/env.ts';
 import { allow, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
 import { decide, type LiteralLabel } from '../_shared/rules.ts';
-import { imageKb, requestTimer, timed } from '../_shared/timing.ts';
+import { clientFields, imageKb, requestTimer, timed } from '../_shared/timing.ts';
 
-const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY') });
+// The app gives up on the lists after 12 s, so the whole reading (one retry included) must end by 10 s.
+const CLAUDE_DEADLINE_MS = 10_000;
+const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY'), timeout: CLAUDE_DEADLINE_MS, maxRetries: 1 });
 
 // Override with the CLAUDE_MODEL secret, e.g. a faster model if the lists feel slow.
 const CLAUDE_MODEL = env('CLAUDE_MODEL') ?? 'claude-opus-5-5';
@@ -61,13 +63,15 @@ export default {
 
     let image: unknown;
     let scanId: unknown;
+    let client: unknown;
     try {
-      ({ image, scan_id: scanId } = await req.json());
+      ({ image, scan_id: scanId, client } = await req.json());
     } catch {
       return json({ error: 'Body must be JSON' }, 400);
     }
     timer.mark('body');
     if (typeof scanId === 'string') timer.set({ scan_id: scanId.slice(0, 32) });
+    timer.set(clientFields(client));
     if (!isJpegBase64(image)) {
       return json({ error: 'Send a JPEG photo as base64 in "image"' }, 400);
     }
@@ -82,6 +86,8 @@ export default {
 
     let reading: LiteralLabel;
     timer.mark('claude_start');
+    // Logged up front so a reading that never returns still leaves a trace.
+    console.log(JSON.stringify({ event: 'scan_label_claude_start', scan_id: typeof scanId === 'string' ? scanId.slice(0, 32) : undefined }));
     try {
       const response = await anthropic.beta.messages.create({
         model: CLAUDE_MODEL,
@@ -100,7 +106,7 @@ export default {
             ],
           },
         ],
-      });
+      }, { signal: AbortSignal.timeout(CLAUDE_DEADLINE_MS) });
       timer.mark('claude_end');
       timer.set({
         claude_model: response.model,
@@ -118,7 +124,8 @@ export default {
       timer.mark('claude_end');
       timer.set({ claude_error: err instanceof Error ? err.message.slice(0, 200) : String(err) });
       console.error('label reading failed', err);
-      return json({ error: 'The label reader is unavailable. Try again in a moment.' }, 502);
+      const timedOut = err instanceof Error && /abort|timeout/i.test(`${err.name} ${err.message}`);
+      return json({ error: 'The label reader is unavailable. Try again in a moment.', code: timedOut ? 'reader_timeout' : 'reader_unavailable' }, timedOut ? 504 : 502);
     }
 
     if (!reading.is_food_label) {

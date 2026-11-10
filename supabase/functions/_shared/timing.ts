@@ -37,6 +37,20 @@ export const requestTimer = (): Timer => store.getStore() ?? startTimer('untimed
 
 export const imageKb = (base64: string) => Math.round((base64.length * 3) / 4 / 1024);
 
+const CLIENT_KEYS = ['stream_px', 'camera', 'torch', 'capture_path', 'upload_px', 'upload_kb', 'encode_ms'];
+
+/** The app's capture details (`client` in the body), allow-listed and trimmed for the log as `client_*`. */
+export function clientFields(raw: unknown): Record<string, unknown> {
+  if (!raw || typeof raw !== 'object') return {};
+  const fields: Record<string, unknown> = {};
+  for (const key of CLIENT_KEYS) {
+    const value = (raw as Record<string, unknown>)[key];
+    if (typeof value === 'string') fields[`client_${key}`] = value.slice(0, 64);
+    else if (typeof value === 'number' || typeof value === 'boolean') fields[`client_${key}`] = value;
+  }
+  return fields;
+}
+
 /** Wraps a fetch handler so the clock starts before the auth check and the log covers every response. */
 export function timed(fn: string, handle: (req: Request) => Promise<Response>) {
   return async (req: Request) => {
