@@ -1,0 +1,103 @@
+---
+// "Try it" on the home page: sample labels and a paste box, judged by the scanner's own rules (src/lib/tryIt.ts
+// imports supabase/functions/_shared). The sample verdicts are worked out at build time and switch with plain
+// radio buttons, so they work before any script loads; the script only adds the paste box.
+import '../styles/tryit.css';
+import { APP_URL } from '../config';
+import { MAX_PASTE_CHARS, SAMPLES, renderResult, scanText } from '../lib/tryIt';
+---
+<section class="tryit" aria-labelledby="tryit-h" data-tryit>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">Try it here</span>
+      <h2 id="tryit-h">No package in your hand? Check a label right now.</h2>
+      <p class="lead">Pick a sample label or paste an ingredient list. The verdict comes from the same rules the scanner uses, run on this page. No sign-in.</p>
+    </div>
+    <div class="tryit-grid">
+      <fieldset class="tryit-samples">
+        <legend>Sample labels</legend>
+        <ul>
+          {SAMPLES.map((s, i) => (
+            <li>
+              <input type="radio" name="tryit-sample" id={`tryit-${s.id}`} value={s.id} checked={i === 0} />
+              <label for={`tryit-${s.id}`}><b>{s.name}</b><span>{s.claim}</span></label>
+            </li>
+          ))}
+        </ul>
+        <p class="tryit-fine">Made-up labels for this demo, not real products.</p>
+      </fieldset>
+
+      <div class="tryit-out">
+        {SAMPLES.map((s) => <div class="tryit-static" set:html={renderResult(scanText(s.ingredients, s.addedSugarsG), s.name)} />)}
+        <div class="tryit-live" role="status" data-tryit-live></div>
+      </div>
+
+      <form class="tryit-form" data-tryit-form novalidate>
+        <label for="tryit-text">Or paste an ingredient list</label>
+        <textarea id="tryit-text" rows="4" maxlength={MAX_PASTE_CHARS} placeholder="Water, cane sugar, natural flavors, citric acid" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="tryit-private"></textarea>
+        <div class="tryit-row">
+          <label for="tryit-grams">Added sugars per serving, in grams (optional)</label>
+          <input id="tryit-grams" type="number" inputmode="decimal" min="0" max="500" step="any" autocomplete="off" />
+        </div>
+        <p class="tryit-error" data-tryit-error role="alert"></p>
+        <button class="btn" type="submit" disabled>Check this list</button>
+        <p class="tryit-fine" id="tryit-private">Pasted text never leaves your browser.</p>
+        <noscript><p class="tryit-fine">Checking your own list needs JavaScript. The sample labels work without it.</p></noscript>
+      </form>
+
+      <div class="tryit-next">
+        <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Open the scanner</a>
+        <p class="tryit-fine">Photograph a real package and it reads the label for you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { parseGrams, renderResult, scanText } from '../lib/tryIt';
+
+  const root = document.querySelector<HTMLElement>('[data-tryit]');
+  const form = root?.querySelector<HTMLFormElement>('[data-tryit-form]');
+  const live = root?.querySelector<HTMLElement>('[data-tryit-live]');
+  const text = form?.querySelector<HTMLTextAreaElement>('textarea');
+  const grams = form?.querySelector<HTMLInputElement>('input[type="number"]');
+  const error = form?.querySelector<HTMLElement>('[data-tryit-error]');
+  const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+  if (root && form && live && text && grams && error && button) {
+    const samples = Array.from(root.querySelectorAll<HTMLInputElement>('input[name="tryit-sample"]'));
+    const fail = (message: string) => {
+      error.textContent = message;
+      text.setAttribute('aria-invalid', message ? 'true' : 'false');
+    };
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const result = scanText(text.value, parseGrams(grams.value));
+      if (result.kind === 'empty') {
+        fail('Paste an ingredient list first.');
+        text.focus();
+        return;
+      }
+      fail('');
+      // No sample is selected while your own list is showing.
+      for (const sample of samples) sample.checked = false;
+      live.innerHTML = renderResult(result, 'Your list');
+      const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      live.scrollIntoView({ block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+    });
+
+    // Back to a sample: its panel is already in the page.
+    for (const sample of samples) {
+      sample.addEventListener('change', () => {
+        live.innerHTML = '';
+      });
+    }
+    text.addEventListener('input', () => fail(''));
+    // Ctrl+Enter or Cmd+Enter checks the list from inside the text box.
+    text.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) form.requestSubmit();
+    });
+    button.disabled = false;
+  }
+</script>
