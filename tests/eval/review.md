@@ -44,7 +44,7 @@ keep their verdict (nothing sweet, stevia or monk fruit only, an artificial swee
 |---|---|---|---|
 | 16-sweetleaf-drops | ok | BAD | erythritol + steviol glycosides, no added sugar, no artificial sweetener |
 | 29-vitaminwater-zero | ok | BAD | erythritol + stevia, no added sugar, no artificial sweetener |
-| 40-quest-bar | ok | BAD | erythritol + steviol glycosides; your expected list also has isomalto-oligosaccharides as added sugar (see below): if that is added sugar, the grams decide |
+| 40-quest-bar | ok | BAD | erythritol + steviol glycosides, plus isomalto-oligosaccharides, which now count as added sugar: the grams per bar decide (4 g or less = OKAY) |
 | 42-lilys-dark-chocolate | replace | BAD | maltitol + stevia, no sugar added |
 
 **Juice and fruit concentrate: added sugar only when it sweetens another food**
@@ -76,15 +76,10 @@ about an ingredient. Nothing was changed.
 
 | id | finding |
 |---|---|
-| 35-honey-nut-cheerios, 37-nature-valley-oats-honey | "Brown Sugar Syrup" is not in the registry, so the rules call it an unknown sweetener. The verdict stays BAD here (Sugar and Honey are also listed), but on its own it would be OKAY. Adding it needs your OK. |
-| 40-quest-bar | expected_added_sugars lists Isomalto-Oligosaccharides; the registry counts isomaltooligosaccharides (IMO) as fiber, not sugar, and the hyphenated spelling isn't matched at all (unknown sweetener). Decide which is right. |
-| 05-blue-diamond-almonds | expected_added_sugars lists Maltodextrin; the rules treat maltodextrin as not sugar (21 CFR 184.1444). |
-| 36-frosted-flakes | expected_added_sugars lists Malt Flavor; "malt flavor" is not in the registry (unknown sweetener on its own). |
 | 26-monster-original | the database text lists sucralose; expected_sweeteners is empty. |
 | 33-white-claw | the database text lists cane sugar and cherry juice concentrate; expected_added_sugars is empty (BAD stays, for the alcohol). |
 | 39-clif-chocolate-chip | the database text lists barley malt extract (added sugar); expected_added_sugars doesn't. |
 | 22-gatorade-zero | "sucrose acetate isobutyrate" (an emulsifier) reads as an unknown sweetener; BAD stays (sucralose). |
-| labels.json `_verdicts` | the note still describes the old names (CLEAN / BAD / UGLY) and the old policy. |
 | 43-oreo `source.image` | still points at the deleted screenshot; fetch-photos.mjs now skips every item whose photo_status isn't `ok`, so it won't be downloaded again. |
 
 ## All items
@@ -95,7 +90,7 @@ about an ingredient. Nothing was changed.
 | 02-topo-chico | replace | Topo chico | MINERAL WATER, CARBON DIOXIDE Size 1 Bottle MADE IN MEXICO BY: Per Serving Calories Total Fat 0g m 15mg Mal Carb Protein 00 0 CIA. TOPO CHICO, S. DE R.L. DE C.V. MONTERREY NO. 6500 COL. TOPO CHICO, MTY N.LC.P 64260 FOR BOTTLED WATER % Daily Value QUALITY INFORMATION 56-4357 0% PLEASE CONTACT TOPO 1% 0% OLD! | CLEAN | — | — | — |
 | 03-smartwater | ok | Glaceau · Glaceau smartwater, vapor distilled water | Vapor distilled water, calcium chloride and magnesium chloride and potassium bicarbonate (electrolyte sources*). | CLEAN | — | — | — |
 | 04-spindrift-grapefruit | replace | Ardor Energy · Pink Grapefruit | carbonated purified water, organic L-theanine, organic green tea, organic flavor, organic caffeine (from green tea), sea salt | CLEAN | Grapefruit Juice, Lemon Juice | — | — |
-| 05-blue-diamond-almonds | replace | Blue Diamond Almonds · Blue diamond almonds | Almonds, wasabi soy sauce seasoning (sugar, modified corn starch, salt, soy sauce [soybean, wheat, salt], horseradish, onion, spice, fractionated coconut oil and/or palm kernel oil, garlic, maltodextrin, yeast extract, natural flavor, citric acid, disodiu | BAD | — | Sugar, Maltodextrin | — |
+| 05-blue-diamond-almonds | replace | Blue Diamond Almonds · Blue diamond almonds | Almonds, wasabi soy sauce seasoning (sugar, modified corn starch, salt, soy sauce [soybean, wheat, salt], horseradish, onion, spice, fractionated coconut oil and/or palm kernel oil, garlic, maltodextrin, yeast extract, natural flavor, citric acid, disodiu | BAD | — | Sugar | — |
 | 06-quaker-old-fashioned-oats | ok | quaker old fashion oats | whole grain rolled oats, | CLEAN | — | — | — |
 | 07-fage-total-0-plain | ok | Fage · Fage Total 0% | grade A pasteurized skimmed milk, live active yogurt cultures (L. bulgaricus, S. thermophilus, L. acidophilus, bifidus, L. casei) | CLEAN | Milk | — | — |
 | 08-larabar-cashew-cookie | replace | Fair · Larabar Chocolate Chip Cookie Dough | cashews, dates, semisweet chocolate chips (unsweetened chocolate, sugar, cocoa butter, vanilla), apples, sea salt, vanilla extract. | BAD | Dates | Sugar | — |
@@ -126,7 +121,7 @@ about an ingredient. Nothing was changed.
 | 33-white-claw | ok | White claw, Libman, High Noon · White Claw Hard Seltzer, Black Cherry | purified carbonated water, alcohol, natural flavors, cane sugar, citric acid, natural cherry juice concentrate, sodium citrate, | BAD | — | — | — |
 | 34-michelob-ultra | ok | Michelob ultra | 4,2 % ALC./VOL - BREWED AND ANHEUSER-BUSCH. SI LOUIS MO | BAD | — | — | — |
 | 35-honey-nut-cheerios | ok | Cheerios · Honey Nut Cheerios | Whole Grain Oats, Sugar, Corn Starch, Honey, Brown Sugar Syrup, Salt, Tripotassium Phosphate, Canola and/or Sunflower Oil, Natural Almond Flavor, Vitamin E (mixed tocopherols).  Vitamins and Minerals: Calcium Carbonate, Vitamin C (sodium ascorbate), Iron and Zinc (mineral nutrients), A B Vitamin (niacinamide), Vitamin B6 (pyridoxine hydrochloride), Vitamin B₁ (thiamin mononitrate), Vitamin A (palmitate) Vitamin B₂ (riboflavin), A B Vitamin (folic acid), Vitamin B12, Vitamin D3. | BAD | — | Sugar, Honey, Brown Sugar Syrup | — |
-| 36-frosted-flakes | replace | Kellogg's · Kelloggs Frosted Flakes | — | BAD | — | Sugar, Malt Flavor | — |
+| 36-frosted-flakes | replace | Kellogg's · Kelloggs Frosted Flakes | — | BAD | — | Sugar | — |
 | 37-nature-valley-oats-honey | ok | Nature Valley · Nature Valley Crunchy Oats 'N Honey Granola Bar | Whole Grain Oats, Sugar, Canola Oil, Rice Flour, Honey, Salt, Brown Sugar Syrup, Baking Soda, Soy Lecithin, Natural Flavor. CONTAINS SOY; MAY CONTAIN PEANUT, ALMOND AND PECAN INGREDIENTS | BAD | — | Sugar, Honey, Brown Sugar Syrup | — |
 | 38-kind-dark-choc-nuts | ok | Kind · kind thins dark chocolate nuts and sea salt | almonds, tapioca syrup, sugar, palm kemel oil, chicory root fiber, rice flour, honey, canola oil, alkalīzed cocoa, unsweetened chocolate, sea salt, naturál flavor, soy lecithin, cocoa butter, vitamin e (tocopherols to maintain freshness). 29670-00-wo allergen information: contains almonds and soy. may contain tree nuts. | BAD | — | Tapioca Syrup, Sugar, Honey | — |
 | 39-clif-chocolate-chip | ok | Clif Bar - Chocolate chip | organic brown rice syrup, organic rolled oats, soy protein isolate, organic cane syrup, organic roasted soybeans, rice flour, cane sugar, unsweetened chocolate, organic soy flour, organic oat fiber, organic high oleic sunflower oil, cocoa butter, barley malt extract, sea salt, natural flavors, soy lecithin, organic cinnamon, vitamins , minerals: dicalcium phosphate, magnesium oxide, ascorbic acid (vit, c), dl-alpha tocopheryl acetate (vit, e) , beta carotene (vit, a), niacinamide (vit, b3), ergocalciferol (vit, d2), thiamine mononitrate (vit, b1), pyridoxine hydrochloride (vit, b6), riboflavin (vit, b2), cyanocobalamin (vit, b12), allergen statement: contains soy, may contain peanuts, tree nuts, milk, and wheat, itm | BAD | — | Brown Rice Syrup, Cane Syrup, Cane Sugar | — |

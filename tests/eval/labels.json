@@ -1,6 +1,6 @@
 {
   "_about": "QuickGOB accuracy test set. Pre-filled from typical US labels: check each entry against YOUR photo, fix it, then set verified=true. Recipes change; the photo is the truth. expected_verdict null = decide after checking the label/policy.",
-  "_verdicts": "CLEAN / OKAY / BAD / RETRY as shown in the app. Current code names them CLEAN / BAD / UGLY (app OKAY = code BAD, app BAD = code UGLY). Pre-filled with the CURRENT code policy: any added sugar, sugar alcohol, artificial sweetener or alcohol = BAD; stevia/monk fruit only = OKAY; none = CLEAN.",
+  "_verdicts": "CLEAN / OKAY / BAD / RETRY, the same names in the app and the code (Rules v3, RULES.md). CLEAN = no added sugar, no sweeteners, no alcohol. OKAY = up to 4 g added sugar per serving, sugar alcohols, allulose, stevia / monk fruit, or an unknown sweetener. BAD = over 4 g added sugar per serving, added sugar with unreadable grams, any artificial sweetener, or alcohol over 0.5% ABV. RETRY = not a food label, unreadable, or no / cut-off ingredient list. Some expected verdicts were pre-filled under the old rules: see review.md, RE-CHECK AFTER RULE CHANGE.",
   "items": [
     {
       "id": "01-lacroix-pamplemousse",
@@ -108,8 +108,7 @@
       "expected_verdict": "BAD",
       "expected_natural_sugars": [],
       "expected_added_sugars": [
-        "Sugar",
-        "Maltodextrin"
+        "Sugar"
       ],
       "expected_sweeteners": [],
       "verified": false,
@@ -906,8 +905,7 @@
       "expected_verdict": "BAD",
       "expected_natural_sugars": [],
       "expected_added_sugars": [
-        "Sugar",
-        "Malt Flavor"
+        "Sugar"
       ],
       "expected_sweeteners": [],
       "verified": false,

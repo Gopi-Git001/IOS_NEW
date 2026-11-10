@@ -70,10 +70,13 @@ Jev makes the final call from the photo (`_shared/jev.ts`, `src/lib/combine.ts`)
 | Milk, yogurt, whey | Naturally occurring | Not added | Allowed in CLEAN |
 | Malted barley, barley malt (the brewing grain) | Grain | Not sugar | Allowed in CLEAN |
 | Malt syrup, malt extract, barley malt syrup | Added sugar | Added | Added sugar (grams decide) |
+| Brown sugar syrup | Added sugar | Added | Added sugar (grams decide) |
+| Isomaltooligosaccharides (IMO) | Added sugar (often sold as fiber) | Added | Added sugar (grams decide) |
 
 ## Decided (Nov 9, 2026)
 
 - "Malted barley" / "barley malt" are the brewing grain, not sugar. "Malt syrup", "malt extract" and "barley malt syrup" are added sugar.
+- "Brown sugar syrup" is added sugar. Isomaltooligosaccharides (IMO, also spelled "isomalto-oligosaccharides") are added sugar, not fiber.
 - If the lists failed and the user taps Retry after Jev's CLEAN was shown, and the retried reading finds added sugar, the safety floor changes CLEAN to OKAY or BAD. Safety wins: this is the only case where a shown verdict changes.
 
 ## Open items (not decided; nothing invented)

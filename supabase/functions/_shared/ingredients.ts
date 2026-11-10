@@ -67,7 +67,7 @@ export const REGISTRY: Entry[] = [
   // ---- Added sugars (FDA 21 CFR 101.9(c)(6)(iii)) ----
   added('sugar', 'Sugar', [
     'sugar', 'cane sugar', 'raw cane sugar', 'evaporated cane sugar', 'beet sugar', 'granulated sugar', 'white sugar',
-    'brown sugar', 'light brown sugar', 'dark brown sugar', 'raw sugar', 'turbinado sugar', 'turbinado', 'demerara sugar',
+    'brown sugar', 'brown sugar syrup', 'light brown sugar', 'dark brown sugar', 'raw sugar', 'turbinado sugar', 'turbinado', 'demerara sugar',
     'demerara', 'muscovado sugar', 'muscovado', 'powdered sugar', 'confectioners sugar', "confectioner's sugar", 'icing sugar',
     'caster sugar', 'sucrose', 'cane juice', 'evaporated cane juice', 'dried cane syrup', 'cane syrup', 'cane juice crystals',
     'rapadura', 'panela', 'jaggery', 'sucanat', 'sugar syrup', 'simple syrup', 'liquid sugar', 'invert sugar', 'invert cane sugar',
@@ -91,6 +91,9 @@ export const REGISTRY: Entry[] = [
   added('juice_concentrate', 'Fruit juice concentrate', [
     'fruit juice concentrate', 'juice concentrate', 'concentrated fruit juice', 'concentrated juice', 'fruit juice concentrates',
   ], 'FDA counts juice concentrate used to sweeten as added sugar. Exception: 100% juice products.'),
+  added('imo', 'Isomaltooligosaccharides (IMO)', [
+    'isomaltooligosaccharide', 'isomaltooligosaccharides', 'isomalto-oligosaccharide', 'isomalto-oligosaccharides', 'imo',
+  ], 'Often sold as a fiber; counted here as added sugar.'),
   // Rare sugars that FDA labels as sugar (chemically sugars).
   { id: 'tagatose', name: 'Tagatose', cls: 'rare_sugar', labeling: 'counted_as_added_sugar', treatment: 'added_sugar', aliases: ['tagatose', 'd-tagatose'],
     note: 'A rare sugar that FDA still counts as added sugar.' },
@@ -157,7 +160,7 @@ export const REGISTRY: Entry[] = [
   plain('fiber_other', 'Added fiber', [
     'polydextrose', 'inulin', 'chicory root fiber', 'chicory root inulin', 'chicory root extract', 'oligofructose',
     'fructooligosaccharides', 'fos', 'galactooligosaccharides', 'gos', 'acacia fiber', 'oat fiber', 'psyllium husk', 'citrus fiber',
-    'isomaltooligosaccharide', 'isomaltooligosaccharides', 'imo', 'soluble tapioca fiber',
+    'soluble tapioca fiber',
   ], 'other_carbohydrate'),
   plain('starch', 'Starch', [
     'corn starch', 'cornstarch', 'tapioca starch', 'potato starch', 'rice starch', 'wheat starch', 'modified food starch',

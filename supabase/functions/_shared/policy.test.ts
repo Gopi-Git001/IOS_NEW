@@ -121,6 +121,12 @@ const CASES: Case[] = [
   ...['Malt Syrup', 'Malt Extract', 'Barley Malt Syrup', 'Barley Malt Extract'].map((s) => ({
     name: `${s} is added sugar`, label: label(`Oats, ${s}, Salt`), verdict: 'BAD' as const, rule: 'X2-added-sugar-no-grams', triggers: ['malt_syrup'],
   })),
+  { name: 'brown sugar syrup is added sugar', label: label('Oats, Brown Sugar Syrup, Salt'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'brown sugar syrup at 3 g per serving', label: label('Oats, Brown Sugar Syrup, Salt', perServing(3)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g', triggers: ['sugar'] },
+  ...['Isomaltooligosaccharides', 'Isomalto-Oligosaccharides', 'Isomaltooligosaccharide', 'IMO'].map((s) => ({
+    name: `${s} is added sugar, not fiber`, label: label(`Milk Protein Isolate, ${s}, Cocoa`), verdict: 'BAD' as const, rule: 'X2-added-sugar-no-grams', triggers: ['imo'],
+  })),
+  { name: 'IMO with erythritol at 2 g per serving', label: label('Milk Protein Isolate, Isomalto-Oligosaccharides, Erythritol', perServing(2)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g' },
   { name: 'malt extract at 2 g per serving', label: label('Oats, Malt Extract, Salt', perServing(2)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g', triggers: ['malt_syrup'] },
   { name: 'beer listed with a <0.5% claim', label: label('Dealcoholized Beer (Water, Barley, Hops), Beer', { abv_text: '<0.5% ABV' }), verdict: 'CLEAN', rule: 'C1-clean' },
   { name: '0.6% ABV is alcohol', label: label('Water, Barley, Hops', { abv_text: '0.6% ABV' }), verdict: 'BAD', rule: 'X4-alcohol' },
@@ -196,6 +202,10 @@ test('registry: no entry is both sugar and sweetener; identities match expectati
   assert.equal(cls('Barley Malt'), 'non_sweet');
   assert.equal(cls('Barley Malt Syrup'), 'added_sugar');
   assert.equal(cls('Malt Extract'), 'added_sugar');
+  assert.equal(cls('Brown Sugar Syrup'), 'added_sugar');
+  assert.equal(cls('Isomalto-Oligosaccharides'), 'added_sugar');
+  assert.equal(cls('Isomaltooligosaccharides'), 'added_sugar');
+  assert.equal(cls('Soluble Corn Fiber'), 'other_carbohydrate');
 });
 
 test('normalize: no substring matching', () => {
