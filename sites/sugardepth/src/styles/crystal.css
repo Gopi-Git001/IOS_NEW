@@ -370,10 +370,6 @@ a { text-decoration-color: var(--rule); }
     border-radius: 2px;
     background: var(--ink);
   }
-  .nav-panel-cta {
-    margin: 12px clamp(20px, 4vw, 40px) 0;
-    width: calc(100% - 2 * clamp(20px, 4vw, 40px));
-  }
   .nav-menu-button:focus-visible,
   .nav-panel a:focus-visible {
     outline: 2px solid var(--ink);
@@ -401,5 +397,4 @@ a { text-decoration-color: var(--rule); }
   .nav-menu-button { padding-inline: 8px; }
   .nav-panel nav a { padding-inline: 12px; }
   .nav-panel nav a[aria-current='page']::before { left: 12px; }
-  .nav-panel-cta { margin-inline: 12px; width: calc(100% - 24px); }
 }
