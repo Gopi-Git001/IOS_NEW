@@ -113,16 +113,6 @@ a { text-decoration-color: var(--rule); }
   .verdict-card ul { font-size: 15px; }
 }
 @media (max-width: 640px) {
-  /* Two balanced rows, in DOM order, with no orphan or horizontal nav scroll. */
-  .site-header { position: static; }
-  .site-header .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; padding-block: 8px; }
-  .site-header .wordmark { display: inline-flex; min-height: 44px; align-items: center; justify-self: start; }
-  .header-cta { margin-left: 0; }
-  .header-cta .btn { padding-inline: 14px; }
-  .nav { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); width: 100%; margin: 0; overflow: visible; gap: 0; padding: 0; }
-  .nav a { grid-column: span 3; display: flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 10px 8px; font-size: 14px; line-height: 1.25; text-align: center; white-space: normal; }
-  /* The long label gets its own centered row so it wraps to two lines at most. */
-  .nav a:nth-child(3) { grid-column: 1 / -1; }
   /* Keep the decorative cube in flow, beside the button, not in a 120px void. */
   .cta-band:not(.cta-editorial) { display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 20px 12px; padding: 24px 20px; }
   .cta-band:not(.cta-editorial) > div { grid-column: 1 / -1; }
@@ -137,7 +127,7 @@ a { text-decoration-color: var(--rule); }
   .disguises .reveal-word { text-align: left; }
 }
 @media (max-height: 480px) and (orientation: landscape) {
-  .site-header { position: static; }
+  .site-header { position: sticky; top: 0; }
 }
 @media (max-width: 600px) {
   /* Retain explicit table/row/cell roles and native headers associations while
@@ -228,4 +218,89 @@ a { text-decoration-color: var(--rule); }
     object-fit: contain;
     object-position: center;
   }
+}
+
+/* Phone header. Hidden on laptop so the desktop bar is unchanged. */
+.nav-menu { display: none; }
+@media (max-width: 900px) {
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: #06080d;
+  }
+  .site-header .wrap {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    min-height: 60px;
+    padding-block: 8px;
+  }
+  .site-header .wordmark {
+    font-size: 1.05rem;
+    min-height: 44px;
+    margin-right: auto;
+  }
+  .site-header .nav { display: none; }
+  .header-cta.btn.sm {
+    margin-left: 0;
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 8px 12px;
+    gap: 6px;
+    font-size: 14px;
+  }
+  .nav-menu {
+    display: block;
+    position: static;
+    flex: 0 0 auto;
+  }
+  .nav-menu-button.btn.sm {
+    list-style: none;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 12px;
+    gap: 6px;
+    font-size: 14px;
+  }
+  .nav-menu-button::-webkit-details-marker { display: none; }
+  .nav-menu-button::marker { content: ''; }
+  .nav-menu-icon { font-size: 18px; line-height: 1; }
+  .nav-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 8px 20px 12px;
+    background: #06080d;
+    border-bottom: 1px solid var(--hair);
+  }
+  .nav-panel a {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .nav-panel a[aria-current='page'] {
+    color: var(--ink);
+    background: var(--glass);
+  }
+}
+@media (max-width: 360px) {
+  .site-header .wrap { padding-inline: 12px; gap: 6px; }
+  .site-header .wordmark { font-size: 1rem; }
+  .header-cta.btn.sm { padding-inline: 8px; font-size: 13px; gap: 4px; }
+  .nav-menu-button.btn.sm { padding-inline: 8px; }
 }
