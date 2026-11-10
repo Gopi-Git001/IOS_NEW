@@ -9,7 +9,8 @@ tests/eval/
 ├── labels.json      the 60 test cases and their correct answers
 ├── shopping-list.csv the 60 products as a checklist (open in Excel/Sheets)
 ├── fetch-photos.mjs  downloads the label photos for you
-├── review.md         created by the script, for checking answers
+├── review.md         created by the script, for checking answers (hand-written sections above the table are kept)
+├── PHOTOS-TO-TAKE.md the photos to take yourself (photo_status "replace" / "missing"; the script never downloads these)
 └── photos/          your label photos go here (one per case)
 ```
 

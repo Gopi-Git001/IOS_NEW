@@ -26,7 +26,7 @@ const ADDED: Def[] = [
   { keys: ['agave'], blurb: 'A syrup that is mostly fructose.' },
   { keys: ['maple'], blurb: 'Tree sap boiled down to sugar.' },
   { keys: ['molasses', 'treacle'], blurb: 'The syrup left over from making sugar.' },
-  { keys: ['barley malt', 'malt syrup', 'malt extract', 'maltose'], blurb: 'Sugar made from sprouted grain.' },
+  { keys: ['malt syrup', 'malt extract', 'maltose'], blurb: 'Sugar made from sprouted grain.' },
   { keys: ['dextrose'], blurb: 'Pure glucose, usually made from corn.' },
   { keys: ['coconut sugar', 'date sugar', 'palm sugar'], blurb: 'Sounds healthier. Still sugar.' },
   { keys: ['brown sugar', 'raw sugar', 'turbinado', 'demerara', 'muscovado', 'cane sugar', 'beet sugar', 'invert sugar', 'powdered sugar', 'icing sugar'], blurb: 'Sugar by a slightly different name.' },

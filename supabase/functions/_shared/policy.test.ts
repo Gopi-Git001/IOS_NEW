@@ -114,8 +114,14 @@ const CASES: Case[] = [
   ...['<0.5% ABV', '< 0.5% alc/vol', 'Less than 0.5% alcohol by volume', '0.0%', '0.0% ABV', '0.5% ABV or less', 'Alc. 0.5% vol', 'Non-alcoholic', 'Non-Alcoholic Brew', 'Alcohol-free', 'Alcohol free'].map((abv) => ({
     name: `not alcohol: "${abv}"`, label: label('Water, Barley, Hops, Yeast', { abv_text: abv }), verdict: 'CLEAN' as const, rule: 'C1-clean',
   })),
-  // Not in the registry yet: "malt" is a sweet signal, so this is OKAY and logged until someone adds it.
-  { name: 'non-alcoholic beer with malted barley', label: label('Water, Malted Barley, Hops, Yeast', { abv_text: '<0.5% ABV' }), verdict: 'OKAY', rule: 'O4-unknown-sweetener' },
+  // Malted barley is the brewing grain, not sugar; malt syrup and malt extract are added sugar.
+  { name: 'non-alcoholic beer with malted barley', label: label('Water, Malted Barley, Hops, Yeast', { abv_text: '<0.5% ABV' }), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'non-alcoholic beer with barley malt', label: label('Water, Barley Malt, Hops, Yeast', { abv_text: '0.0%' }), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'beer with malted barley is still alcohol', label: label('Water, Malted Barley, Hops, Yeast', { abv_text: '5% ABV' }), verdict: 'BAD', rule: 'X4-alcohol' },
+  ...['Malt Syrup', 'Malt Extract', 'Barley Malt Syrup', 'Barley Malt Extract'].map((s) => ({
+    name: `${s} is added sugar`, label: label(`Oats, ${s}, Salt`), verdict: 'BAD' as const, rule: 'X2-added-sugar-no-grams', triggers: ['malt_syrup'],
+  })),
+  { name: 'malt extract at 2 g per serving', label: label('Oats, Malt Extract, Salt', perServing(2)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g', triggers: ['malt_syrup'] },
   { name: 'beer listed with a <0.5% claim', label: label('Dealcoholized Beer (Water, Barley, Hops), Beer', { abv_text: '<0.5% ABV' }), verdict: 'CLEAN', rule: 'C1-clean' },
   { name: '0.6% ABV is alcohol', label: label('Water, Barley, Hops', { abv_text: '0.6% ABV' }), verdict: 'BAD', rule: 'X4-alcohol' },
   { name: 'European comma decimal', label: label('Water, Barley, Hops', { abv_text: '4,5 % vol' }), verdict: 'BAD', rule: 'X4-alcohol' },
@@ -186,6 +192,10 @@ test('registry: no entry is both sugar and sweetener; identities match expectati
   assert.equal(cls('Whole Milk'), 'naturally_occurring_sugar');
   assert.equal(cls('Banana Puree'), 'naturally_occurring_sugar');
   assert.equal(cls('Strawberry Puree Concentrate'), 'context_dependent');
+  assert.equal(cls('Malted Barley'), 'non_sweet');
+  assert.equal(cls('Barley Malt'), 'non_sweet');
+  assert.equal(cls('Barley Malt Syrup'), 'added_sugar');
+  assert.equal(cls('Malt Extract'), 'added_sugar');
 });
 
 test('normalize: no substring matching', () => {

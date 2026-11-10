@@ -55,7 +55,8 @@ const VERDICT_CRITERIA = {
 const INSTRUCTIONS =
   'Read the ingredient list (and the nutrition panel, if visible) in `label_photo` and rate the product for sugar. ' +
   'Sugar hides under many names: cane sugar, sucrose, dextrose, glucose or corn syrup, fruit juice concentrate, ' +
-  'honey, agave, molasses, rice syrup, barley malt and more all count as added sugar. Use the "Added Sugars" grams per ' +
+  'honey, agave, molasses, rice syrup, malt syrup, malt extract and more all count as added sugar (malted barley ' +
+  'itself, the brewing grain, is not sugar). Use the "Added Sugars" grams per ' +
   'serving from the panel: 4 g or less is OKAY, more than 4 g is BAD, and added sugar with no per-serving grams visible is BAD. ' +
   'Sugars naturally present in whole fruit, milk, plain yogurt or 100% juice are fine. "<0.5% ABV", "0.0%", "non-alcoholic" ' +
   'and "alcohol-free" are not alcohol. Maltodextrin, resistant maltodextrin, starches and fibers are not sugars and are not sweeteners.';

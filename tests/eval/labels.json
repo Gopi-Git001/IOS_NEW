@@ -1,11 +1,11 @@
 {
   "_about": "QuickGOB accuracy test set. Pre-filled from typical US labels: check each entry against YOUR photo, fix it, then set verified=true. Recipes change; the photo is the truth. expected_verdict null = decide after checking the label/policy.",
-  "_verdicts": "CLEAN / OKAY / BAD / RETRY, the same names in the app and the code (Rules v3, RULES.md). Pre-filled with the OLD v2 policy (any added sugar, sugar alcohol, artificial sweetener or alcohol = BAD; stevia/monk fruit only = OKAY; none = CLEAN); items that may change under v3 are listed in review.md under RE-CHECK AFTER RULE CHANGE.",
+  "_verdicts": "CLEAN / OKAY / BAD / RETRY as shown in the app. Current code names them CLEAN / BAD / UGLY (app OKAY = code BAD, app BAD = code UGLY). Pre-filled with the CURRENT code policy: any added sugar, sugar alcohol, artificial sweetener or alcohol = BAD; stevia/monk fruit only = OKAY; none = CLEAN.",
   "items": [
     {
       "id": "01-lacroix-pamplemousse",
       "photo": "photos/01-lacroix-pamplemousse.jpg",
-      "product": "LaCroix Pamplemousse sparkling water",
+      "product": "LaCroix Coconut sparkling water",
       "category": "water",
       "tests": "Single/two-ingredient drink, no sugar",
       "expected_verdict": "CLEAN",
@@ -18,11 +18,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0012993101015",
-        "name": "Coconut Sparkling Water,  LaCroix · Naturally Essenced Coconut Sparkling Water",
+        "name": "Coconut Sparkling Water,  LaCroix \u00b7 Naturally Essenced Coconut Sparkling Water",
         "page": "https://world.openfoodfacts.org/product/0012993101015",
         "image": "https://images.openfoodfacts.org/images/products/001/299/310/1015/ingredients_fr.7.full.jpg"
       },
-      "off_ingredients_text": "ONLY CARBONATED WATER, NATURALLY ESSENCED"
+      "off_ingredients_text": "ONLY CARBONATED WATER, NATURALLY ESSENCED",
+      "photo_status": "ok"
     },
     {
       "id": "02-topo-chico",
@@ -44,7 +45,9 @@
         "page": "https://world.openfoodfacts.org/product/0021136180596",
         "image": "https://images.openfoodfacts.org/images/products/002/113/618/0596/ingredients_en.7.full.jpg"
       },
-      "off_ingredients_text": "MINERAL WATER, CARBON DIOXIDE Size 1 Bottle MADE IN MEXICO BY: Per Serving Calories Total Fat 0g m 15mg Mal Carb Protein 00 0 CIA. TOPO CHICO, S. DE R.L. DE C.V. MONTERREY NO. 6500 COL. TOPO CHICO, MTY N.LC.P 64260 FOR BOTTLED WATER % Daily Value QUALITY INFORMATION 56-4357 0% PLEASE CONTACT TOPO 1% 0% OLD!"
+      "off_ingredients_text": "MINERAL WATER, CARBON DIOXIDE Size 1 Bottle MADE IN MEXICO BY: Per Serving Calories Total Fat 0g m 15mg Mal Carb Protein 00 0 CIA. TOPO CHICO, S. DE R.L. DE C.V. MONTERREY NO. 6500 COL. TOPO CHICO, MTY N.LC.P 64260 FOR BOTTLED WATER % Daily Value QUALITY INFORMATION 56-4357 0% PLEASE CONTACT TOPO 1% 0% OLD!",
+      "photo_status": "replace",
+      "photo_issue": "Whole bottle, ingredient text too small to read"
     },
     {
       "id": "03-smartwater",
@@ -62,11 +65,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0786162507006",
-        "name": "Glaceau · Glaceau smartwater, vapor distilled water",
+        "name": "Glaceau \u00b7 Glaceau smartwater, vapor distilled water",
         "page": "https://world.openfoodfacts.org/product/0786162507006",
         "image": "https://images.openfoodfacts.org/images/products/078/616/250/7006/ingredients_fr.7.full.jpg"
       },
-      "off_ingredients_text": "Vapor distilled water, calcium chloride and magnesium chloride and potassium bicarbonate (electrolyte sources*)."
+      "off_ingredients_text": "Vapor distilled water, calcium chloride and magnesium chloride and potassium bicarbonate (electrolyte sources*).",
+      "photo_status": "ok"
     },
     {
       "id": "04-spindrift-grapefruit",
@@ -87,21 +91,26 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0850019890037",
-        "name": "Ardor Energy · Pink Grapefruit",
+        "name": "Ardor Energy \u00b7 Pink Grapefruit",
         "page": "https://world.openfoodfacts.org/product/0850019890037",
         "image": "https://images.openfoodfacts.org/images/products/085/001/989/0037/ingredients_en.7.full.jpg"
       },
-      "off_ingredients_text": "carbonated purified water, organic L-theanine, organic green tea, organic flavor, organic caffeine (from green tea), sea salt"
+      "off_ingredients_text": "carbonated purified water, organic L-theanine, organic green tea, organic flavor, organic caffeine (from green tea), sea salt",
+      "photo_status": "replace",
+      "photo_issue": "Wrong product (Ardor Energy, not Spindrift)"
     },
     {
       "id": "05-blue-diamond-almonds",
       "photo": "photos/05-blue-diamond-almonds.jpg",
-      "product": "Blue Diamond Whole Natural almonds",
+      "product": "Blue Diamond Wasabi & Soy Sauce almonds",
       "category": "snack",
       "tests": "Single-ingredient food",
-      "expected_verdict": "CLEAN",
+      "expected_verdict": "BAD",
       "expected_natural_sugars": [],
-      "expected_added_sugars": [],
+      "expected_added_sugars": [
+        "Sugar",
+        "Maltodextrin"
+      ],
       "expected_sweeteners": [],
       "verified": false,
       "notes": "",
@@ -109,11 +118,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0041570055779",
-        "name": "Blue Diamond Almonds · Blue diamond almonds",
+        "name": "Blue Diamond Almonds \u00b7 Blue diamond almonds",
         "page": "https://world.openfoodfacts.org/product/0041570055779",
         "image": "https://images.openfoodfacts.org/images/products/004/157/005/5779/ingredients_en.7.full.jpg"
       },
-      "off_ingredients_text": "Almonds, wasabi soy sauce seasoning (sugar, modified corn starch, salt, soy sauce [soybean, wheat, salt], horseradish, onion, spice, fractionated coconut oil and/or palm kernel oil, garlic, maltodextrin, yeast extract, natural flavor, citric acid, disodiu"
+      "off_ingredients_text": "Almonds, wasabi soy sauce seasoning (sugar, modified corn starch, salt, soy sauce [soybean, wheat, salt], horseradish, onion, spice, fractionated coconut oil and/or palm kernel oil, garlic, maltodextrin, yeast extract, natural flavor, citric acid, disodiu",
+      "photo_status": "replace",
+      "photo_issue": "Ingredient text too small; also a different flavour"
     },
     {
       "id": "06-quaker-old-fashioned-oats",
@@ -135,7 +146,8 @@
         "page": "https://world.openfoodfacts.org/product/24045766",
         "image": "https://images.openfoodfacts.org/images/products/24045766/ingredients_en.4.full.jpg"
       },
-      "off_ingredients_text": "whole grain rolled oats,"
+      "off_ingredients_text": "whole grain rolled oats,",
+      "photo_status": "ok"
     },
     {
       "id": "07-fage-total-0-plain",
@@ -155,23 +167,26 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0689544083016",
-        "name": "Fage · Fage Total 0%",
+        "name": "Fage \u00b7 Fage Total 0%",
         "page": "https://world.openfoodfacts.org/product/0689544083016",
         "image": "https://images.openfoodfacts.org/images/products/068/954/408/3016/ingredients_en.7.full.jpg"
       },
-      "off_ingredients_text": "grade A pasteurized skimmed milk, live active yogurt cultures (L. bulgaricus, S. thermophilus, L. acidophilus, bifidus, L. casei)"
+      "off_ingredients_text": "grade A pasteurized skimmed milk, live active yogurt cultures (L. bulgaricus, S. thermophilus, L. acidophilus, bifidus, L. casei)",
+      "photo_status": "ok"
     },
     {
       "id": "08-larabar-cashew-cookie",
       "photo": "photos/08-larabar-cashew-cookie.jpg",
-      "product": "Larabar Cashew Cookie",
+      "product": "Larabar Chocolate Chip Cookie Dough",
       "category": "snack",
       "tests": "Dates as the only sweetness",
-      "expected_verdict": "CLEAN",
+      "expected_verdict": "BAD",
       "expected_natural_sugars": [
         "Dates"
       ],
-      "expected_added_sugars": [],
+      "expected_added_sugars": [
+        "Sugar"
+      ],
       "expected_sweeteners": [],
       "verified": false,
       "notes": "",
@@ -179,11 +194,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "02198248",
-        "name": "Fair · Larabar Chocolate Chip Cookie Dough",
+        "name": "Fair \u00b7 Larabar Chocolate Chip Cookie Dough",
         "page": "https://world.openfoodfacts.org/product/02198248",
         "image": "https://images.openfoodfacts.org/images/products/02198248/ingredients_en.11.full.jpg"
       },
-      "off_ingredients_text": "cashews, dates, semisweet chocolate chips (unsweetened chocolate, sugar, cocoa butter, vanilla), apples, sea salt, vanilla extract."
+      "off_ingredients_text": "cashews, dates, semisweet chocolate chips (unsweetened chocolate, sugar, cocoa butter, vanilla), apples, sea salt, vanilla extract.",
+      "photo_status": "replace",
+      "photo_issue": "Very low resolution strip (234 px tall)"
     },
     {
       "id": "09-raos-marinara",
@@ -207,7 +224,9 @@
         "page": "https://world.openfoodfacts.org/product/7717079001182",
         "image": "https://images.openfoodfacts.org/images/products/771/707/900/1182/ingredients_en.4.full.jpg"
       },
-      "off_ingredients_text": "light cream (cream, milk), water, butter (cream, natural flavorings), parmesan and romano cheese (pasteurized part-skim milk, cheese cultures, salt, enzymes), enzyme modified egg yolks, parmesan cheese (pasteurized milk, salt, rennet), sea salt, black pepper, white pepper, modified cornstarch, disodium phosphate xanthan gum, contains: egg, milk"
+      "off_ingredients_text": "light cream (cream, milk), water, butter (cream, natural flavorings), parmesan and romano cheese (pasteurized part-skim milk, cheese cultures, salt, enzymes), enzyme modified egg yolks, parmesan cheese (pasteurized milk, salt, rennet), sea salt, black pepper, white pepper, modified cornstarch, disodium phosphate xanthan gum, contains: egg, milk",
+      "photo_status": "replace",
+      "photo_issue": "Wrong product (Rao's Alfredo, not marinara)"
     },
     {
       "id": "10-365-peanut-butter",
@@ -225,11 +244,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0099482523619",
-        "name": "365 Whole Foods Market · Organic Unsalted Unsweetened Creamy Peanut Butter",
+        "name": "365 Whole Foods Market \u00b7 Organic Unsalted Unsweetened Creamy Peanut Butter",
         "page": "https://world.openfoodfacts.org/product/0099482523619",
         "image": "https://images.openfoodfacts.org/images/products/009/948/252/3619/ingredients_en.13.full.jpg"
       },
-      "off_ingredients_text": "Organic dry roasted peanuts."
+      "off_ingredients_text": "Organic dry roasted peanuts.",
+      "photo_status": "ok"
     },
     {
       "id": "11-unsweetened-almond-milk",
@@ -247,11 +267,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0078742052342",
-        "name": "Great Value,   Wal-Mart Stores  Inc. · Unsweetened almondmilk",
+        "name": "Great Value,   Wal-Mart Stores  Inc. \u00b7 Unsweetened almondmilk",
         "page": "https://world.openfoodfacts.org/product/0078742052342",
         "image": "https://images.openfoodfacts.org/images/products/007/874/205/2342/ingredients_en.8.full.jpg"
       },
-      "off_ingredients_text": "almondmilk (filtered water, almonds), calcium carbonate, natural vanilla flavor with other natural flavors, sea salt, potassium citrate, carrageenan, sunflower lecithin, vitamin a palmitate, vitamin d2, d-alpha-tocopherol, (natural vitamin e),"
+      "off_ingredients_text": "almondmilk (filtered water, almonds), calcium carbonate, natural vanilla flavor with other natural flavors, sea salt, potassium citrate, carrageenan, sunflower lecithin, vitamin a palmitate, vitamin d2, d-alpha-tocopherol, (natural vitamin e),",
+      "photo_status": "ok"
     },
     {
       "id": "12-hard-boiled-eggs",
@@ -269,11 +290,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0674959000079",
-        "name": "GoldEgg, JauneDoré · Organic Large Brown Eggs",
+        "name": "GoldEgg, JauneDor\u00e9 \u00b7 Organic Large Brown Eggs",
         "page": "https://world.openfoodfacts.org/product/0674959000079",
         "image": "https://images.openfoodfacts.org/images/products/067/495/900/0079/ingredients_en.24.full.jpg"
       },
-      "off_ingredients_text": "Large Organic Free-Range Chicken Eggs."
+      "off_ingredients_text": "Large Organic Free-Range Chicken Eggs.",
+      "photo_status": "ok"
     },
     {
       "id": "13-lmnt-citrus-salt",
@@ -293,11 +315,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0850009273130",
-        "name": "LMNT · LMNT Electrolyte drink mix",
+        "name": "LMNT \u00b7 LMNT Electrolyte drink mix",
         "page": "https://world.openfoodfacts.org/product/0850009273130",
         "image": "https://images.openfoodfacts.org/images/products/085/000/927/3130/ingredients_en.30.full.jpg"
       },
-      "off_ingredients_text": "Salt (Sodium Chloride), Citric Acid, Magnesium Malate, Potassium Chloride, Natural Flavors, Stevia Leaf Extract, Malic Acid, Watermelon Flavor."
+      "off_ingredients_text": "Salt (Sodium Chloride), Citric Acid, Magnesium Malate, Potassium Chloride, Natural Flavors, Stevia Leaf Extract, Malic Acid, Watermelon Flavor.",
+      "photo_status": "ok"
     },
     {
       "id": "14-zevia-cola",
@@ -317,11 +340,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "12702275",
-        "name": "zevia · zevia",
+        "name": "zevia \u00b7 zevia",
         "page": "https://world.openfoodfacts.org/product/12702275",
         "image": "https://images.openfoodfacts.org/images/products/12702275/ingredients_en.10.full.jpg"
       },
-      "off_ingredients_text": "carbonated water, stevia leaf extract, natural flavors, citric acid."
+      "off_ingredients_text": "carbonated water, stevia leaf extract, natural flavors, citric acid.",
+      "photo_status": "ok"
     },
     {
       "id": "15-zevia-ginger-ale",
@@ -341,23 +365,26 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "12702275",
-        "name": "zevia · zevia",
+        "name": "zevia \u00b7 zevia",
         "page": "https://world.openfoodfacts.org/product/12702275",
         "image": "https://images.openfoodfacts.org/images/products/12702275/ingredients_en.10.full.jpg"
       },
-      "off_ingredients_text": "carbonated water, stevia leaf extract, natural flavors, citric acid."
+      "off_ingredients_text": "carbonated water, stevia leaf extract, natural flavors, citric acid.",
+      "photo_status": "replace",
+      "photo_issue": "Same photo as 14 (Zevia Cola), not Ginger Ale"
     },
     {
       "id": "16-sweetleaf-drops",
       "photo": "photos/16-sweetleaf-drops.jpg",
-      "product": "SweetLeaf liquid stevia",
+      "product": "Hermesetas Stevia sweetener (erythritol + steviol glycosides)",
       "category": "sweetener",
       "tests": "Pure stevia product",
-      "expected_verdict": "OKAY",
+      "expected_verdict": "BAD",
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [
-        "Stevia Extract"
+        "Erythritol",
+        "Steviol Glycosides"
       ],
       "verified": false,
       "notes": "",
@@ -365,11 +392,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "7610211149004",
-        "name": "Stevia Sweet · Stevia",
+        "name": "Stevia Sweet \u00b7 Stevia",
         "page": "https://world.openfoodfacts.org/product/7610211149004",
         "image": "https://images.openfoodfacts.org/images/products/761/021/114/9004/ingredients_en.9.full.jpg"
       },
-      "off_ingredients_text": "for hermes s fibre: modified starch (contains wheat), erythritol&quot;, sweetener: steviol glycosides *excess con have a laxa store in a cool and dry place, recyclable"
+      "off_ingredients_text": "for hermes s fibre: modified starch (contains wheat), erythritol&quot;, sweetener: steviol glycosides *excess con have a laxa store in a cool and dry place, recyclable",
+      "photo_status": "ok"
     },
     {
       "id": "17-coca-cola",
@@ -389,11 +417,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "04918202",
-        "name": "Coca-Cola,  Coke · Coca-cola Coke - Classic",
+        "name": "Coca-Cola,  Coke \u00b7 Coca-cola Coke - Classic",
         "page": "https://world.openfoodfacts.org/product/04918202",
         "image": "https://images.openfoodfacts.org/images/products/04918202/ingredients_en.7.full.jpg"
       },
-      "off_ingredients_text": "CARBONATED WATER, HIGH FRUCTOSE CORN SYRUP, CARAMEL COLOR, PHOSPHORIC ACID, NATURAL FLAVORS, CAFFEINE."
+      "off_ingredients_text": "CARBONATED WATER, HIGH FRUCTOSE CORN SYRUP, CARAMEL COLOR, PHOSPHORIC ACID, NATURAL FLAVORS, CAFFEINE.",
+      "photo_status": "ok"
     },
     {
       "id": "18-sprite",
@@ -417,7 +446,9 @@
         "page": "https://world.openfoodfacts.org/product/0049000054552",
         "image": "https://images.openfoodfacts.org/images/products/004/900/005/4552/ingredients_en.16.full.jpg"
       },
-      "off_ingredients_text": ""
+      "off_ingredients_text": "",
+      "photo_status": "replace",
+      "photo_issue": "Thin strip, text too small"
     },
     {
       "id": "19-diet-coke",
@@ -437,11 +468,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0049000024692",
-        "name": "Coke · Diet Coke - 6pk/16.9 fl oz Bottles",
+        "name": "Coke \u00b7 Diet Coke - 6pk/16.9 fl oz Bottles",
         "page": "https://world.openfoodfacts.org/product/0049000024692",
         "image": "https://images.openfoodfacts.org/images/products/004/900/002/4692/ingredients_en.14.full.jpg"
       },
-      "off_ingredients_text": "CARBONATED WATER, CARAMEL COLOR, ASPARTAME, PHOSPHORIC ACID, POTASSIUM 0% BENZOATE (TO PROTECT TASTE), NATURAL FLAVORS, CITRIC ACID, CAFFEINE."
+      "off_ingredients_text": "CARBONATED WATER, CARAMEL COLOR, ASPARTAME, PHOSPHORIC ACID, POTASSIUM 0% BENZOATE (TO PROTECT TASTE), NATURAL FLAVORS, CITRIC ACID, CAFFEINE.",
+      "photo_status": "ok"
     },
     {
       "id": "20-coke-zero",
@@ -462,11 +494,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0049000045840",
-        "name": "Coca-Cola · Coca-Cola Zero Sugar",
+        "name": "Coca-Cola \u00b7 Coca-Cola Zero Sugar",
         "page": "https://world.openfoodfacts.org/product/0049000045840",
         "image": "https://images.openfoodfacts.org/images/products/004/900/004/5840/ingredients_fr.4.full.jpg"
       },
-      "off_ingredients_text": "carbonated water, caramel color, phosphoric acid, ašpartame, pótasshum benzoate (to protect tasté), natural flavors, potassium citrate, acesulfame potassium, caffeine. caffeine content: 48 mg/16.9fl oz"
+      "off_ingredients_text": "carbonated water, caramel color, phosphoric acid, a\u0161partame, p\u00f3tasshum benzoate (to protect tast\u00e9), natural flavors, potassium citrate, acesulfame potassium, caffeine. caffeine content: 48 mg/16.9fl oz",
+      "photo_status": "ok"
     },
     {
       "id": "21-gatorade-lemon-lime",
@@ -487,11 +520,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0052000048179",
-        "name": "Gatorade · Gatorade thirst quencher",
+        "name": "Gatorade \u00b7 Gatorade thirst quencher",
         "page": "https://world.openfoodfacts.org/product/0052000048179",
         "image": "https://images.openfoodfacts.org/images/products/005/200/004/8179/ingredients_en.9.full.jpg"
       },
-      "off_ingredients_text": "contains no no fruit juice no juice water lemon-lime fruit punch orange"
+      "off_ingredients_text": "contains no no fruit juice no juice water lemon-lime fruit punch orange",
+      "photo_status": "replace",
+      "photo_issue": "Store-shelf photo, no readable ingredient list"
     },
     {
       "id": "22-gatorade-zero",
@@ -512,11 +547,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0052000047752",
-        "name": "Gatorade · Gatorade zero",
+        "name": "Gatorade \u00b7 Gatorade zero",
         "page": "https://world.openfoodfacts.org/product/0052000047752",
         "image": "https://images.openfoodfacts.org/images/products/005/200/004/7752/ingredients_en.16.full.jpg"
       },
-      "off_ingredients_text": "er case 12 1 bottle (360 ml) serving size rving ies 0g 160mg % daily value* arbohydrate &lt;1g sugars og udes og added sugars ein og amount per serving o calories 0% 1 bottle (360 ml) serving size ssium 50mg 0% a significant source of saturated fat, stat, cholesterol, dietary fiber, amin d, calcium, and iron. 0% total fat og 7% sodium 160mg 0% total carbohydrate &lt;1g 0% total sugars og includes og added sugars 0% protein og amount per serving o calories % daily value* 0% 7% potassium 50mg 0% not a significant source of saturated fat, trans fat, cholesterol, dietary fiber, vitamin d, calcium, and iron. the % daily value (dv) tells you how much a nutrient in a serving of food contributes to a daily diet. 2,000 calories & gay is used for general nutrition advice. water, citric acid, sodium citrate, natural flavor, salt, monopotassium phosphate, modified food starch, sucralose, acesulfame potassium, *the % daily value (dv) tells you how much a nutrient in a serving of food contributes to a daily diet. 2,000 calories a day is used for general nutrition advice. water, citric acid, sodium citrate, salt, monopotassium phosphate, gum arabic, natural flavor, sucralose, acesulfame glycerol ester of rosin, red 40, blue 1. glycerol ester of rosin, yellow 6. potassium, sucrose acetate isobutyrate, gatorade 1 total fat og sodium 160mg total carbohydrate total sugars og includes og added sug protein og potassium 50mg not a significant source of sat trans fat, cholesterol, dietary fi vitamin d, calcium, and iron. * the % daily value (dv) tells you how muc in a serving of food contributes to a daily d calories a day is used for general nutrition a water, citric acid, sodium citrate monopotassium phosphate, mo food starch, natural flavor, sucra acesulfame potassium, glycerol of rosin,"
+      "off_ingredients_text": "er case 12 1 bottle (360 ml) serving size rving ies 0g 160mg % daily value* arbohydrate &lt;1g sugars og udes og added sugars ein og amount per serving o calories 0% 1 bottle (360 ml) serving size ssium 50mg 0% a significant source of saturated fat, stat, cholesterol, dietary fiber, amin d, calcium, and iron. 0% total fat og 7% sodium 160mg 0% total carbohydrate &lt;1g 0% total sugars og includes og added sugars 0% protein og amount per serving o calories % daily value* 0% 7% potassium 50mg 0% not a significant source of saturated fat, trans fat, cholesterol, dietary fiber, vitamin d, calcium, and iron. the % daily value (dv) tells you how much a nutrient in a serving of food contributes to a daily diet. 2,000 calories & gay is used for general nutrition advice. water, citric acid, sodium citrate, natural flavor, salt, monopotassium phosphate, modified food starch, sucralose, acesulfame potassium, *the % daily value (dv) tells you how much a nutrient in a serving of food contributes to a daily diet. 2,000 calories a day is used for general nutrition advice. water, citric acid, sodium citrate, salt, monopotassium phosphate, gum arabic, natural flavor, sucralose, acesulfame glycerol ester of rosin, red 40, blue 1. glycerol ester of rosin, yellow 6. potassium, sucrose acetate isobutyrate, gatorade 1 total fat og sodium 160mg total carbohydrate total sugars og includes og added sug protein og potassium 50mg not a significant source of sat trans fat, cholesterol, dietary fi vitamin d, calcium, and iron. * the % daily value (dv) tells you how muc in a serving of food contributes to a daily d calories a day is used for general nutrition a water, citric acid, sodium citrate monopotassium phosphate, mo food starch, natural flavor, sucra acesulfame potassium, glycerol of rosin,",
+      "photo_status": "ok"
     },
     {
       "id": "23-propel",
@@ -537,11 +573,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "44161507",
-        "name": "Gatorade · propel water",
+        "name": "Gatorade \u00b7 propel water",
         "page": "https://world.openfoodfacts.org/product/44161507",
         "image": "https://images.openfoodfacts.org/images/products/44161507/ingredients_en.4.full.jpg"
       },
-      "off_ingredients_text": "cholestero, delay fhe, vianin and ion, of s-vc, inc, total og 0% (vitamin b3), dropel, electrolyte water beverage s no fruit juice water, citric acid, natural flavor sodium hexametaphosphate (to protect flavor), salt,"
+      "off_ingredients_text": "cholestero, delay fhe, vianin and ion, of s-vc, inc, total og 0% (vitamin b3), dropel, electrolyte water beverage s no fruit juice water, citric acid, natural flavor sodium hexametaphosphate (to protect flavor), salt,",
+      "photo_status": "replace",
+      "photo_issue": "Package photo, ingredient list not readable"
     },
     {
       "id": "24-pedialyte",
@@ -564,11 +602,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0070074678504",
-        "name": "Pedialyte · Electrolytes",
+        "name": "Pedialyte \u00b7 Electrolytes",
         "page": "https://world.openfoodfacts.org/product/0070074678504",
         "image": "https://images.openfoodfacts.org/images/products/007/007/467/8504/ingredients_en.13.full.jpg"
       },
-      "off_ingredients_text": "ANHYDROUS DEXTROSE, CITRIC ACID, SHORT-CHAIN FRUCTOOLIGOSACCHARIDES, SALT, POTASSIUM CITRATE, POTASSIUM PHOSPHATE, SODIUM CITRATE, MAGNESIUM CHLORIDE, NATURAL AND ARTIFICIAL FLAVORS, CALCIUM SILICATE, SUCRALOSE, ACESULFAME POTASSIUM, AND RED 40"
+      "off_ingredients_text": "ANHYDROUS DEXTROSE, CITRIC ACID, SHORT-CHAIN FRUCTOOLIGOSACCHARIDES, SALT, POTASSIUM CITRATE, POTASSIUM PHOSPHATE, SODIUM CITRATE, MAGNESIUM CHLORIDE, NATURAL AND ARTIFICIAL FLAVORS, CALCIUM SILICATE, SUCRALOSE, ACESULFAME POTASSIUM, AND RED 40",
+      "photo_status": "replace",
+      "photo_issue": "Hand holding a packet, ingredients not readable"
     },
     {
       "id": "25-liquid-iv-lemon-lime",
@@ -595,7 +635,8 @@
         "page": "https://world.openfoodfacts.org/product/21207877",
         "image": "https://images.openfoodfacts.org/images/products/21207877/ingredients_en.4.full.jpg"
       },
-      "off_ingredients_text": "pure cane sugar, dextrose, citric acid, salt, potassium citrate, sodium citrate, dipotassium phosphate, silicon dioxide, stevia leaf extract (rebaudioside a), vitamin c (ascorbic acid), acid), natural b3 flavors, (niacinamide), vitamin b5 (d-calcium pantothenate), vitamin [pyridoxine b6 vitamin hydrochloride), vitamin b12 (cyanocobalamin),"
+      "off_ingredients_text": "pure cane sugar, dextrose, citric acid, salt, potassium citrate, sodium citrate, dipotassium phosphate, silicon dioxide, stevia leaf extract (rebaudioside a), vitamin c (ascorbic acid), acid), natural b3 flavors, (niacinamide), vitamin b5 (d-calcium pantothenate), vitamin [pyridoxine b6 vitamin hydrochloride), vitamin b12 (cyanocobalamin),",
+      "photo_status": "ok"
     },
     {
       "id": "26-monster-original",
@@ -616,11 +657,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0070847811169",
-        "name": "MonsterMonster Energy · Monster Energy",
+        "name": "MonsterMonster Energy \u00b7 Monster Energy",
         "page": "https://world.openfoodfacts.org/product/0070847811169",
         "image": "https://images.openfoodfacts.org/images/products/007/084/781/1169/ingredients_en.13.full.jpg"
       },
-      "off_ingredients_text": "carbonated water, sugar, glucose, citric acid, natural flavors, taurine, sodium citrate, color added, panax ginseng extract, l-carnitine l-tartrate, caffeine, sorbic acid (preservative), benzoic acid (preservative), niacinamide (vit, b3), sucralose, salt, d-glucuronolactone, inositol, guarana extract, pyridoxine hydrochloride (vit, b6), riboflavin (vit, b2), maltodextrin, cyanocobalamin (vit, b12),"
+      "off_ingredients_text": "carbonated water, sugar, glucose, citric acid, natural flavors, taurine, sodium citrate, color added, panax ginseng extract, l-carnitine l-tartrate, caffeine, sorbic acid (preservative), benzoic acid (preservative), niacinamide (vit, b3), sucralose, salt, d-glucuronolactone, inositol, guarana extract, pyridoxine hydrochloride (vit, b6), riboflavin (vit, b2), maltodextrin, cyanocobalamin (vit, b12),",
+      "photo_status": "ok"
     },
     {
       "id": "27-red-bull",
@@ -641,11 +683,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0611269818994",
-        "name": "Red Bull · Red bull",
+        "name": "Red Bull \u00b7 Red bull",
         "page": "https://world.openfoodfacts.org/product/0611269818994",
         "image": "https://images.openfoodfacts.org/images/products/061/126/981/8994/ingredients_en.5.full.jpg"
       },
-      "off_ingredients_text": "carbonated water, sucrose, glucose, citric acid, taurine, sodium bicarbonate, magnesium carbonate, caffeine, niacinamide, calcium pantothenate, pyridoxine hcl, vitamin b12, natural and artificial flavors, colors,"
+      "off_ingredients_text": "carbonated water, sucrose, glucose, citric acid, taurine, sodium bicarbonate, magnesium carbonate, caffeine, niacinamide, calcium pantothenate, pyridoxine hcl, vitamin b12, natural and artificial flavors, colors,",
+      "photo_status": "replace",
+      "photo_issue": "Front of can, no ingredient list"
     },
     {
       "id": "28-vitaminwater",
@@ -666,11 +710,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0786162003515",
-        "name": "VitaminWater · Zero xxx",
+        "name": "VitaminWater \u00b7 Zero xxx",
         "page": "https://world.openfoodfacts.org/product/0786162003515",
         "image": "https://images.openfoodfacts.org/images/products/078/616/200/3515/ingredients_en.24.full.jpg"
       },
-      "off_ingredients_text": "Reverse osmosis water, less than 0.5% of: vitamins A. C. B3, B5, B6, B12 (beta-carotene, ascorbic acid, niacinamide, calcium pantothenate. pyridoxine hydrochloride. cyanocobalamin), fruit and vegetable juices (for color), natural flavors, citric acid, stevia leaf extract, electrolytes (calcium and magnesium lactates and potassium phosphate), monk fruit extract. sodium selenate, manganese citrate."
+      "off_ingredients_text": "Reverse osmosis water, less than 0.5% of: vitamins A. C. B3, B5, B6, B12 (beta-carotene, ascorbic acid, niacinamide, calcium pantothenate. pyridoxine hydrochloride. cyanocobalamin), fruit and vegetable juices (for color), natural flavors, citric acid, stevia leaf extract, electrolytes (calcium and magnesium lactates and potassium phosphate), monk fruit extract. sodium selenate, manganese citrate.",
+      "photo_status": "replace",
+      "photo_issue": "Front of bottle, text too small; matched vitaminwater zero, not regular"
     },
     {
       "id": "29-vitaminwater-zero",
@@ -691,11 +737,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0786162002976",
-        "name": "Glaceau · Vitamin water, vitaminwater zero squeezed, lemonade, lemonade",
+        "name": "Glaceau \u00b7 Vitamin water, vitaminwater zero squeezed, lemonade, lemonade",
         "page": "https://world.openfoodfacts.org/product/0786162002976",
         "image": "https://images.openfoodfacts.org/images/products/078/616/200/2976/ingredients_en.16.full.jpg"
       },
-      "off_ingredients_text": "Reverse osmosis water, less than 1% of: erythritol, citric acid, calcium phosphate, magnesium lactate and calcium lactate and potassium phosphate (electrolyte source), gum acacia, phosphoric acid, vitamin c (ascorbic acid), stevia leaf extract, natural flavors, zinc gluconate, glycerol ester of rosin, vitamin b5 (calcium pantothenate), vitamin e (alpha-tocopheryl acetate), vitamin b6 (pyridoxine hydrochloride), vitamin a palmitate."
+      "off_ingredients_text": "Reverse osmosis water, less than 1% of: erythritol, citric acid, calcium phosphate, magnesium lactate and calcium lactate and potassium phosphate (electrolyte source), gum acacia, phosphoric acid, vitamin c (ascorbic acid), stevia leaf extract, natural flavors, zinc gluconate, glycerol ester of rosin, vitamin b5 (calcium pantothenate), vitamin e (alpha-tocopheryl acetate), vitamin b6 (pyridoxine hydrochloride), vitamin a palmitate.",
+      "photo_status": "ok"
     },
     {
       "id": "30-starbucks-frappuccino",
@@ -717,35 +764,37 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "01264904",
-        "name": "Starbucks · Mocha Frappuccino",
+        "name": "Starbucks \u00b7 Mocha Frappuccino",
         "page": "https://world.openfoodfacts.org/product/01264904",
         "image": "https://images.openfoodfacts.org/images/products/01264904/ingredients_en.40.full.jpg"
       },
-      "off_ingredients_text": "BREWED * COFFEE (WATER, COFFEE), REDUCED FAT MILK, SUGAR, COCOA, PECTIN, *: STARBUCKS."
+      "off_ingredients_text": "BREWED * COFFEE (WATER, COFFEE), REDUCED FAT MILK, SUGAR, COCOA, PECTIN, *: STARBUCKS.",
+      "photo_status": "ok"
     },
     {
       "id": "31-snapple-peach-tea",
       "photo": "photos/31-snapple-peach-tea.jpg",
-      "product": "Snapple Peach Tea",
+      "product": "Diet Snapple Peach Tea",
       "category": "tea",
       "tests": "Sugar",
       "expected_verdict": "BAD",
       "expected_natural_sugars": [],
-      "expected_added_sugars": [
-        "Sugar"
+      "expected_added_sugars": [],
+      "expected_sweeteners": [
+        "Aspartame"
       ],
-      "expected_sweeteners": [],
       "verified": false,
       "notes": "",
       "source": {
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0076183202074",
-        "name": "Snapple · Diet snapple peach tea",
+        "name": "Snapple \u00b7 Diet snapple peach tea",
         "page": "https://world.openfoodfacts.org/product/0076183202074",
         "image": "https://images.openfoodfacts.org/images/products/007/618/320/2074/ingredients_en.10.full.jpg"
       },
-      "off_ingredients_text": "Filtered Water, Citric Acid, Tea, Aspartame, Potassium Citrate, Natural Flavors, Malic Acid"
+      "off_ingredients_text": "Filtered Water, Citric Acid, Tea, Aspartame, Potassium Citrate, Natural Flavors, Malic Acid",
+      "photo_status": "ok"
     },
     {
       "id": "32-simply-lemonade",
@@ -767,11 +816,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "06234306",
-        "name": "Simply Lemonade · Simply Lemonade",
+        "name": "Simply Lemonade \u00b7 Simply Lemonade",
         "page": "https://world.openfoodfacts.org/product/06234306",
         "image": "https://images.openfoodfacts.org/images/products/06234306/ingredients_en.7.full.jpg"
       },
-      "off_ingredients_text": ""
+      "off_ingredients_text": "",
+      "photo_status": "replace",
+      "photo_issue": "Nutrition panel only, no ingredient list"
     },
     {
       "id": "33-white-claw",
@@ -789,11 +840,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0635985500018",
-        "name": "White claw, Libman, High Noon · White Claw Hard Seltzer, Black Cherry",
+        "name": "White claw, Libman, High Noon \u00b7 White Claw Hard Seltzer, Black Cherry",
         "page": "https://world.openfoodfacts.org/product/0635985500018",
         "image": "https://images.openfoodfacts.org/images/products/063/598/550/0018/ingredients_en.20.full.jpg"
       },
-      "off_ingredients_text": "purified carbonated water, alcohol, natural flavors, cane sugar, citric acid, natural cherry juice concentrate, sodium citrate,"
+      "off_ingredients_text": "purified carbonated water, alcohol, natural flavors, cane sugar, citric acid, natural cherry juice concentrate, sodium citrate,",
+      "photo_status": "ok"
     },
     {
       "id": "34-michelob-ultra",
@@ -815,7 +867,8 @@
         "page": "https://world.openfoodfacts.org/product/0018200967153",
         "image": "https://images.openfoodfacts.org/images/products/001/820/096/7153/ingredients_en.12.full.jpg"
       },
-      "off_ingredients_text": "4,2 % ALC./VOL - BREWED AND ANHEUSER-BUSCH. SI LOUIS MO"
+      "off_ingredients_text": "4,2 % ALC./VOL - BREWED AND ANHEUSER-BUSCH. SI LOUIS MO",
+      "photo_status": "ok"
     },
     {
       "id": "35-honey-nut-cheerios",
@@ -837,11 +890,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0016000107472",
-        "name": "Cheerios · Honey Nut Cheerios",
+        "name": "Cheerios \u00b7 Honey Nut Cheerios",
         "page": "https://world.openfoodfacts.org/product/0016000107472",
         "image": "https://images.openfoodfacts.org/images/products/001/600/010/7472/ingredients_en.11.full.jpg"
       },
-      "off_ingredients_text": "Whole Grain Oats, Sugar, Corn Starch, Honey, Brown Sugar Syrup, Salt, Tripotassium Phosphate, Canola and/or Sunflower Oil, Natural Almond Flavor, Vitamin E (mixed tocopherols). \r\nVitamins and Minerals: Calcium Carbonate, Vitamin C (sodium ascorbate), Iron and Zinc (mineral nutrients), A B Vitamin (niacinamide), Vitamin B6 (pyridoxine hydrochloride), Vitamin B₁ (thiamin mononitrate), Vitamin A (palmitate) Vitamin B₂ (riboflavin), A B Vitamin (folic acid), Vitamin B12, Vitamin D3."
+      "off_ingredients_text": "Whole Grain Oats, Sugar, Corn Starch, Honey, Brown Sugar Syrup, Salt, Tripotassium Phosphate, Canola and/or Sunflower Oil, Natural Almond Flavor, Vitamin E (mixed tocopherols). \r\nVitamins and Minerals: Calcium Carbonate, Vitamin C (sodium ascorbate), Iron and Zinc (mineral nutrients), A B Vitamin (niacinamide), Vitamin B6 (pyridoxine hydrochloride), Vitamin B\u2081 (thiamin mononitrate), Vitamin A (palmitate) Vitamin B\u2082 (riboflavin), A B Vitamin (folic acid), Vitamin B12, Vitamin D3.",
+      "photo_status": "ok"
     },
     {
       "id": "36-frosted-flakes",
@@ -862,11 +916,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0038000127502",
-        "name": "Kellogg's · Kelloggs Frosted Flakes",
+        "name": "Kellogg's \u00b7 Kelloggs Frosted Flakes",
         "page": "https://world.openfoodfacts.org/product/0038000127502",
         "image": "https://images.openfoodfacts.org/images/products/003/800/012/7502/ingredients_en.9.full.jpg"
       },
-      "off_ingredients_text": ""
+      "off_ingredients_text": "",
+      "photo_status": "replace",
+      "photo_issue": "Wrong product (a chocolate cereal, not Frosted Flakes)"
     },
     {
       "id": "37-nature-valley-oats-honey",
@@ -888,24 +944,25 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0016000264694",
-        "name": "Nature Valley · Nature Valley Crunchy Oats 'N Honey Granola Bar",
+        "name": "Nature Valley \u00b7 Nature Valley Crunchy Oats 'N Honey Granola Bar",
         "page": "https://world.openfoodfacts.org/product/0016000264694",
         "image": "https://images.openfoodfacts.org/images/products/001/600/026/4694/ingredients_en.33.full.jpg"
       },
-      "off_ingredients_text": "Whole Grain Oats, Sugar, Canola Oil, Rice Flour, Honey, Salt, Brown Sugar Syrup, Baking Soda, Soy Lecithin, Natural Flavor. CONTAINS SOY; MAY CONTAIN PEANUT, ALMOND AND PECAN INGREDIENTS"
+      "off_ingredients_text": "Whole Grain Oats, Sugar, Canola Oil, Rice Flour, Honey, Salt, Brown Sugar Syrup, Baking Soda, Soy Lecithin, Natural Flavor. CONTAINS SOY; MAY CONTAIN PEANUT, ALMOND AND PECAN INGREDIENTS",
+      "photo_status": "ok"
     },
     {
       "id": "38-kind-dark-choc-nuts",
       "photo": "photos/38-kind-dark-choc-nuts.jpg",
-      "product": "KIND Dark Chocolate Nuts & Sea Salt",
+      "product": "KIND Thins Dark Chocolate Nuts & Sea Salt",
       "category": "snack",
       "tests": "Honey + glucose syrup",
       "expected_verdict": "BAD",
       "expected_natural_sugars": [],
       "expected_added_sugars": [
-        "Honey",
-        "Glucose Syrup",
-        "Sugar"
+        "Tapioca Syrup",
+        "Sugar",
+        "Honey"
       ],
       "expected_sweeteners": [],
       "verified": false,
@@ -914,11 +971,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "16067811",
-        "name": "Kind · kind thins dark chocolate nuts and sea salt",
+        "name": "Kind \u00b7 kind thins dark chocolate nuts and sea salt",
         "page": "https://world.openfoodfacts.org/product/16067811",
         "image": "https://images.openfoodfacts.org/images/products/16067811/ingredients_en.4.full.jpg"
       },
-      "off_ingredients_text": "almonds, tapioca syrup, sugar, palm kemel oil, chicory root fiber, rice flour, honey, canola oil, alkalīzed cocoa, unsweetened chocolate, sea salt, naturál flavor, soy lecithin, cocoa butter, vitamin e (tocopherols to maintain freshness). 29670-00-wo allergen information: contains almonds and soy. may contain tree nuts."
+      "off_ingredients_text": "almonds, tapioca syrup, sugar, palm kemel oil, chicory root fiber, rice flour, honey, canola oil, alkal\u012bzed cocoa, unsweetened chocolate, sea salt, natur\u00e1l flavor, soy lecithin, cocoa butter, vitamin e (tocopherols to maintain freshness). 29670-00-wo allergen information: contains almonds and soy. may contain tree nuts.",
+      "photo_status": "ok"
     },
     {
       "id": "39-clif-chocolate-chip",
@@ -944,21 +1002,23 @@
         "page": "https://world.openfoodfacts.org/product/3728732512161",
         "image": "https://images.openfoodfacts.org/images/products/372/873/251/2161/ingredients_en.5.full.jpg"
       },
-      "off_ingredients_text": "organic brown rice syrup, organic rolled oats, soy protein isolate, organic cane syrup, organic roasted soybeans, rice flour, cane sugar, unsweetened chocolate, organic soy flour, organic oat fiber, organic high oleic sunflower oil, cocoa butter, barley malt extract, sea salt, natural flavors, soy lecithin, organic cinnamon, vitamins , minerals: dicalcium phosphate, magnesium oxide, ascorbic acid (vit, c), dl-alpha tocopheryl acetate (vit, e) , beta carotene (vit, a), niacinamide (vit, b3), ergocalciferol (vit, d2), thiamine mononitrate (vit, b1), pyridoxine hydrochloride (vit, b6), riboflavin (vit, b2), cyanocobalamin (vit, b12), allergen statement: contains soy, may contain peanuts, tree nuts, milk, and wheat, itm"
+      "off_ingredients_text": "organic brown rice syrup, organic rolled oats, soy protein isolate, organic cane syrup, organic roasted soybeans, rice flour, cane sugar, unsweetened chocolate, organic soy flour, organic oat fiber, organic high oleic sunflower oil, cocoa butter, barley malt extract, sea salt, natural flavors, soy lecithin, organic cinnamon, vitamins , minerals: dicalcium phosphate, magnesium oxide, ascorbic acid (vit, c), dl-alpha tocopheryl acetate (vit, e) , beta carotene (vit, a), niacinamide (vit, b3), ergocalciferol (vit, d2), thiamine mononitrate (vit, b1), pyridoxine hydrochloride (vit, b6), riboflavin (vit, b2), cyanocobalamin (vit, b12), allergen statement: contains soy, may contain peanuts, tree nuts, milk, and wheat, itm",
+      "photo_status": "ok"
     },
     {
       "id": "40-quest-bar",
       "photo": "photos/40-quest-bar.jpg",
-      "product": "Quest protein bar",
+      "product": "Kirkland Signature Protein Bar, Chocolate Chip Cookie Dough",
       "category": "snack",
       "tests": "Sugar alcohol + sucralose + stevia",
       "expected_verdict": "BAD",
       "expected_natural_sugars": [],
-      "expected_added_sugars": [],
+      "expected_added_sugars": [
+        "Isomalto-Oligosaccharides"
+      ],
       "expected_sweeteners": [
         "Erythritol",
-        "Sucralose",
-        "Stevia"
+        "Steviol Glycosides"
       ],
       "verified": false,
       "notes": "",
@@ -966,11 +1026,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0096619356102",
-        "name": "Kirkland · Protein Bar, Chocolate Chip Cookie Dough",
+        "name": "Kirkland \u00b7 Protein Bar, Chocolate Chip Cookie Dough",
         "page": "https://world.openfoodfacts.org/product/0096619356102",
         "image": "https://images.openfoodfacts.org/images/products/009/661/935/6102/ingredients_en.15.full.jpg"
       },
-      "off_ingredients_text": "protein blend (milk protein isolate, whey protein isolate), soluble corn fiber, cashew butter, isomalto-oligosaccharides (vegetable source), unsweetened chocolate, erythritol, water, cocoa butter, natural flavors, sea salt, sunflower lecithin, steviol glycosides (stevia)."
+      "off_ingredients_text": "protein blend (milk protein isolate, whey protein isolate), soluble corn fiber, cashew butter, isomalto-oligosaccharides (vegetable source), unsweetened chocolate, erythritol, water, cocoa butter, natural flavors, sea salt, sunflower lecithin, steviol glycosides (stevia).",
+      "photo_status": "ok"
     },
     {
       "id": "41-halo-top-vanilla",
@@ -995,24 +1056,25 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0858089003135",
-        "name": "Halo Top · Cookie & Cream Light Ice Cream",
+        "name": "Halo Top \u00b7 Cookie & Cream Light Ice Cream",
         "page": "https://world.openfoodfacts.org/product/0858089003135",
         "image": "https://images.openfoodfacts.org/images/products/085/808/900/3135/ingredients_fr.7.full.jpg"
       },
-      "off_ingredients_text": "Skim milk, eggs, erythritol, prebiotic fiber, milk protein concentrate, cream, organic cane sugar, cookie crumbs (wheat flour, sugar, cocoa, honey, unsweetened chocolate, salt, whey), vegetable glycerin, sea salt, natural flavors, organic carob gum, organic guar gum, organic stevia leaf extract."
+      "off_ingredients_text": "Skim milk, eggs, erythritol, prebiotic fiber, milk protein concentrate, cream, organic cane sugar, cookie crumbs (wheat flour, sugar, cocoa, honey, unsweetened chocolate, salt, whey), vegetable glycerin, sea salt, natural flavors, organic carob gum, organic guar gum, organic stevia leaf extract.",
+      "photo_status": "replace",
+      "photo_issue": "Tub side, text too small"
     },
     {
       "id": "42-lilys-dark-chocolate",
       "photo": "photos/42-lilys-dark-chocolate.jpg",
-      "product": "Lily's dark chocolate bar",
+      "product": "Pobeda 100% dark chocolate, no sugar added (maltitol)",
       "category": "dessert",
       "tests": "Stevia + erythritol",
       "expected_verdict": "BAD",
       "expected_natural_sugars": [],
       "expected_added_sugars": [],
       "expected_sweeteners": [
-        "Erythritol",
-        "Stevia Extract"
+        "Maltitol"
       ],
       "verified": false,
       "notes": "",
@@ -1020,11 +1082,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "4660013948124",
-        "name": "Pobeda · Bitterschokolade ohne Zuckerzusatz &quot;72% Kakao&quot; &quot;Charged&quot;",
+        "name": "Pobeda \u00b7 Bitterschokolade ohne Zuckerzusatz &quot;72% Kakao&quot; &quot;Charged&quot;",
         "page": "https://world.openfoodfacts.org/product/4660013948124",
         "image": "https://images.openfoodfacts.org/images/products/466/001/394/8124/ingredients_ru.16.full.jpg"
       },
-      "off_ingredients_text": "cocoa mass, sweetener (maltitol), cocoa powder, prebiotic (inulin 10%), cocoa butter, emulsifier (soya lecithin), natural sweetener (stevia 0.03%), natural vanilla."
+      "off_ingredients_text": "cocoa mass, sweetener (maltitol), cocoa powder, prebiotic (inulin 10%), cocoa butter, emulsifier (soya lecithin), natural sweetener (stevia 0.03%), natural vanilla.",
+      "photo_status": "replace",
+      "photo_issue": "Front of pack, no ingredient list; also not Lily's"
     },
     {
       "id": "43-oreo",
@@ -1045,11 +1109,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0044000047009",
-        "name": "Oreo,  Nabisco · Oreo (Chocolate Sandwich Cookies)",
+        "name": "Oreo,  Nabisco \u00b7 Oreo (Chocolate Sandwich Cookies)",
         "page": "https://world.openfoodfacts.org/product/0044000047009",
         "image": "https://images.openfoodfacts.org/images/products/004/400/004/7009/ingredients_en.34.full.jpg"
       },
-      "off_ingredients_text": "unbleached enriched flour (wheat flour, niacin, reduced iron, thiamine mononitrate {vitamin b1}, riboflavin {vitamin b2}, folic acid), sugar, palm and/or canola oil, cocoa (processed with alkali), high fructose corn syrup, leavening (baking soda and/or calcium phosphate), salt, soy lecithin, chocolate, artificial flavor,"
+      "off_ingredients_text": "unbleached enriched flour (wheat flour, niacin, reduced iron, thiamine mononitrate {vitamin b1}, riboflavin {vitamin b2}, folic acid), sugar, palm and/or canola oil, cocoa (processed with alkali), high fructose corn syrup, leavening (baking soda and/or calcium phosphate), salt, soy lecithin, chocolate, artificial flavor,",
+      "photo_status": "replace",
+      "photo_issue": "DELETED: the database photo was a screenshot of someone's email, not a label"
     },
     {
       "id": "44-nutella",
@@ -1071,25 +1137,25 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "00988639",
-        "name": "Ferrero, Nutella · Nutella, hazelnut spread with cocoa, hazelnut",
+        "name": "Ferrero, Nutella \u00b7 Nutella, hazelnut spread with cocoa, hazelnut",
         "page": "https://world.openfoodfacts.org/product/00988639",
         "image": "https://images.openfoodfacts.org/images/products/00988639/ingredients_en.7.full.jpg"
       },
-      "off_ingredients_text": "Sugar, palm oil, hazelnuts, cocoa, skim milk, whey (milk), lecithin as emulsifier (soy), vanillin: an artificial flavor."
+      "off_ingredients_text": "Sugar, palm oil, hazelnuts, cocoa, skim milk, whey (milk), lecithin as emulsifier (soy), vanillin: an artificial flavor.",
+      "photo_status": "ok"
     },
     {
       "id": "45-heinz-ketchup",
       "photo": "photos/45-heinz-ketchup.jpg",
-      "product": "Heinz Tomato Ketchup",
+      "product": "Heinz Tomato Ketchup (EU recipe, sugar not HFCS)",
       "category": "sauce",
       "tests": "Hidden HFCS + corn syrup",
       "expected_verdict": "BAD",
       "expected_natural_sugars": [
-        "Tomato Concentrate"
+        "Tomatoes"
       ],
       "expected_added_sugars": [
-        "High Fructose Corn Syrup",
-        "Corn Syrup"
+        "Sugar"
       ],
       "expected_sweeteners": [],
       "verified": false,
@@ -1098,22 +1164,22 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "8715700124834",
-        "name": "Heinz · Tomato Ketchup",
+        "name": "Heinz \u00b7 Tomato Ketchup",
         "page": "https://world.openfoodfacts.org/product/8715700124834",
         "image": "https://images.openfoodfacts.org/images/products/871/570/012/4834/ingredients_nl.15.full.jpg"
       },
-      "off_ingredients_text": "tomatoes (148 g per 100 tomato ketchup), vinegar, sugar, salt, spice and spice extracts (contain celery), spice,"
+      "off_ingredients_text": "tomatoes (148 g per 100 tomato ketchup), vinegar, sugar, salt, spice and spice extracts (contain celery), spice,",
+      "photo_status": "ok"
     },
     {
       "id": "46-syrup-corn-syrup",
       "photo": "photos/46-syrup-corn-syrup.jpg",
-      "product": "Pancake syrup (corn syrup type, e.g. Aunt Jemima/Pearl Milling)",
+      "product": "Pearl Milling Company Original Syrup",
       "category": "sauce",
       "tests": "Corn syrup + HFCS",
       "expected_verdict": "BAD",
       "expected_natural_sugars": [],
       "expected_added_sugars": [
-        "Corn Syrup",
         "High Fructose Corn Syrup"
       ],
       "expected_sweeteners": [],
@@ -1127,7 +1193,8 @@
         "page": "https://world.openfoodfacts.org/product/03009765",
         "image": "https://images.openfoodfacts.org/images/products/03009765/ingredients_en.4.full.jpg"
       },
-      "off_ingredients_text": "high fructose corn syrup, water, cellulose gum, salt, natural and artificial flavor, caramel color, sorbic acid and sodium benzoate (preservatives) sodium hexametaphosphate (568-l03-14)"
+      "off_ingredients_text": "high fructose corn syrup, water, cellulose gum, salt, natural and artificial flavor, caramel color, sorbic acid and sodium benzoate (preservatives) sodium hexametaphosphate (568-l03-14)",
+      "photo_status": "ok"
     },
     {
       "id": "47-daves-killer-bread",
@@ -1152,7 +1219,8 @@
         "page": "https://world.openfoodfacts.org/product/01317176",
         "image": "https://images.openfoodfacts.org/images/products/01317176/ingredients_en.4.full.jpg"
       },
-      "off_ingredients_text": "organic whole wheat flour, water, organic cracked whole wheat, organic cane sugar, organic wheat gluten, organic expeller pressed canola oil, contains 2% or less of each of the following: organic molasses, sea salt, yeast, organic cultured wheat flour, organic vinegar, organic acerola powder, enzymes, 526-050919 ted by, organ distri deb-al barer"
+      "off_ingredients_text": "organic whole wheat flour, water, organic cracked whole wheat, organic cane sugar, organic wheat gluten, organic expeller pressed canola oil, contains 2% or less of each of the following: organic molasses, sea salt, yeast, organic cultured wheat flour, organic vinegar, organic acerola powder, enzymes, 526-050919 ted by, organ distri deb-al barer",
+      "photo_status": "ok"
     },
     {
       "id": "48-ritz-crackers",
@@ -1173,11 +1241,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "04400660",
-        "name": "Mondelez · ritz crackers original",
+        "name": "Mondelez \u00b7 ritz crackers original",
         "page": "https://world.openfoodfacts.org/product/04400660",
         "image": "https://images.openfoodfacts.org/images/products/04400660/ingredients_en.4.full.jpg"
       },
-      "off_ingredients_text": "unbleached enriched flour (wheat flour, niacin, reduced iron, thiamine mononitrate (vitamin b1), riboflavin (vitamin b2), folic acid), soybean and/or canola oil, palm oil, sugar, salt, leavening (calcium phosphate, baking soda), high fructose corn syrup, soy lecithin, natural flavor. contains: wheat, soy. mondelez global llc east hanover, nj 07936 usa contains a bioengineered food ingredient made in mexico"
+      "off_ingredients_text": "unbleached enriched flour (wheat flour, niacin, reduced iron, thiamine mononitrate (vitamin b1), riboflavin (vitamin b2), folic acid), soybean and/or canola oil, palm oil, sugar, salt, leavening (calcium phosphate, baking soda), high fructose corn syrup, soy lecithin, natural flavor. contains: wheat, soy. mondelez global llc east hanover, nj 07936 usa contains a bioengineered food ingredient made in mexico",
+      "photo_status": "ok"
     },
     {
       "id": "49-chobani-vanilla",
@@ -1203,7 +1272,9 @@
         "page": "https://world.openfoodfacts.org/product/0114242661780",
         "image": "https://images.openfoodfacts.org/images/products/011/424/266/1780/ingredients_en.4.full.jpg"
       },
-      "off_ingredients_text": ""
+      "off_ingredients_text": "",
+      "photo_status": "replace",
+      "photo_issue": "Tub photo, ingredient list not readable"
     },
     {
       "id": "50-coffee-mate-original",
@@ -1223,11 +1294,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0050000301522",
-        "name": "Nestlé · Coffee mate the original powder coffee creamer",
+        "name": "Nestl\u00e9 \u00b7 Coffee mate the original powder coffee creamer",
         "page": "https://world.openfoodfacts.org/product/0050000301522",
         "image": "https://images.openfoodfacts.org/images/products/005/000/030/1522/ingredients_fr.10.full.jpg"
       },
-      "off_ingredients_text": ""
+      "off_ingredients_text": "",
+      "photo_status": "replace",
+      "photo_issue": "Front of bottle, no ingredient list"
     },
     {
       "id": "51-athletic-brewing-na",
@@ -1245,11 +1318,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0855352008071",
-        "name": "Athletic Brewing Co, Athletic Brewing Company · Upside Dawn",
+        "name": "Athletic Brewing Co, Athletic Brewing Company \u00b7 Upside Dawn",
         "page": "https://world.openfoodfacts.org/product/0855352008071",
         "image": "https://images.openfoodfacts.org/images/products/085/535/200/8071/ingredients_en.16.full.jpg"
       },
-      "off_ingredients_text": "Water, Malted Barley, Oats, Hops, Wheat, Yeast"
+      "off_ingredients_text": "Water, Malted Barley, Oats, Hops, Wheat, Yeast",
+      "photo_status": "ok"
     },
     {
       "id": "52-gts-kombucha",
@@ -1267,11 +1341,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0722430830162",
-        "name": "GT's · synergy raw kombucha",
+        "name": "GT's \u00b7 synergy raw kombucha",
         "page": "https://world.openfoodfacts.org/product/0722430830162",
         "image": "https://images.openfoodfacts.org/images/products/072/243/083/0162/ingredients_en.9.full.jpg"
       },
-      "off_ingredients_text": ""
+      "off_ingredients_text": "",
+      "photo_status": "ok"
     },
     {
       "id": "53-simply-orange-juice",
@@ -1291,11 +1366,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "3560070820542",
-        "name": "Carrefour Bio, Carrefour · 100% Pur jus Orange Sans pulpe",
+        "name": "Carrefour Bio, Carrefour \u00b7 100% Pur jus Orange Sans pulpe",
         "page": "https://world.openfoodfacts.org/product/3560070820542",
         "image": "https://images.openfoodfacts.org/images/products/356/007/082/0542/ingredients_fr.117.full.jpg"
       },
-      "off_ingredients_text": "100% pure leak pressed organic orange juice"
+      "off_ingredients_text": "100% pure leak pressed organic orange juice",
+      "photo_status": "replace",
+      "photo_issue": "Only a language line, no ingredients; French product"
     },
     {
       "id": "54-blurry-lacroix",
@@ -1313,12 +1390,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0012993101015",
-        "name": "Coconut Sparkling Water,  LaCroix · Naturally Essenced Coconut Sparkling Water",
+        "name": "Coconut Sparkling Water,  LaCroix \u00b7 Naturally Essenced Coconut Sparkling Water",
         "page": "https://world.openfoodfacts.org/product/0012993101015",
         "image": "https://images.openfoodfacts.org/images/products/001/299/310/1015/ingredients_fr.7.full.jpg",
         "derived_from": "01-lacroix-pamplemousse",
         "effect": "blur"
-      }
+      },
+      "photo_status": "ok"
     },
     {
       "id": "55-glare-coke-can",
@@ -1338,12 +1416,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "04918202",
-        "name": "Coca-Cola,  Coke · Coca-cola Coke - Classic",
+        "name": "Coca-Cola,  Coke \u00b7 Coca-cola Coke - Classic",
         "page": "https://world.openfoodfacts.org/product/04918202",
         "image": "https://images.openfoodfacts.org/images/products/04918202/ingredients_en.7.full.jpg",
         "derived_from": "17-coca-cola",
         "effect": "glare"
-      }
+      },
+      "photo_status": "ok"
     },
     {
       "id": "56-curved-gatorade",
@@ -1364,12 +1443,14 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0052000048179",
-        "name": "Gatorade · Gatorade thirst quencher",
+        "name": "Gatorade \u00b7 Gatorade thirst quencher",
         "page": "https://world.openfoodfacts.org/product/0052000048179",
         "image": "https://images.openfoodfacts.org/images/products/005/200/004/8179/ingredients_en.9.full.jpg",
         "derived_from": "21-gatorade-lemon-lime",
         "effect": "none"
-      }
+      },
+      "photo_status": "replace",
+      "photo_issue": "Same store-shelf photo as 21; take a real curved-bottle photo"
     },
     {
       "id": "57-dim-light-cereal",
@@ -1391,17 +1472,18 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0016000107472",
-        "name": "Cheerios · Honey Nut Cheerios",
+        "name": "Cheerios \u00b7 Honey Nut Cheerios",
         "page": "https://world.openfoodfacts.org/product/0016000107472",
         "image": "https://images.openfoodfacts.org/images/products/001/600/010/7472/ingredients_en.11.full.jpg",
         "derived_from": "35-honey-nut-cheerios",
         "effect": "dim"
-      }
+      },
+      "photo_status": "ok"
     },
     {
       "id": "58-nutrition-panel-only",
       "photo": "photos/58-nutrition-panel-only.jpg",
-      "product": "Any product: Nutrition Facts only, no ingredient list",
+      "product": "Malt-O-Meal Frosted Flakes: nutrition panel only",
       "category": "photo-quality",
       "tests": "Needs the ingredient list",
       "expected_verdict": "RETRY",
@@ -1414,11 +1496,12 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "0042400910787",
-        "name": "Malt O'Meal · Frosted Flakes Cereal",
+        "name": "Malt O'Meal \u00b7 Frosted Flakes Cereal",
         "page": "https://world.openfoodfacts.org/product/0042400910787",
         "image": "https://images.openfoodfacts.org/images/products/004/240/091/0787/nutrition_en.19.full.jpg"
       },
-      "off_ingredients_text": "Milled corn, sugar, contains 2% or less of: corn syrup, salt, barley malt extract, wheat starch. vitamins and minerals: ferric orthophosphate (source of iron), niacinamide (vitamin b3), zinc oxide (source of zinc), thiamin mononitrate (vitamin b1), calcium pantothenate (vitamin b5), pyridoxine hydrochloride (vitamin b6), folic acid."
+      "off_ingredients_text": "Milled corn, sugar, contains 2% or less of: corn syrup, salt, barley malt extract, wheat starch. vitamins and minerals: ferric orthophosphate (source of iron), niacinamide (vitamin b3), zinc oxide (source of zinc), thiamin mononitrate (vitamin b1), calcium pantothenate (vitamin b5), pyridoxine hydrochloride (vitamin b6), folic acid.",
+      "photo_status": "ok"
     },
     {
       "id": "59-not-food-shoe",
@@ -1431,7 +1514,9 @@
       "expected_added_sugars": [],
       "expected_sweeteners": [],
       "verified": false,
-      "notes": ""
+      "notes": "",
+      "photo_status": "missing",
+      "photo_issue": "Take any non-food object (shoe, keyboard)"
     },
     {
       "id": "60-non-english-label",
@@ -1449,11 +1534,13 @@
         "database": "Open Food Facts",
         "license": "CC BY-SA 3.0",
         "barcode": "370096130310",
-        "name": "Au comptoir de Mathilde · Pâte à tartiner",
+        "name": "Au comptoir de Mathilde \u00b7 P\u00e2te \u00e0 tartiner",
         "page": "https://world.openfoodfacts.org/product/370096130310",
         "image": "https://images.openfoodfacts.org/images/products/037/009/613/0310/ingredients_fr.3.full.jpg"
       },
-      "off_ingredients_text": ""
+      "off_ingredients_text": "",
+      "photo_status": "ok"
     }
-  ]
+  ],
+  "_photo_status": "ok = usable now; replace = take your own photo of this product (same file name); missing = not taken yet. Only verified=true AND photo_status=ok entries are scored."
 }

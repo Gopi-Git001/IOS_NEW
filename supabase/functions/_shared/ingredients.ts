@@ -87,7 +87,7 @@ export const REGISTRY: Entry[] = [
   added('corn_syrup', 'Corn syrup', ['corn syrup', 'corn syrup solids', 'glucose syrup', 'glucose syrup solids', 'dried glucose syrup', 'corn sweetener']),
   added('hfcs', 'High fructose corn syrup', ['high fructose corn syrup', 'hfcs', 'glucose-fructose syrup', 'glucose fructose syrup', 'glucose-fructose', 'fructose syrup', 'fructose-glucose syrup', 'isoglucose']),
   added('rice_syrup', 'Rice syrup', ['rice syrup', 'brown rice syrup', 'rice malt syrup', 'tapioca syrup', 'oat syrup', 'sorghum syrup', 'carob syrup', 'date syrup', 'fig syrup']),
-  added('malt_syrup', 'Malt syrup', ['malt syrup', 'barley malt syrup', 'barley malt extract', 'malt extract', 'malted barley extract', 'barley malt']),
+  added('malt_syrup', 'Malt syrup', ['malt syrup', 'barley malt syrup', 'barley malt extract', 'malt extract', 'malted barley extract']),
   added('juice_concentrate', 'Fruit juice concentrate', [
     'fruit juice concentrate', 'juice concentrate', 'concentrated fruit juice', 'concentrated juice', 'fruit juice concentrates',
   ], 'FDA counts juice concentrate used to sweeten as added sugar. Exception: 100% juice products.'),
@@ -206,6 +206,9 @@ export const REGISTRY: Entry[] = [
   plain('fats', 'Fats and oils', ['olive oil', 'extra virgin olive oil', 'canola oil', 'sunflower oil', 'high oleic sunflower oil', 'safflower oil', 'palm oil', 'palm kernel oil', 'coconut oil', 'vegetable oil', 'soybean oil', 'avocado oil', 'butter', 'cream', 'heavy cream', 'ghee', 'shortening']),
   plain('proteins', 'Proteins', ['egg', 'eggs', 'egg whites', 'egg yolks', 'whey protein isolate', 'whey protein concentrate', 'milk protein concentrate', 'milk protein isolate', 'casein', 'sodium caseinate', 'soy protein isolate', 'pea protein', 'pea protein isolate', 'rice protein', 'collagen', 'cheese', 'cheddar cheese', 'cultures', 'live and active cultures', 'live cultures', 'enzymes', 'rennet', 'yeast', 'nutritional yeast']),
   plain('grains_nuts', 'Grains, nuts and seeds', ['oats', 'rolled oats', 'whole grain oats', 'oat flour', 'wheat flour', 'enriched flour', 'enriched wheat flour', 'whole wheat flour', 'whole grain wheat', 'bleached flour', 'unbleached flour', 'rice', 'brown rice', 'rice flour', 'brown rice flour', 'corn flour', 'cornmeal', 'quinoa', 'barley', 'rye', 'almonds', 'almond butter', 'almond flour', 'peanuts', 'peanut butter', 'cashews', 'walnuts', 'pecans', 'hazelnuts', 'pistachios', 'sunflower seeds', 'pumpkin seeds', 'chia seeds', 'flax seeds', 'flaxseed', 'sesame seeds', 'hemp seeds', 'soybeans', 'chickpeas', 'black beans', 'lentils']),
+  { id: 'malted_barley', name: 'Malted barley', cls: 'non_sweet', labeling: 'not_counted_as_sugar', treatment: 'clean_ok',
+    aliases: ['malted barley', 'barley malt'],
+    note: 'The brewing grain, not a sugar. Malt syrup and malt extract made from it are added sugar.' },
 ];
 
 // ---- Lookup tables (built once) ----

@@ -47,7 +47,7 @@ sugarcane character reacts.
 - At the same time the `scan-label` Edge Function has Claude vision list the sugars by name, and
   the rules (`_shared/rules.ts`, staged pipeline documented in RULES.md) compute a backstop verdict.
 - The app fires both calls at once and keeps the loading state until BOTH have answered (or Jev's
-  6 s wait, `JEV_WAIT_MS` in `src/lib/scan.ts`, passes). It then shows one verdict and never changes it.
+  6 s wait, `JEV_WAIT_MS` in `src/lib/scanFlow.ts`, passes). It then shows one verdict and never changes it.
 - Jev's verdict wins. The rules verdict is used only when Jev is unavailable or its confidence is
   under 0.45 (`MIN_CONFIDENCE` in `_shared/jev.ts`), or when Jev says CLEAN but the reading found added sugar,
   an artificial sweetener or alcohol (safety floor, `src/lib/combine.ts`).

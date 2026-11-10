@@ -231,6 +231,8 @@ for (const it of ordered) {
   const file = path.join(DIR, it.photo);
   try {
     if (plan.kind === "manual") { summary.manual.push(`${it.id}: take this photo yourself (${it.tests})`); continue; }
+    // "replace" photos were wrong or private (43-oreo was a screenshot): never download them again, even with --force or --from-sources.
+    if (it.photo_status && it.photo_status !== "ok") { summary.manual.push(`${it.id}: take this photo yourself (${it.photo_issue || it.tests})`); continue; }
     if (!FORCE && (await exists(file))) { summary.ok.push(`${it.id} (already there)`); continue; }
 
     if (plan.variantOf) {
@@ -283,11 +285,20 @@ await fs.writeFile(LABELS, JSON.stringify(labels, null, 2) + "\n");
 
 const esc = (s) => String(s ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
 const list = (a) => (a && a.length ? a.join(", ") : "—");
+const TITLE = "# Review: check each photo, fix labels.json, set verified = true";
+const HEADER = "| id | photo | matched product | label text from database | expected verdict | natural | added | sweeteners |";
+// Keep the hand-written sections (e.g. "RE-CHECK AFTER RULE CHANGE") between the title and the table.
+const old = await fs.readFile(path.join(DIR, "review.md"), "utf8").catch(() => "");
+const allAt = old.search(/^## All items/m);
+const tableAt = allAt >= 0 ? allAt : old.search(/^\| id \|/m);
+const curated = tableAt > 0 ? old.slice(old.indexOf("\n") + 1, tableAt).trim() : "";
 const review = [
-  "# Review: check each photo, fix labels.json, set verified = true", "",
-  "| id | matched product | label text from database | expected verdict | natural | added | sweeteners |",
-  "|---|---|---|---|---|---|---|",
-  ...labels.items.map((it) => `| ${it.id} | ${esc(it.source?.name || it.source?.derived_from || "—")} | ${esc(it.off_ingredients_text || "—")} | ${it.expected_verdict ?? "DECIDE"} | ${esc(list(it.expected_natural_sugars))} | ${esc(list(it.expected_added_sugars))} | ${esc(list(it.expected_sweeteners))} |`),
+  TITLE, "",
+  ...(curated ? [curated, ""] : []),
+  "## All items", "",
+  HEADER,
+  "|---|---|---|---|---|---|---|---|",
+  ...labels.items.map((it) => `| ${it.id} | ${it.photo_status ?? "—"} | ${esc(it.source?.name || it.source?.derived_from || "—")} | ${esc(it.off_ingredients_text || "—")} | ${it.expected_verdict ?? "DECIDE"} | ${esc(list(it.expected_natural_sugars))} | ${esc(list(it.expected_added_sugars))} | ${esc(list(it.expected_sweeteners))} |`),
 ].join("\n");
 await fs.writeFile(path.join(DIR, "review.md"), review + "\n");
 

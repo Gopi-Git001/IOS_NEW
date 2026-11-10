@@ -68,10 +68,15 @@ Jev makes the final call from the photo (`_shared/jev.ts`, `src/lib/combine.ts`)
 | Single-strength juice, fruit puree | Naturally occurring | Not added | Allowed in CLEAN |
 | Lactose listed on its own | Added sugar | Added | Added sugar (grams decide) |
 | Milk, yogurt, whey | Naturally occurring | Not added | Allowed in CLEAN |
+| Malted barley, barley malt (the brewing grain) | Grain | Not sugar | Allowed in CLEAN |
+| Malt syrup, malt extract, barley malt syrup | Added sugar | Added | Added sugar (grams decide) |
+
+## Decided (Nov 9, 2026)
+
+- "Malted barley" / "barley malt" are the brewing grain, not sugar. "Malt syrup", "malt extract" and "barley malt syrup" are added sugar.
+- If the lists failed and the user taps Retry after Jev's CLEAN was shown, and the retried reading finds added sugar, the safety floor changes CLEAN to OKAY or BAD. Safety wins: this is the only case where a shown verdict changes.
 
 ## Open items (not decided; nothing invented)
 
 1. NHDC (E959) is grouped with the artificial sweeteners. This is an assumption.
-2. "Malted Barley" (and "malt" names in general) aren't in the registry, so "malt" reads as a possible sweetener: an NA beer listing malted barley comes out OKAY (O4), not CLEAN. Adding it is a registry decision for the user.
-3. Unknown ingredients with no sweet signal don't block CLEAN. They're listed in `unresolved` for transparency.
-4. If the lists failed and the user taps Retry after Jev's CLEAN was shown, and the retried reading finds added sugar, the safety floor changes CLEAN to OKAY or BAD. This is the only case where a shown verdict changes.
+2. Unknown ingredients with no sweet signal don't block CLEAN. They're listed in `unresolved` for transparency.
