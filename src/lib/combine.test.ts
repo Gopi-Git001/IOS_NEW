@@ -121,3 +121,17 @@ test('Jev says illegible but the reader read it: show the reading', () => {
   const u = combine({ status: 'unreadable', model: 'jev' }, reading, false);
   assert.equal(u?.status === 'done' && u.result.verdict, 'OKAY');
 });
+
+test('sugar stacking from the reading is kept whichever verdict shows, and absent when the reading failed', () => {
+  const sugarStacking = { distinct: 2, stacked: true, firstPosition: 2, firstNested: false, ingredientCount: 6 };
+  const stacked: ScanResult = { ...reading, addedSugars: ['Honey', 'Cane Sugar', '2 g added per serving'], sugarStacking };
+  for (const [j, verdict] of [[jev('BAD'), 'BAD'], [jev('CLEAN'), 'OKAY'], [null, 'OKAY']] as const) {
+    const u = combine(j, stacked, false, false, false, j === null);
+    if (u?.status !== 'done') throw new Error('expected done');
+    assert.equal(u.result.verdict, verdict);
+    assert.deepEqual(u.result.sugarStacking, sugarStacking);
+  }
+  const failed = combine(jev('BAD'), null, true);
+  if (failed?.status !== 'done') throw new Error('expected done');
+  assert.equal(failed.result.sugarStacking, undefined);
+});

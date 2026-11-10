@@ -24,5 +24,6 @@ export const placeholderResults: ScanResult[] = [
     naturalSugars: [],
     addedSugars: ['Sucrose', 'Glucose syrup', 'Fruit juice concentrate', '12 g added per serving'],
     sweeteners: ['Aspartame'],
+    sugarStacking: { distinct: 3, stacked: true, firstPosition: 2, firstNested: false, ingredientCount: 9 },
   },
 ];

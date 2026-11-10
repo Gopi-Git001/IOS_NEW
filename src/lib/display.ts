@@ -76,3 +76,21 @@ export function reasonLine(result: ScanResult) {
   const grams = result.addedSugars.map((s) => s.match(/^(\d+(?:\.\d+)?) g added per serving$/i)).find(Boolean);
   return grams ? `${result.headline} · ${grams[1]} g added per serving` : result.headline;
 }
+
+const wholeFrom1 = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 1;
+
+/**
+ * The "Sugar stacking" badge and the one line beside it: "3 different added sugars, first at ingredient 2 of 14",
+ * or just "First sugar at ingredient 2 of 14" when there is one. Null when the server sent no place or one that
+ * doesn't add up, so nothing is shown. A sub-ingredient in brackets reads "inside ingredient 1 of 3".
+ * Display only: it never changes the verdict.
+ */
+export function sugarStackingLine(result: ScanResult): { badge: string | null; line: string } | null {
+  const s = result.sugarStacking;
+  if (!s || !wholeFrom1(s.distinct) || !wholeFrom1(s.firstPosition) || !wholeFrom1(s.ingredientCount) || s.firstPosition > s.ingredientCount) return null;
+  const place = `${s.firstNested === true ? 'inside' : 'at'} ingredient ${s.firstPosition} of ${s.ingredientCount}`;
+  const stacked = s.stacked === true && s.distinct >= 2;
+  return stacked
+    ? { badge: 'Sugar stacking', line: `${s.distinct} different added sugars, first ${place}` }
+    : { badge: null, line: `First sugar ${place}` };
+}
