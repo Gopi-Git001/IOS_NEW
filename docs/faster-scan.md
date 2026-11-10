@@ -18,6 +18,15 @@ No deployments, remote writes, PRs or pushes are part of this change.
 - A shot locks auto-capture. The repeated lock inside `capture()` preserves the automatic shot's scene reference; a manual shot uses its latest sample instead. Only returning to the camera plus two frames differing from the captured scene by >18 luma can re-arm it, even when the new label is already visible on return. A fresh stable hold is then required.
 - Hidden tabs, open sheets and capture/scan work suspend sampling. Manual shutter remains available; native remains manual-only.
 
+## Main integration
+
+- Gopi's live camera implementation is the baseline: mounted beneath results, paused preview, release after 60 seconds or hiding the page, 1920x1440 constraints, remembered Android torch camera, torch-only constraints and confirmed torch support.
+- Prefer main's `uploadPlan` and direct-source canvas upload. The web camera encodes JPEG 0.85 once for upload; `preparePhoto` returns `photo.upload` without re-encoding, while native keeps its existing manipulator fallback.
+- Preserve main's lists Retry UI and `retryLists` callback. Streaming has the same 12-second client deadline and retryable network/5xx failures; a user retry calls only the legacy reader with the same prepared image and metadata, never Jev.
+- Both server endpoints use the shared reader with main's 10-second overall abort, one SDK retry, `reader_timeout`/`reader_unavailable` codes and up-front Claude-start log. Capture metadata remains logged as main's allowlisted `client_*` fields.
+- Auto-capture re-arming now follows the camera becoming active again instead of assuming it remounts. Manual shutter locking and captured-scene references remain unchanged.
+- Production timing remains narrowly allowlisted, including one-pass `encode_ms` and the torch-on `frame` capture path; camera labels stay out of the production timing payload.
+
 ## Deployment input
 
 The existing `supabase/config.toml` entry maps slug `quickgob-scan` to:
@@ -41,10 +50,10 @@ The legacy reader only needs redeployment if adopting the extracted source there
 
 ## Verification
 
-Local gates passed: `npm run test:rules` (159 tests), `npx tsc --noEmit`, `npm run build:web`.
+Local gates passed: `npm run test:rules` (171 tests), all repository `*.test.ts` files (179 tests across 15 files), `npx tsc --noEmit`, `npm run build:web`.
 Deno 2.9.8 passed all five entrypoints using `deno check --config supabase/functions/<name>/deno.json --lock supabase/functions/<name>/deno.lock --frozen-lockfile supabase/functions/<name>/index.ts`.
 The existing root lock fails frozen validation due to stale workspace metadata and a missing direct Supabase specifier; it was not rewritten.
-Unit coverage includes chunked UTF-8, immediate Jev delivery, error outcomes, whole-body fallback, capture/re-arm including automatic and manual repeated locks, mixed-client model quotas, denied-hit accounting and trace privacy.
+Unit coverage includes chunked UTF-8, immediate Jev delivery, whole-body fallback, stream deadline/late-event suppression, lists Retry without another Jev call, 404-only legacy fallback, negative Jev awaiting the reader, capture/re-arm including automatic and manual repeated locks, mixed-client model quotas, denied-hit accounting and trace privacy.
 
 Still needs an approved deployed test: gateway CORS/JWT behavior, actual incremental delivery, warm-up effectiveness, quota sharing, and receipt of the production timing line.
 Still needs real phones: focus thresholds, scene-change sensitivity, hidden-tab behavior, manual override, Android still capture and iOS Safari fallback.

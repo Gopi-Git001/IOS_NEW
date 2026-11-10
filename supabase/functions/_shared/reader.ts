@@ -4,7 +4,9 @@ import { env } from './env.ts';
 import { decide, type LiteralLabel } from './rules.ts';
 import type { Timer } from './timing.ts';
 
-const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY') });
+// Preserve the live reader's 10-second overall deadline and one SDK retry.
+const CLAUDE_DEADLINE_MS = 10_000;
+const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY'), timeout: CLAUDE_DEADLINE_MS, maxRetries: 1 });
 
 // Override with the CLAUDE_MODEL secret, e.g. a faster model if the lists feel slow.
 const CLAUDE_MODEL = env('CLAUDE_MODEL') ?? 'claude-opus-5-5';
@@ -51,6 +53,7 @@ export async function readLabel(image: string, timer: Timer) {
   const json = (body: Record<string, unknown>, status = 200) => ({ body, status });
   let reading: LiteralLabel;
   timer.mark('claude_start');
+  console.log(JSON.stringify({ event: 'scan_label_claude_start', scan_id: timer.snapshot().scan_id }));
   try {
     const response = await anthropic.beta.messages.create({
       model: CLAUDE_MODEL,
@@ -69,7 +72,7 @@ export async function readLabel(image: string, timer: Timer) {
           ],
         },
       ],
-    });
+    }, { signal: AbortSignal.timeout(CLAUDE_DEADLINE_MS) });
     timer.mark('claude_end');
     timer.set({
       claude_model: response.model,
@@ -87,7 +90,8 @@ export async function readLabel(image: string, timer: Timer) {
     timer.mark('claude_end');
     timer.set({ claude_error: err instanceof Error ? err.message.slice(0, 200) : String(err) });
     console.error('label reading failed', err);
-    return json({ error: 'The label reader is unavailable. Try again in a moment.' }, 502);
+    const timedOut = err instanceof Error && /abort|timeout/i.test(`${err.name} ${err.message}`);
+    return json({ error: 'The label reader is unavailable. Try again in a moment.', code: timedOut ? 'reader_timeout' : 'reader_unavailable' }, timedOut ? 504 : 502);
   }
 
   if (!reading.is_food_label) {

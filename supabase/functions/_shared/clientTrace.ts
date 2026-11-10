@@ -3,7 +3,7 @@ const marks = ['tap', 'still_attempt_done', 'captured', 'prepared', 'upload_star
 export function clientTrace(value: unknown): Record<string, unknown> {
   const input = value && typeof value === 'object' ? value as Record<string, unknown> : {};
   const out: Record<string, unknown> = {};
-  for (const key of [...marks, 'image_kb']) {
+  for (const key of [...marks, 'image_kb', 'encode_ms']) {
     const n = input[key];
     if (typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 3_600_000) out[key] = Math.round(n);
   }
@@ -12,7 +12,7 @@ export function clientTrace(value: unknown): Record<string, unknown> {
   }
   const enums: Record<string, string[]> = {
     platform: ['web', 'ios', 'android'],
-    capture_path: ['still', 'burst', 'native'],
+    capture_path: ['still', 'burst', 'frame', 'native'],
     network: ['bluetooth', 'cellular', 'ethernet', 'wifi', 'wimax', 'other', 'unknown', 'slow-2g', '2g', '3g', '4g'],
   };
   for (const [key, allowed] of Object.entries(enums)) if (allowed.includes(input[key] as string)) out[key] = input[key];

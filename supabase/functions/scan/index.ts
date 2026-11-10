@@ -4,7 +4,7 @@ import { allowScan, intSetting, isJpegBase64, tooMany } from '../_shared/guard.t
 import { askJev } from '../_shared/jev.ts';
 import { readLabel } from '../_shared/reader.ts';
 import { env } from '../_shared/env.ts';
-import { imageKb, requestTimer, timed } from '../_shared/timing.ts';
+import { clientFields, imageKb, requestTimer, timed } from '../_shared/timing.ts';
 import { clientTrace } from '../_shared/clientTrace.ts';
 
 export default {
@@ -28,6 +28,7 @@ export default {
     const image = body.image;
     if (!isJpegBase64(image)) return Response.json({ error: 'Send a JPEG photo as base64 in "image"' }, { status: 400 });
     if (typeof body.scan_id === 'string') timer.set({ scan_id: body.scan_id.slice(0, 32) });
+    timer.set(clientFields(body.client));
     timer.set({ image_kb: imageKb(image) });
     // Each model shares its legacy allowance, preventing extra paid calls via mixed clients.
     if (!await allowScan(ctx.supabaseAdmin, userId, intSetting('SCAN_DAILY_LIMIT', 100))) return tooMany();
@@ -41,7 +42,7 @@ export default {
         };
         // Start the reader now, but always emit Jev first even if the reader wins.
         const reading = readLabel(image, timer).catch(() => ({
-          body: { error: 'The label reader is unavailable. Try again in a moment.' },
+          body: { error: 'The label reader is unavailable. Try again in a moment.', code: 'reader_unavailable' },
           status: 502,
         }));
         timer.mark('jev_start');

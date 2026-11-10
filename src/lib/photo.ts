@@ -6,20 +6,47 @@ export type Rect = { x: number; y: number; width: number; height: number };
 /** The guide box in view pixels, plus the size of the camera view it sits on. */
 export type ViewBox = { x: number; y: number; width: number; height: number; viewWidth: number; viewHeight: number };
 
-/** A captured photo. `crop` is the guide box (with a margin) on the photo, when it is known. */
-export type Photo = { uri: string; width: number; height: number; crop?: Rect };
+/** How a photo was taken (camera, stream size, torch…), sent with the scan for the server logs. */
+export type CaptureMeta = Record<string, string | number | boolean>;
+
+/**
+ * A captured photo. `crop` is the guide box (with a margin) on the photo, when it is known.
+ * `upload`, when set, is the ready-to-send base64 JPEG (the web camera encodes it at capture).
+ */
+export type Photo = { uri: string; width: number; height: number; crop?: Rect; upload?: string; meta?: CaptureMeta };
 
 export type LabelCameraHandle = { capture: () => Promise<Photo> };
 
 export type LabelCameraProps = {
   torch: boolean;
   box: ViewBox | null;
-  onReady: () => void;
+  /** False while a result covers the camera: the preview pauses (web) or closes (phones). */
+  active: boolean;
+  onReadyChange: (ready: boolean) => void;
+  /** Whether the running camera can light its torch; re-reported for every new camera stream. */
+  onTorchSupport: (supported: boolean) => void;
+  /** The torch was asked for but didn't come on. */
+  onTorchFailed: () => void;
   /** Web only. Native keeps the manual shutter. */
   autoCapture?: boolean;
   onAutoCapture?: () => void;
   ref?: Ref<LabelCameraHandle>;
 };
+
+/** Jev rejects any side over 1568 px or under 280 px. */
+export const UPLOAD_MAX_SIDE = 1568;
+export const UPLOAD_MIN_SIDE = 280;
+
+/**
+ * Which part of a `width`×`height` frame to upload and at what size: the guide box (with its margin)
+ * when it is big enough, else the whole frame, shrunk so the longest side is at most 1568 px.
+ */
+export function uploadPlan(width: number, height: number, region: Rect | null) {
+  const box = region && toPixels(withMargin(region, CROP_MARGIN), width, height);
+  const src = box && Math.min(box.width, box.height) >= UPLOAD_MIN_SIDE ? box : { originX: 0, originY: 0, width, height };
+  const scale = Math.min(1, UPLOAD_MAX_SIDE / Math.max(src.width, src.height));
+  return { src, width: Math.round(src.width * scale), height: Math.round(src.height * scale), cropped: src === box };
+}
 
 /** Thrown by `capture()` when the photo is too soft to read; the next tap is accepted anyway. */
 export class BlurryPhotoError extends Error {}

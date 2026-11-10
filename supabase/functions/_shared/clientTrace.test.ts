@@ -17,4 +17,5 @@ test('production trace keeps technical timings and strips identifiers and free t
 test('trace rejects invalid values, nested fields and arbitrary technical strings', () => {
   assert.deepEqual(clientTrace({ captured: -1, prepared: Infinity, image_kb: 'no', network: 'private', platform: 'account', photo_px: 'private', tap: NaN }), {});
   assert.deepEqual(clientTrace(null), {});
+  assert.deepEqual(clientTrace({ capture_path: 'frame', encode_ms: 20, camera: 'device-id' }), { encode_ms: 20, capture_path: 'frame' });
 });
