@@ -1,6 +1,7 @@
 // Links shown in Menu → About.
 // TODO: replace these placeholders with the real pages, email and store listings before release.
 export const links = {
+  website: 'https://sugardepth.com',
   howItWorks: 'https://sugardepth.com/how-it-works',
   privacy: 'https://sugardepth.com/privacy',
   terms: 'https://sugardepth.com/terms',

@@ -48,7 +48,7 @@ export type MarkState = 'idle' | 'scanning' | Verdict;
 
 const MARK_GLOW: Record<Verdict, string> = { CLEAN: colors.clean, OKAY: colors.okay, BAD: colors.bad };
 
-function useReducedMotion() {
+export function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduced).catch(() => {});

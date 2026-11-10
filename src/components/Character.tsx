@@ -16,6 +16,15 @@ const images = {
 
 export type Mood = keyof typeof images;
 
+/**
+ * full: drop in, mood loop and glint (default). planted: same, but the feet never leave the ground
+ * (for standing on a button). still: the first frame, nothing moves (reduce motion).
+ */
+export type Motion = 'full' | 'planted' | 'still';
+
+/** Where the bottom of the shoes sits in every cube image (594 of 600 px). Below it is transparent. */
+export const MASCOT_FEET_RATIO = 0.99;
+
 // Where the cube's top-left corner sits in each image (fraction of the size), for the glint.
 const corner: Record<Mood, [number, number]> = {
   idle: [0.15, 0.05],
@@ -41,7 +50,11 @@ type Values = { y: Animated.Value; sx: Animated.Value; sy: Animated.Value; r: An
 const squash = (v: Values, k: number, d: number, easing = ease) =>
   Animated.parallel([t(v.sy, k, d, easing), t(v.sx, 2 - k, d, easing)]);
 
-function moodLoop(mood: Mood, v: Values) {
+function moodLoop(mood: Mood, v: Values, planted: boolean) {
+  if (planted) {
+    // Breathing in place: squash/stretch from the feet, no lift.
+    return Animated.loop(Animated.sequence([squash(v, 1.025, 1300), squash(v, 1, 1300)]));
+  }
   switch (mood) {
     case 'clean': // happy hops: crouch, stretch up, land with a squash
       return Animated.loop(
@@ -93,7 +106,7 @@ function moodLoop(mood: Mood, v: Values) {
   }
 }
 
-function useCube(mood: Mood) {
+function useCube(mood: Mood, motion: Motion) {
   const v = useRef({
     enter: new Animated.Value(0),
     glint: new Animated.Value(0),
@@ -107,7 +120,11 @@ function useCube(mood: Mood) {
   useEffect(() => {
     [v.y, v.r, v.x, v.enter, v.glint].forEach((a) => a.setValue(0));
     [v.sx, v.sy].forEach((a) => a.setValue(1));
-    const loop = moodLoop(mood, v);
+    if (motion === 'still') {
+      v.enter.setValue(1);
+      return;
+    }
+    const loop = moodLoop(mood, v, motion === 'planted');
     const intro = Animated.spring(v.enter, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true });
     const glint = Animated.loop(Animated.sequence([wait(1400), t(v.glint, 1, 260), t(v.glint, 0, 420), wait(900)]));
     intro.start(() => loop.start());
@@ -117,7 +134,7 @@ function useCube(mood: Mood) {
       loop.stop();
       glint.stop();
     };
-  }, [mood, v]);
+  }, [mood, motion, v]);
 
   // Drop in from above, landing with a little squash from the spring overshoot.
   const dropY = v.enter.interpolate({ inputRange: [0, 1], outputRange: [-60, 0] });
@@ -139,15 +156,17 @@ function useCube(mood: Mood) {
 }
 
 /** Standalone character (sign-in screen and anywhere it isn't pinned to a corner). */
-export function CharacterView({ mood, size }: { mood: Mood; size: number }) {
-  const { body, shadow, glint, opacity } = useCube(mood);
+export function CharacterView({ mood, size, motion = 'full', shadow: withShadow = true }: { mood: Mood; size: number; motion?: Motion; shadow?: boolean }) {
+  const { body, shadow, glint, opacity } = useCube(mood, motion);
+  // The glint is 18 px; it shrinks only on a small cube (under 113 px), so larger ones are unchanged.
+  const g = Math.min(18, size * 0.16);
   return (
     <View style={{ width: size, height: size }}>
-      <Animated.View style={[styles.shadow, { width: size * 0.5, left: size * 0.25, bottom: size * 0.02 }, shadow]} />
+      {withShadow && <Animated.View style={[styles.shadow, { width: size * 0.5, left: size * 0.25, bottom: size * 0.02 }, shadow]} />}
       <Animated.View style={{ width: size, height: size, opacity, transform: body, transformOrigin: 'bottom' }}>
         <Animated.Image source={images[mood]} resizeMode="contain" style={{ width: size, height: size }} />
-        <Animated.View style={[styles.glint, { left: size * corner[mood][0] - 9, top: size * corner[mood][1] - 9 }, glint]}>
-          <Svg width={18} height={18} viewBox="0 0 24 24">
+        <Animated.View style={[styles.glint, { left: size * corner[mood][0] - g / 2, top: size * corner[mood][1] - g / 2 }, glint]}>
+          <Svg width={g} height={g} viewBox="0 0 24 24">
             <Path d="M12 0c.6 6 1.9 9.4 12 12-10.1 2.6-11.4 6-12 12-.6-6-1.9-9.4-12-12C10.1 9.4 11.4 6 12 0z" fill="#FFFFFF" />
           </Svg>
         </Animated.View>

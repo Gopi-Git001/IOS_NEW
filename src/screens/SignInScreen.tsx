@@ -1,16 +1,67 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Linking, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { CharacterView } from '../components/Character';
-import { Ambient, Footer, Header } from '../components/Chrome';
+import { CharacterView, MASCOT_FEET_RATIO } from '../components/Character';
+import { Ambient, Footer, useReducedMotion } from '../components/Chrome';
+import { links } from '../config';
 import { signInWithGoogle, takeAuthRedirectError } from '../lib/api';
+import { notify } from '../lib/confirm';
 import { colors, fonts, frost } from '../theme';
+
+// Option A layout (docs/design/signin-option-a-*.png). Wide = laptop, narrow = phones and tablets.
+const WIDE_FROM = 900;
+// The cube's head starts 2.3% down its image; the big name's letters end this far above the head.
+const HEAD_RATIO = 0.023;
+const NAME_GAP = 12;
+// How far the "p" of "Depth" hangs below the text line, per px of font size (Libre Franklin 800).
+const DESCENDER = { wide: 0.04, narrow: 0.075 };
+// The big mascot is drawn in a box this many times as tall as it is wide (the cube fits the height).
+const MASCOT_BOX_ASPECT = 0.71;
+
+function layout(width: number, height: number, topInset: number) {
+  const wide = width >= WIDE_FROM;
+  const side = wide ? 30 : 20;
+  const buttonHeight = wide ? 72 : 60;
+  const buttonTop = topInset + height * (wide ? 560 / 900 : 470 / 844);
+  const small = wide ? { left: 20, top: 12, width: 84, height: 64 } : { left: 12, top: 12, width: 68, height: 52 };
+
+  const fontSize = wide ? Math.min(width * 0.145, 210) : Math.min(width * 0.246, 96);
+  const lineHeight = wide ? 1 : 0.92;
+  const nameHeight = fontSize * lineHeight * (wide ? 1 : 2);
+  const cube = (wide ? 290 : Math.min(width * (240 / 390), 290)) * MASCOT_BOX_ASPECT;
+
+  // On short screens, shrink the name and the mascot together so they fit between the small mascot and the button.
+  const room = buttonTop - (topInset + small.top + small.height + 8);
+  const descender = fontSize * (wide ? DESCENDER.wide : DESCENDER.narrow);
+  const needed = nameHeight + descender + NAME_GAP + cube * (MASCOT_FEET_RATIO - HEAD_RATIO);
+  const s = Math.min(1, room / needed);
+
+  const cubeSize = cube * s;
+  const cubeTop = buttonTop - cubeSize * MASCOT_FEET_RATIO; // the shoes land on the button's top edge
+  const nameBottom = cubeTop + cubeSize * HEAD_RATIO - (NAME_GAP + descender) * s;
+  return {
+    wide,
+    side,
+    buttonHeight,
+    buttonTop,
+    small,
+    cubeSize,
+    cubeTop,
+    nameBottom,
+    name: { fontSize: fontSize * s, lineHeight: fontSize * s * lineHeight, letterSpacing: -0.04 * fontSize * s },
+    finePrintGap: wide ? 24 : 18,
+  };
+}
 
 /** Google sign-in only (free through Supabase Auth). Supabase creates the account on first sign-in. */
 export function SignInScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
+  const L = layout(width, height - insets.top - insets.bottom, insets.top);
 
   // Coming back from Google with an error (for example, the person pressed Cancel).
   useEffect(() => setError(takeAuthRedirectError()), []);
@@ -27,22 +78,54 @@ export function SignInScreen() {
   return (
     <View style={styles.root}>
       <Ambient />
-      <SafeAreaView style={styles.fill}>
-        <Header ink />
-        <View style={styles.body}>
-          <View style={styles.character}>
-            <CharacterView mood="idle" size={170} />
-          </View>
-          <Text style={styles.title}>Sign in to start scanning</Text>
-          <View style={styles.titleRule} />
-          <Text style={styles.subtitle}>Use your Google account. No password, no texts.</Text>
-          <GoogleButton onPress={start} busy={busy} />
-          <Text style={styles.fineprint}>We only get your name and email from Google.</Text>
-          {error && <Text style={styles.error}>{error}</Text>}
-        </View>
+      <Text accessibilityRole="header" style={styles.srOnly}>
+        Sugar Depth sign in
+      </Text>
+
+      <SmallMascot box={{ ...L.small, top: insets.top + L.small.top, left: insets.left + L.small.left }} still={reduced} />
+
+      <Text
+        testID="signin-name"
+        aria-hidden
+        style={[styles.name, L.name, { bottom: height - L.nameBottom }]}
+      >
+        {L.wide ? 'Sugar Depth' : 'Sugar\nDepth'}
+      </Text>
+
+      <View style={[styles.buttonSlot, { top: L.buttonTop, left: L.side, right: L.side }]}>
+        <GoogleButton onPress={start} busy={busy} height={L.buttonHeight} />
+        <Text style={[styles.fineprint, { marginTop: L.finePrintGap }]}>We only get your name and email from Google.</Text>
+        {error && <Text style={styles.error}>{error}</Text>}
+      </View>
+
+      {/* In front of the button but never in the way of a tap. */}
+      <View testID="signin-mascot" pointerEvents="none" style={[styles.bigMascot, { top: L.cubeTop, left: (width - L.cubeSize) / 2 }]}>
+        <CharacterView mood="idle" size={L.cubeSize} motion={reduced ? 'still' : 'planted'} shadow={false} />
+      </View>
+
+      <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
         <Footer ink />
-      </SafeAreaView>
+      </View>
     </View>
+  );
+}
+
+/** The small mascot at the top-left: a link to sugardepth.com (new tab on the web, the browser on phones). */
+function SmallMascot({ box, still }: { box: { left: number; top: number; width: number; height: number }; still: boolean }) {
+  const web = Platform.OS === 'web';
+  const open = () => Linking.openURL(links.website).catch(() => notify("Couldn't open link", links.website));
+  // react-native-web renders href/hrefAttrs as an anchor; they aren't in React Native's types.
+  const anchor = web ? ({ href: links.website, hrefAttrs: { target: '_blank', rel: 'noopener' } } as object) : {};
+  return (
+    <Pressable
+      {...anchor}
+      onPress={web ? undefined : open}
+      accessibilityRole="link"
+      accessibilityLabel="Sugar Depth website"
+      style={({ pressed }) => [styles.smallMascot, box, pressed && styles.smallPressed]}
+    >
+      <CharacterView mood="idle" size={box.height} motion={still ? 'still' : 'full'} shadow={false} />
+    </Pressable>
   );
 }
 
@@ -57,14 +140,14 @@ function GoogleMark() {
   );
 }
 
-function GoogleButton({ onPress, busy }: { onPress: () => void; busy: boolean }) {
+function GoogleButton({ onPress, busy, height }: { onPress: () => void; busy: boolean; height: number }) {
   return (
     <Pressable
       onPress={onPress}
       disabled={busy}
       accessibilityRole="button"
       accessibilityLabel="Continue with Google"
-      style={({ pressed }) => [styles.button, busy && styles.buttonDisabled, pressed && styles.buttonPressed]}
+      style={({ pressed }) => [styles.button, { height, borderRadius: height / 2 }, busy && styles.buttonDisabled, pressed && styles.buttonPressed]}
     >
       {busy ? (
         <ActivityIndicator color={colors.onInk} />
@@ -79,40 +162,33 @@ function GoogleButton({ onPress, busy }: { onPress: () => void; busy: boolean })
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.paper },
-  fill: { flex: 1 },
-  body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 12 },
-  character: { alignSelf: 'center', marginBottom: 4 },
-  title: { fontFamily: fonts.black, fontSize: 30, lineHeight: 33, letterSpacing: -1.1, color: colors.ink },
-  titleRule: { height: 2, borderRadius: 1, backgroundColor: colors.rule, marginTop: -4 },
-  subtitle: { fontFamily: fonts.serif, fontSize: 18, lineHeight: 24, color: colors.inkMuted, marginBottom: 6 },
-  input: {
-    height: 58,
-    borderRadius: 16,
-    ...frost(20),
-    backgroundColor: colors.paperRaised,
-    paddingHorizontal: 18,
-    fontFamily: fonts.semibold,
-    fontSize: 19,
-    color: colors.ink,
+  // Clip the ambient glows (they hang past the edges) so the page never scrolls.
+  root: { flex: 1, backgroundColor: colors.paper, overflow: 'hidden' },
+  srOnly: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
+  smallMascot: { position: 'absolute', zIndex: 3, alignItems: 'center', justifyContent: 'center', minWidth: 44, minHeight: 44 },
+  smallPressed: { opacity: 0.8 },
+  // See-through wordmark: the app's heavy Libre Franklin at 800, 20% of the paper white.
+  name: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontFamily: fonts.extrabold,
+    color: 'rgba(244,241,234,0.2)',
   },
-  codeInput: { textAlign: 'center', letterSpacing: 10, fontSize: 24 },
+  buttonSlot: { position: 'absolute', zIndex: 1 },
+  bigMascot: { position: 'absolute', zIndex: 2 },
+  footer: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   button: {
-    height: 58,
-    borderRadius: 29,
     backgroundColor: 'rgba(244,246,251,0.92)',
     ...frost(16),
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
   },
   buttonDisabled: { opacity: 0.35 },
   buttonPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   buttonRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  fineprint: { fontFamily: fonts.semibold, fontSize: 13, color: colors.inkMuted, textAlign: 'center', marginTop: 2 },
+  fineprint: { fontFamily: fonts.semibold, fontSize: 13, color: colors.inkMuted, textAlign: 'center' },
   buttonText: { fontFamily: fonts.bold, fontSize: 18, color: colors.onInk },
-  links: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 6, marginTop: 4 },
-  link: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },
-  linkDisabled: { color: colors.inkFaint, textDecorationLine: 'none' },
-  error: { fontFamily: fonts.semibold, fontSize: 14, color: colors.bad },
+  error: { fontFamily: fonts.semibold, fontSize: 14, color: colors.bad, textAlign: 'center', marginTop: 8 },
 });
