@@ -113,15 +113,6 @@ a { text-decoration-color: var(--rule); }
   .verdict-card ul { font-size: 15px; }
 }
 @media (max-width: 640px) {
-  /* Two balanced rows, in DOM order, with no orphan or horizontal nav scroll. */
-  .site-header { position: static; }
-  .site-header .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; padding-block: 8px; }
-  .site-header .wordmark { display: inline-flex; min-height: 44px; align-items: center; justify-self: start; }
-  .header-cta { margin-left: 0; }
-  .header-cta .btn { padding-inline: 14px; }
-  .nav { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); width: 100%; margin: 0; overflow: visible; gap: 0; padding: 0; }
-  .nav a { grid-column: span 2; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 4px; font-size: 12px; line-height: 1.5; text-align: center; white-space: normal; }
-  .nav a:nth-last-child(-n + 2) { grid-column: span 3; }
   /* Keep the decorative cube in flow, beside the button, not in a 120px void. */
   .cta-band:not(.cta-editorial) { display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 20px 12px; padding: 24px 20px; }
   .cta-band:not(.cta-editorial) > div { grid-column: 1 / -1; }
@@ -136,7 +127,7 @@ a { text-decoration-color: var(--rule); }
   .disguises .reveal-word { text-align: left; }
 }
 @media (max-height: 480px) and (orientation: landscape) {
-  .site-header { position: static; }
+  .site-header { position: sticky; top: 0; }
 }
 @media (max-width: 600px) {
   /* Retain explicit table/row/cell roles and native headers associations while
@@ -190,4 +181,220 @@ a { text-decoration-color: var(--rule); }
   .cta-editorial > .editorial-image img { min-height: 0; height: 190px; }
   .cta-editorial > div { padding: 24px 24px 0; }
   .cta-editorial > .btn { grid-column: 1; margin: 24px 24px 0; }
+}
+@media (max-width: 640px) {
+  .crystal-slab-label,
+  .verdict-card .mini-slab span,
+  .facts-verdict .mini-slab span { font-size: 11px; }
+  .crystal-eyebrow,
+  .crystal-controls label,
+  .editorial-frame figcaption,
+  .scan-example figcaption { font-size: 13px; }
+  .verdict-card ul,
+  .facts-table,
+  .facts-table td,
+  .facts-table th,
+  .facts-table caption { font-size: 16px; }
+  .facts-table .table-label { font-size: 13px; }
+  .facts-table a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .label-figure .editorial-image,
+  .steps-film > .editorial-image {
+    aspect-ratio: auto;
+    height: auto;
+    overflow: visible;
+  }
+  .label-figure img,
+  .steps-film > .editorial-image img,
+  .cta-editorial > .editorial-image img {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    object-fit: contain;
+    object-position: center;
+  }
+}
+
+/* Phone header. Hidden on laptop so the desktop bar is unchanged. */
+.nav-menu { display: none; }
+@media (max-width: 900px) {
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: rgba(244,242,235,.88);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    border-bottom: 1px solid var(--hair);
+  }
+  .site-header:has(.nav-menu[open]) {
+    background: rgb(244, 242, 235);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .site-header .wrap {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    min-height: 60px;
+    padding-block: 8px;
+  }
+  .site-header .wordmark {
+    font-size: 1.05rem;
+    min-height: 44px;
+    margin-right: auto;
+    color: var(--ink);
+  }
+  .site-header .nav { display: none; }
+  .header-cta.btn.sm {
+    margin-left: 0;
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 8px 12px;
+    gap: 6px;
+    font-size: 14px;
+  }
+  .nav-menu {
+    display: block;
+    position: static;
+    flex: 0 0 auto;
+  }
+  .nav-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1;
+    list-style: none;
+    cursor: pointer;
+  }
+  .nav-menu-button::-webkit-details-marker { display: none; }
+  .nav-menu-button::marker { content: ''; }
+  .nav-menu[open] .nav-menu-button { color: var(--ink); }
+  .nav-menu-icon { font-size: 18px; line-height: 1; }
+  .nav-menu-closed,
+  .nav-menu-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    z-index: 3;
+    white-space: nowrap;
+  }
+  .nav-menu-open { display: none; }
+  .nav-menu[open] .nav-menu-closed { display: none; }
+  .nav-menu[open] .nav-menu-open { display: inline-flex; }
+  /* Sized against the sticky header (absolute), so the dim starts under the bar
+     even when backdrop-filter would otherwise trap a fixed box. A tap hits the
+     summary and closes the menu. */
+  .nav-backdrop { display: none; }
+  .nav-menu[open] .nav-backdrop {
+    display: block;
+    position: absolute;
+    z-index: 1;
+    left: 0;
+    width: 100%;
+    top: 100%;
+    height: 100vh;
+    height: 100dvh;
+    background: rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+  }
+  .nav-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0 0 16px;
+    background: rgb(244, 242, 235);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: 0 12px 28px rgba(20, 22, 19, 0.12);
+  }
+  .nav-panel nav {
+    display: flex;
+    flex-direction: column;
+  }
+  .nav-panel nav a {
+    position: relative;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 52px;
+    padding: 0 clamp(20px, 4vw, 40px);
+    border-radius: 0;
+    text-decoration: none;
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--muted);
+    background: transparent;
+  }
+  .nav-panel nav a + a {
+    border-top: 1px solid rgba(20, 22, 19, 0.12);
+  }
+  .nav-panel nav a[aria-current='page'] {
+    color: var(--ink);
+    font-weight: 800;
+    background: transparent;
+  }
+  .nav-panel nav a[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    left: clamp(20px, 4vw, 40px);
+    bottom: 10px;
+    width: 22px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--ink);
+  }
+  .nav-menu-button:focus-visible,
+  .nav-panel a:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+  .nav-menu[open] .nav-panel {
+    animation: nav-panel-in 150ms var(--ease-out);
+  }
+  .nav-menu[open] .nav-backdrop {
+    animation: nav-backdrop-in 150ms var(--ease-out);
+  }
+}
+@keyframes nav-panel-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes nav-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (max-width: 360px) {
+  .site-header .wrap { padding-inline: 12px; gap: 6px; }
+  .site-header .wordmark { font-size: 1rem; }
+  .header-cta.btn.sm { padding-inline: 8px; font-size: 13px; gap: 4px; }
+  .nav-menu-button { padding-inline: 8px; }
+  .nav-panel nav a { padding-inline: 12px; }
+  .nav-panel nav a[aria-current='page']::before { left: 12px; }
 }

@@ -17,5 +17,17 @@ const isCurrent = (href: string) => (href === '/ingredients' ? path.startsWith('
       {links.map((l) => <a href={l.href} aria-current={isCurrent(l.href) ? 'page' : undefined}>{l.label}</a>)}
     </nav>
     <a class="btn sm primary header-cta" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
+    <details class="nav-menu">
+      <summary class="nav-menu-button">
+        <span class="nav-backdrop" aria-hidden="true"></span>
+        <span class="nav-menu-closed"><span class="nav-menu-icon" aria-hidden="true">☰</span> Menu</span>
+        <span class="nav-menu-open"><span class="nav-menu-icon" aria-hidden="true">✕</span> Close</span>
+      </summary>
+      <div class="nav-panel">
+        <nav aria-label="Main">
+          {links.map((l) => <a href={l.href} aria-current={isCurrent(l.href) ? 'page' : undefined}>{l.label}</a>)}
+        </nav>
+      </div>
+    </details>
   </div>
 </header>
