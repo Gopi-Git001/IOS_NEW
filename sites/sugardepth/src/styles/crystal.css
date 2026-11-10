@@ -227,7 +227,10 @@ a { text-decoration-color: var(--rule); }
     position: sticky;
     top: 0;
     z-index: 30;
-    background: #06080d;
+    background: rgba(244,242,235,.88);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    border-bottom: 1px solid var(--hair);
   }
   .site-header .wrap {
     display: flex;
@@ -241,6 +244,7 @@ a { text-decoration-color: var(--rule); }
     font-size: 1.05rem;
     min-height: 44px;
     margin-right: auto;
+    color: var(--ink);
   }
   .site-header .nav { display: none; }
   .header-cta.btn.sm {
@@ -256,16 +260,28 @@ a { text-decoration-color: var(--rule); }
     position: static;
     flex: 0 0 auto;
   }
-  .nav-menu-button.btn.sm {
-    list-style: none;
+  .nav-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     min-height: 44px;
     min-width: 44px;
-    padding: 8px 12px;
-    gap: 6px;
-    font-size: 14px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1;
+    list-style: none;
+    cursor: pointer;
   }
   .nav-menu-button::-webkit-details-marker { display: none; }
   .nav-menu-button::marker { content: ''; }
+  .nav-menu[open] .nav-menu-button { color: var(--ink); background: var(--glass); }
   .nav-menu-icon { font-size: 18px; line-height: 1; }
   .nav-panel {
     position: absolute;
@@ -278,7 +294,9 @@ a { text-decoration-color: var(--rule); }
     gap: 4px;
     margin: 0;
     padding: 8px 20px 12px;
-    background: #06080d;
+    background: rgba(244,242,235,.88);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
     border-bottom: 1px solid var(--hair);
   }
   .nav-panel a {
@@ -289,6 +307,7 @@ a { text-decoration-color: var(--rule); }
     padding: 0 12px;
     border-radius: 999px;
     text-decoration: none;
+    font-family: var(--sans);
     font-size: 0.92rem;
     font-weight: 600;
     color: var(--muted);
@@ -302,5 +321,5 @@ a { text-decoration-color: var(--rule); }
   .site-header .wrap { padding-inline: 12px; gap: 6px; }
   .site-header .wordmark { font-size: 1rem; }
   .header-cta.btn.sm { padding-inline: 8px; font-size: 13px; gap: 4px; }
-  .nav-menu-button.btn.sm { padding-inline: 8px; }
+  .nav-menu-button { padding-inline: 8px; }
 }
