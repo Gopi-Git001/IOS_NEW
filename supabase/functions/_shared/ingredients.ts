@@ -19,7 +19,7 @@
 //   Resistant maltodextrin as dietary fiber (FDA 2018): https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/questions-and-answers-dietary-fiber
 //   EU sweetener E-numbers (E420, E421, E950-E969), Regulation (EC) 1333/2008 Annex II.
 
-export const REGISTRY_VERSION = 'registry-2026.11.10';
+export const REGISTRY_VERSION = 'registry-2026.11.10b';
 
 export type IngredientClass =
   | 'added_sugar' // free mono/disaccharides, syrups, honey, juice concentrates used to sweeten
@@ -174,7 +174,8 @@ export const REGISTRY: Entry[] = [
   plain('fiber_other', 'Added fiber', [
     'polydextrose', 'inulin', 'chicory root fiber', 'chicory root inulin', 'chicory root extract', 'oligofructose',
     'fructooligosaccharides', 'fos', 'galactooligosaccharides', 'gos', 'acacia fiber', 'oat fiber', 'psyllium husk', 'citrus fiber',
-    'soluble tapioca fiber',
+    'soluble tapioca fiber', 'short-chain fructooligosaccharides', 'prebiotic fiber', 'prebiotic fibre',
+    'sugarcane fiber', 'bamboo fiber', 'pea fiber', 'apple fiber',
   ], 'other_carbohydrate'),
   plain('starch', 'Starch', [
     'corn starch', 'cornstarch', 'tapioca starch', 'potato starch', 'rice starch', 'wheat starch', 'modified food starch',
@@ -188,6 +189,9 @@ export const REGISTRY: Entry[] = [
     'milk powder', 'whole milk powder', 'skim milk powder', 'nonfat dry milk', 'dry milk', 'condensed skim milk', 'ultra-filtered milk',
     'ultrafiltered milk', 'yogurt', 'plain yogurt', 'whey', 'sweet whey', 'whey powder', 'buttermilk', 'kefir', 'goat milk',
     'skimmed milk', 'skimmed milk powder', 'semi-skimmed milk', 'reduced minerals whey',
+    'part-skim milk', 'part skim milk', 'pasteurized part-skim milk', 'cultured nonfat milk', 'cultured skim milk', 'cultured whole milk',
+    'cultured lowfat milk', 'cultured low fat milk', 'cultured reduced fat milk', 'nonfat milk powder', 'nonfat dry milk powder', 'milk solids',
+    'nonfat milk solids', 'greek yogurt', 'nonfat yogurt', 'whole milk yogurt', 'sour cream', 'cream cheese', 'cottage cheese',
     'lait', 'lait ecreme', 'lait ecreme en poudre', 'lait en poudre', 'lait entier', 'melk', 'magere melk', 'melkpoeder', 'mageremelkpoeder',
     'milch', 'magermilch', 'magermilchpulver', 'vollmilchpulver', 'milchpulver', 'leche', 'leche desnatada', 'leche en polvo', 'leche desnatada en polvo',
     'latte', 'latte scremato', 'latte in polvere', 'latte scremato in polvere', 'leite', 'leite em po',
@@ -205,6 +209,11 @@ export const REGISTRY: Entry[] = [
   natural('vegetable', 'Vegetables', [
     'carrots', 'carrot', 'tomatoes', 'tomato', 'tomato paste', 'tomato puree', 'sweet potato', 'sweet potatoes', 'beets', 'pumpkin',
     'onion', 'onions', 'garlic', 'celery', 'spinach', 'peppers', 'red peppers', 'corn', 'peas',
+    'potatoes', 'potato', 'potato flakes', 'dehydrated potatoes', 'green peppers', 'bell peppers', 'jalapeno peppers', 'chili peppers',
+    'cucumbers', 'cucumber', 'cabbage', 'kale', 'broccoli', 'cauliflower', 'zucchini', 'mushrooms', 'olives', 'black olives', 'green olives',
+    'basil', 'parsley', 'cilantro', 'oregano', 'thyme', 'rosemary', 'dill', 'mint', 'chives', 'shallots', 'leeks', 'horseradish', 'ginger',
+    'onion powder', 'garlic powder', 'dehydrated onion', 'dehydrated garlic', 'dried onion', 'dried garlic', 'tomato powder', 'diced tomatoes',
+    'crushed tomatoes', 'whole peeled tomatoes', 'italian tomatoes', 'plum tomatoes', 'peeled tomatoes',
   ]),
   { id: 'puree_concentrate', name: 'Fruit puree concentrate', cls: 'context_dependent', labeling: 'depends', treatment: 'needs_context',
     aliases: ['fruit puree concentrate', 'puree concentrate', 'apple puree concentrate', 'strawberry puree concentrate', 'pear puree concentrate', 'banana puree concentrate'],
@@ -219,6 +228,8 @@ export const REGISTRY: Entry[] = [
   plain('water', 'Water', [
     'water', 'filtered water', 'purified water', 'carbonated water', 'sparkling water', 'spring water', 'mineral water', 'coconut water',
     'vapor distilled water', 'distilled water', 'reverse osmosis water', 'purified carbonated water', 'carbonated filtered water',
+    'carbonated purified water', 'sparkling mineral water', 'natural mineral water', 'natural spring water', 'artesian water', 'alkaline water',
+    'carbonated mineral water', 'ice', 'carbon dioxide', 'carbonation', 'nitrogen',
   ]),
   plain('salt', 'Salt', ['salt', 'sea salt', 'kosher salt', 'himalayan pink salt', 'pink salt', 'iodized salt']),
   plain('acids', 'Food acids', ['citric acid', 'malic acid', 'lactic acid', 'tartaric acid', 'phosphoric acid', 'fumaric acid', 'ascorbic acid', 'acetic acid', 'vinegar', 'apple cider vinegar', 'distilled vinegar', 'white vinegar', 'wine vinegar', 'red wine vinegar', 'rice vinegar', 'balsamic vinegar']),
@@ -230,6 +241,33 @@ export const REGISTRY: Entry[] = [
   plain('fats', 'Fats and oils', ['olive oil', 'extra virgin olive oil', 'canola oil', 'sunflower oil', 'high oleic sunflower oil', 'safflower oil', 'palm oil', 'palm kernel oil', 'coconut oil', 'vegetable oil', 'soybean oil', 'avocado oil', 'butter', 'cream', 'heavy cream', 'ghee', 'shortening']),
   plain('proteins', 'Proteins', ['egg', 'eggs', 'egg whites', 'egg yolks', 'whey protein isolate', 'whey protein concentrate', 'milk protein concentrate', 'milk protein isolate', 'casein', 'sodium caseinate', 'soy protein isolate', 'pea protein', 'pea protein isolate', 'rice protein', 'collagen', 'cheese', 'cheddar cheese', 'cultures', 'live and active cultures', 'live cultures', 'live active cultures', 'active cultures', 'live active yogurt cultures', 'yogurt cultures', 'enzymes', 'rennet', 'yeast', 'nutritional yeast']),
   plain('grains_nuts', 'Grains, nuts and seeds', ['oats', 'rolled oats', 'whole grain oats', 'whole grain rolled oats', 'oat flour', 'milled corn', 'wheat flour', 'enriched flour', 'enriched wheat flour', 'whole wheat flour', 'whole grain wheat', 'bleached flour', 'unbleached flour', 'rice', 'brown rice', 'rice flour', 'brown rice flour', 'corn flour', 'cornmeal', 'quinoa', 'barley', 'rye', 'wheat', 'hops', 'almonds', 'almond butter', 'almond flour', 'peanuts', 'peanut butter', 'cashews', 'cashew butter', 'walnuts', 'pecans', 'hazelnuts', 'pistachios', 'sunflower seeds', 'pumpkin seeds', 'chia seeds', 'flax seeds', 'flaxseed', 'sesame seeds', 'hemp seeds', 'soybeans', 'chickpeas', 'black beans', 'lentils']),
+  plain('seasonings', 'Spices and seasonings', [
+    'black pepper', 'white pepper', 'ground black pepper', 'cracked black pepper', 'red pepper', 'red pepper flakes', 'crushed red pepper',
+    'cayenne pepper', 'chili powder', 'cumin', 'coriander', 'nutmeg', 'cloves', 'allspice', 'cardamom', 'mustard', 'mustard seed',
+    'mustard flour', 'celery seed', 'fennel', 'bay leaves', 'sage', 'smoked paprika', 'spice extracts', 'spice and spice extracts',
+    'spices and spice extracts', 'natural spices', 'dried herbs', 'herbs and spices', 'yeast extract', 'autolyzed yeast extract',
+    'soy sauce', 'tamari', 'disodium guanylate', 'disodium inosinate', 'monosodium glutamate', 'msg', 'smoke flavor', 'natural smoke flavor',
+  ]),
+  plain('dairy_proteins', 'Cheese, eggs and cultures', [
+    'cheese cultures', 'bacterial cultures', 'probiotic cultures', 'parmesan cheese', 'romano cheese', 'mozzarella cheese', 'swiss cheese',
+    'cheddar', 'aged cheddar cheese', 'blue cheese', 'feta cheese', 'goat cheese', 'microbial enzymes', 'microbial rennet', 'animal rennet',
+    'enzyme modified egg yolks', 'egg yolk', 'whole eggs', 'whole egg', 'liquid egg whites', 'dried egg whites', 'chicken eggs',
+    'free-range eggs', 'cage-free eggs', 'large eggs', 'whey protein', 'milk protein', 'soy protein', 'beef', 'chicken', 'pork', 'turkey',
+    'tuna', 'salmon', 'anchovies', 'gelatin capsules', 'l-theanine', 'theanine', 'taurine', 'inositol', 'l-carnitine', 'l-carnitine l-tartrate',
+    'glucuronolactone', 'd-glucuronolactone', 'creatine', 'creatine monohydrate', 'electrolyte blend',
+  ]),
+  plain('additives', 'Other additives', [
+    'modified cornstarch', 'carob bean gum', 'fruit pectin', 'sodium alginate', 'alginate', 'konjac', 'konjac gum', 'tara gum', 'thickener',
+    'stabilizer', 'emulsifier', 'polysorbate 80', 'calcium silicate', 'silicon dioxide', 'anticaking agent', 'sodium hexametaphosphate',
+    'sodium sorbate', 'calcium sorbate', 'sodium nitrite', 'sodium erythorbate', 'potassium lactate', 'sodium diacetate', 'sodium acid pyrophosphate',
+    'monocalcium phosphate', 'sodium aluminum phosphate', 'ammonium bicarbonate', 'glycerol ester of rosin', 'ester gum', 'gum acacia',
+    'sucrose acetate isobutyrate', 'brominated vegetable oil', 'vitamin e acetate', 'dl-alpha tocopheryl acetate', 'tocopheryl acetate',
+    'beta-carotene', 'manganese citrate', 'sodium selenate', 'magnesium malate', 'chromium picolinate', 'pyridoxine', 'vitamin b6 hydrochloride',
+    'zinc citrate', 'calcium citrate', 'potassium sorbate and sodium benzoate', 'cocoa processed with alkali', 'alkalized cocoa',
+    'dutch processed cocoa', 'cocoa powder processed with alkali', 'natural cocoa', 'cocoa nibs', 'cacao nibs', 'cacao butter',
+    'guarana extract', 'guarana seed extract', 'panax ginseng extract', 'ginseng extract', 'green tea extract', 'coffee extract',
+    'decaffeinated coffee', 'brewed coffee', 'brewed tea', 'brewed green tea', 'brewed black tea', 'matcha', 'yerba mate',
+  ]),
   { id: 'malted_barley', name: 'Malted barley', cls: 'non_sweet', labeling: 'not_counted_as_sugar', treatment: 'clean_ok',
     aliases: ['malted barley', 'barley malt'],
     note: 'The brewing grain, not a sugar. Malt syrup and malt extract made from it are added sugar.' },

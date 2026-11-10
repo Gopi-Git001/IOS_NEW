@@ -149,6 +149,10 @@ const CASES: Case[] = [
   // Two or more unrecognised ingredients: never CLEAN
   { name: 'two unknown ingredients is OKAY at best', label: label('Water, Spirulina, Chlorella'), verdict: 'OKAY', rule: 'O5-unrecognised-ingredients' },
   { name: 'untranslated foreign list is never CLEAN', label: label('Tomaten, azijn, zout, specerij'), verdict: 'OKAY', rule: 'O5-unrecognised-ingredients' },
+  // Ordinary unsweetened labels must still resolve to CLEAN
+  { name: 'energy drink with theanine (Ardor)', label: label('Carbonated Purified Water, Organic L-Theanine, Organic Green Tea, Organic Flavor, Organic Caffeine (From Green Tea), Sea Salt'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'alfredo sauce', label: label('Light Cream (Cream, Milk), Water, Butter (Cream, Natural Flavorings), Parmesan and Romano Cheese (Pasteurized Part-Skim Milk, Cheese Cultures, Salt, Enzymes), Enzyme Modified Egg Yolks, Parmesan Cheese (Pasteurized Milk, Salt, Rennet), Sea Salt, Black Pepper, White Pepper, Modified Cornstarch, Disodium Phosphate, Xanthan Gum'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'marinara sauce', label: label('Italian Whole Peeled Tomatoes, Olive Oil, Onions, Salt, Garlic, Basil, Black Pepper, Oregano'), verdict: 'CLEAN', rule: 'C1-clean' },
   { name: 'unknown ingredients never soften added sugar', label: label('Spirulina, Chlorella, Sugar'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
   // Missing or not a label
   { name: 'no ingredient list, 0 g added', label: label(null, perServing(0)), verdict: 'RETRY', rule: 'R3-no-ingredient-list' },

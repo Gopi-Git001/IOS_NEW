@@ -1,4 +1,4 @@
-# Sugar rules (policy `rules-v3`, registry `registry-2026.11.10`)
+# Sugar rules (policy `rules-v3`, registry `registry-2026.11.10b`)
 
 Rules v3, approved by the user on Nov 9, 2026. Four verdicts: CLEAN, OKAY, BAD, RETRY. They replace v2's CLEAN / BAD / UGLY (old BAD became OKAY, old UGLY became BAD). These verdicts are QuickGOB's preferences, not medical safety findings.
 
