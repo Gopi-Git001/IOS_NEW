@@ -797,6 +797,11 @@ a.card:hover h3 {
   font-size: 0.95rem;
   margin: 0;
 }
+.card p.also {
+  color: var(--faint);
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
 .pill {
   display: inline-block;
   font-weight: 900;

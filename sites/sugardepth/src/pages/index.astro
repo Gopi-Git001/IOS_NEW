@@ -1,5 +1,4 @@
 ---
-import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import ScanCta from '../components/ScanCta.astro';
 import CrystalVerdict from '../components/CrystalVerdict.astro';
@@ -8,11 +7,12 @@ import Film from '../components/Film.astro';
 import FilmMotion from '../components/FilmMotion.astro';
 import { APP_URL } from '../config';
 import { organization, website, webApplication } from '../data/schema';
-import { ADDED_SUGAR_ALIAS_COUNT } from '../data/sugars';
-const guides = (await getCollection('ingredients')).sort((a, b) => a.data.order - b.data.order);
+import { getFeaturedGuides } from '../data/guides';
+import { ADDED_SUGAR_ALIAS_COUNT, pillText, toneClass } from '../data/ingredients';
+const guides = await getFeaturedGuides();
 const disguises = [
   { alias: 'Evaporated cane juice', reveal: "That's sugar.", href: '/ingredients/evaporated-cane-juice' },
-  { alias: 'Brown rice syrup', reveal: "That's sugar.", href: '/hidden-sugar-names' },
+  { alias: 'Brown rice syrup', reveal: "That's sugar.", href: '/ingredients/rice-syrup' },
   { alias: 'Apple juice concentrate', reveal: "That's sugar.", href: '/ingredients/juice-concentrate' },
   { alias: 'Sucralose', reveal: "That's an artificial sweetener.", href: '/ingredients/sucralose' },
   { alias: 'Erythritol', reveal: "That's a sugar alcohol.", href: '/ingredients/erythritol' },
@@ -175,10 +175,10 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
       </div>
       <ul class="cards">
         {guides.map((g) => (
-          <li><a class="card" href={`/ingredients/${g.id}`}>
-            <span class={`pill ${g.data.verdict.toLowerCase()}`}>{g.data.verdictLabel ?? g.data.verdict}</span>
-            <h3>{g.data.name}</h3>
-            <p>{g.data.summary}</p>
+          <li><a class="card" href={`/ingredients/${g.slug}`}>
+            <span class={`pill ${toneClass(g.page.verdict.tone)}`}>{pillText(g.page)}</span>
+            <h3>{g.name}</h3>
+            <p>{g.summary}</p>
           </a></li>
         ))}
       </ul>
