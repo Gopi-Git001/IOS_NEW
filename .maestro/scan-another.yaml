@@ -1,0 +1,13 @@
+appId: ${APP_ID || "host.exp.exponent"}
+name: scan-another
+tags:
+  - scan
+---
+- runFlow: common/launch.yaml
+- runFlow: common/scan.yaml
+- tapOn: "Scan another"
+- extendedWaitUntil:
+    visible: "Scan label"
+    timeout: 10000
+- assertNotVisible: "Verdict Facts"
+- runFlow: common/scan.yaml

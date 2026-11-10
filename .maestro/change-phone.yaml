@@ -1,0 +1,17 @@
+# KNOWN FAILING: Profile has no phone number or "Change phone" row (accounts are Google or guest).
+# Written to the requested spec; run with --include-tags known-failing.
+appId: ${APP_ID || "host.exp.exponent"}
+name: change-phone
+tags:
+  - known-failing
+---
+- runFlow: common/launch.yaml
+- tapOn: "Profile"
+- tapOn: "Change phone"
+- tapOn: "Phone number"
+- inputText: "5555550100"
+- tapOn: "Send code"
+- tapOn: "Code"
+- inputText: "123456"
+- tapOn: "Verify"
+- assertVisible: "+1 •••• 0100"

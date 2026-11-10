@@ -12,7 +12,7 @@ Shoppers in a grocery aisle or at home who want to know, in seconds, whether a p
 
 ## Product Purpose
 
-Point the camera at a food label and get one sugar verdict: CLEAN, BAD, or UGLY (UNCLEAR when the photo is unreadable). Success: a verdict the user trusts within a few seconds of tapping the shutter, plus a plain explanation of what each sugar name really is.
+Point the camera at a food label and get one sugar verdict: CLEAN, OKAY, or BAD (RETRY when the photo is unreadable). Success: a verdict the user trusts within a few seconds of tapping the shutter, plus a plain explanation of what each sugar name really is.
 
 ## Positioning
 
@@ -24,7 +24,7 @@ One-handed use in stores with mixed lighting; quick repeat scans; phone sign-in 
 
 ## Capabilities and Constraints
 
-- Verdict rules v2: any added sugar, artificial sweetener, erythritol, xylitol or alcohol = UGLY; stevia, monk fruit, allulose or other sugar alcohols = BAD; nothing sweet added = CLEAN.
+- Verdict rules v3 (RULES.md): over 4 g added sugar per serving, unreadable grams, an artificial sweetener or alcohol over 0.5% ABV = BAD; up to 4 g added sugar, sugar alcohols, allulose, stevia or monk fruit = OKAY; nothing sweet added = CLEAN.
 - Claude vision lists the ingredients; Jev makes the final call. Supabase backend.
 - Not medical advice; does not check allergens.
 - Product and in-app name is "Sugar Depth" (sugardepth.com; the app runs at app.sugardepth.com). Former names: "Reallabel" (2026-11-06), "QuickGOB" (still the Supabase function and Vercel project names) and "Sugar Hunter".

@@ -6,7 +6,7 @@ test('aliases reveal sugar with a specific line', () => {
   const e = lookup('Evaporated Cane Juice', 'added');
   assert.equal(e.reveal, "That's sugar.");
   assert.match(e.blurb, /cane sugar/);
-  assert.equal(e.effect, 'Any added sugar makes it UGLY.');
+  assert.equal(e.effect, 'Over 4 g of added sugar per serving makes it BAD; less makes it OKAY.');
 });
 
 test('longest name wins: high fructose corn syrup is not just "syrup"', () => {
@@ -14,8 +14,8 @@ test('longest name wins: high fructose corn syrup is not just "syrup"', () => {
 });
 
 test('sweeteners carry their verdict effect', () => {
-  assert.equal(lookup('Erythritol (sugar alcohol)', 'sweetener').effect, 'Makes it UGLY.');
-  assert.equal(lookup('Stevia Leaf Extract', 'sweetener').effect, 'Makes it BAD.');
+  assert.equal(lookup('Erythritol (sugar alcohol)', 'sweetener').effect, 'Makes it OKAY.');
+  assert.equal(lookup('Stevia Leaf Extract', 'sweetener').effect, 'Makes it OKAY.');
   assert.equal(lookup('Sucralose', 'sweetener').reveal, "That's an artificial sweetener.");
 });
 

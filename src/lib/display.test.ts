@@ -4,7 +4,7 @@ import type { ScanResult } from '../types.ts';
 import { addToHistory, applyStrictMode, HISTORY_LIMIT, ingredientNames, reasonLine, ingredientSummary, initials, maskPhone, percent } from './display.ts';
 
 const result = (over: Partial<ScanResult>): ScanResult => ({
-  verdict: 'BAD',
+  verdict: 'OKAY',
   headline: 'Contains sweeteners',
   naturalSugars: [],
   addedSugars: [],
@@ -14,7 +14,7 @@ const result = (over: Partial<ScanResult>): ScanResult => ({
 
 test('strict mode on keeps the server verdict', () => {
   const r = result({ sweeteners: ['Stevia leaf extract'] });
-  assert.equal(applyStrictMode(r, true).verdict, 'BAD');
+  assert.equal(applyStrictMode(r, true).verdict, 'OKAY');
 });
 
 test('strict mode off shows plant-sweetener-only products as CLEAN', () => {
@@ -22,10 +22,10 @@ test('strict mode off shows plant-sweetener-only products as CLEAN', () => {
   assert.equal(applyStrictMode(r, false).verdict, 'CLEAN');
 });
 
-test('strict mode off leaves sugar alcohols, added sugar and UGLY alone', () => {
-  assert.equal(applyStrictMode(result({ sweeteners: ['Stevia', 'Erythritol (sugar alcohol)'] }), false).verdict, 'BAD');
-  assert.equal(applyStrictMode(result({ sweeteners: ['Stevia'], addedSugars: ['Honey'] }), false).verdict, 'BAD');
-  assert.equal(applyStrictMode(result({ verdict: 'UGLY', sweeteners: ['Sucralose'] }), false).verdict, 'UGLY');
+test('strict mode off leaves sugar alcohols, added sugar and BAD alone', () => {
+  assert.equal(applyStrictMode(result({ sweeteners: ['Stevia', 'Erythritol (sugar alcohol)'] }), false).verdict, 'OKAY');
+  assert.equal(applyStrictMode(result({ sweeteners: ['Stevia'], addedSugars: ['Honey'] }), false).verdict, 'OKAY');
+  assert.equal(applyStrictMode(result({ verdict: 'BAD', sweeteners: ['Sucralose'] }), false).verdict, 'BAD');
 });
 
 test('maskPhone keeps the country code and last four digits', () => {
@@ -41,6 +41,7 @@ test('history keeps the newest 50 scans, newest first', () => {
   assert.equal(h.length, HISTORY_LIMIT);
   assert.equal(h[0].result.headline, 'scan 54');
   assert.equal(h[49].result.headline, 'scan 5');
+  assert.ok(h.every((e) => e.scheme === 'v3'), 'new entries carry the v3 marker');
 });
 
 test('ingredientSummary lists the first three names', () => {

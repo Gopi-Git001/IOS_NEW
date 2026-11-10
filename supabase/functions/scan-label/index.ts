@@ -1,12 +1,13 @@
 // POST { image: <base64 JPEG>, scan_id?: string }  ->  { result: ScanResult, timing } | { error: string, code?: string, timing }
 // Signed-in users only. Stage 1 (extraction): Claude vision copies the label literally, with no
 // sorting and no verdict. Stages 2-4 (normalize, classify, policy) run in _shared/rules.ts.
-// Runs alongside quick-verdict (Jev), which makes the actual CLEAN / BAD / UGLY call.
+// Runs alongside quick-verdict (Jev), which makes the actual CLEAN / OKAY / BAD call.
 import { allow, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
-import { readLabel } from '../_shared/reader.ts';
-export { UNREADABLE } from '../_shared/reader.ts';
+import { readLabel, UNREADABLE } from '../_shared/reader.ts';
 import { clientFields, imageKb, requestTimer, timed } from '../_shared/timing.ts';
+
+export { UNREADABLE };
 
 export default {
   fetch: timed('scan-label', withSupabase({ auth: 'user' }, async (req, ctx) => {

@@ -24,7 +24,7 @@ type Props = {
   state: ScanState;
   onScanAnother: () => void;
   onOpenSheet: (sheet: Sheet) => void;
-  /** Gentle mode: for UGLY, the character shows its calm reaction instead of crying. */
+  /** Gentle mode: for BAD, the character shows its calm reaction instead of crying. */
   gentle?: boolean;
   tagline?: string;
 };
@@ -39,7 +39,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
   const sheetBottom = Math.max(insets.bottom, 8);
   // Leave room above the sheet for the header and the perched cube.
   const sheetMax = window.height - sheetBottom - headerBottom - CUBE + PERCH - 8;
-  const doneMood = (verdict: keyof typeof moodForVerdict): Mood => (gentle && verdict === 'UGLY' ? 'bad' : moodForVerdict[verdict]);
+  const doneMood = (verdict: keyof typeof moodForVerdict): Mood => (gentle && verdict === 'BAD' ? 'okay' : moodForVerdict[verdict]);
 
   const action = { label: state.status === 'done' ? 'Scan another' : 'Try again', onPress: onScanAnother };
 
@@ -90,7 +90,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
           </ResultSheet>
           {sheetHeight > 0 && (
             <Character
-              mood={state.status === 'done' ? doneMood(state.result.verdict) : 'bad'}
+              mood={state.status === 'done' ? doneMood(state.result.verdict) : 'okay'}
               bottom={sheetBottom + sheetHeight - PERCH}
               size={CUBE}
               right={(window.width - Math.min(window.width * .96, 700)) / 2 + 10}

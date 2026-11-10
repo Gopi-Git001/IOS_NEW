@@ -8,6 +8,7 @@ import { noteScan, scanTimingId } from './scanTiming';
 import { supabase } from './supabase';
 import { postScan } from './scanTransport';
 import { requestScanStream, RetryableScanError, type ScanEvent } from './scanStream';
+import { normalizeJev, normalizeResult } from './verdicts';
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
 async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
@@ -30,7 +31,7 @@ export class UnreadableError extends Error {}
 /** Thrown by readLabel when the lists timed out, the connection dropped or the server failed: worth a retry. */
 export class RetryableReadError extends Error {}
 
-/** The verdict is already on screen by then, so the lists get a short leash. */
+/** The verdict waits for the lists, so they get a short leash. */
 const LISTS_TIMEOUT_MS = 12_000;
 const READ_FAILED = "Couldn't read the label. Try again.";
 
@@ -85,9 +86,9 @@ async function encodeForUpload({ uri, width, height }: Photo, crop: Rect | undef
   return base64;
 }
 
-/** Fast path: Jev makes the CLEAN / BAD / UGLY call straight from the photo. Never throws. */
+/** Fast path: Jev makes the CLEAN / OKAY / BAD call straight from the photo. Never throws. */
 export async function quickVerdict(image: string, client?: CaptureMeta): Promise<JevVerdict> {
-  const { data, error } = await supabase.functions.invoke<{ jev: JevVerdict; timing?: unknown }>('quickgob-quick-verdict', {
+  const { data, error } = await supabase.functions.invoke<{ jev: JevVerdict; verdicts?: string; timing?: unknown }>('quickgob-quick-verdict', {
     body: { image, scan_id: scanTimingId(), client },
   });
   if (error || !data?.jev) {
@@ -96,7 +97,7 @@ export async function quickVerdict(image: string, client?: CaptureMeta): Promise
     return { status: 'unavailable', reason: e.message };
   }
   noteScan({ quick_verdict_server: data.timing });
-  return data.jev;
+  return normalizeJev(data.jev, data.verdicts);
 }
 
 /** Detail path: Claude lists the sugars, and the rules give a backstop verdict. */
@@ -114,7 +115,7 @@ export async function readLabel(image: string, client?: CaptureMeta): Promise<Sc
   });
 
   const attempt = async (): Promise<ScanResult> => {
-    const { data, error } = await supabase.functions.invoke<{ result: ScanResult; timing?: unknown }>('quickgob-scan-label', {
+    const { data, error } = await supabase.functions.invoke<{ result: ScanResult; verdicts?: string; timing?: unknown }>('quickgob-scan-label', {
       body: { image, scan_id: scanTimingId(), client },
       signal: controller.signal,
     });
@@ -131,9 +132,14 @@ export async function readLabel(image: string, client?: CaptureMeta): Promise<Sc
       if (e.code === 'unreadable') throw new UnreadableError(e.message);
       throw status >= 500 || error instanceof FunctionsRelayError ? new RetryableReadError(READ_FAILED) : new Error(e.message);
     }
+    const result = normalizeResult(data.result, data.verdicts);
+    if (!result) {
+      outcome('bad_verdict');
+      throw new Error(READ_FAILED);
+    }
     outcome('ok');
     noteScan({ scan_label_server: data.timing });
-    return data.result;
+    return result;
   };
 
   try {

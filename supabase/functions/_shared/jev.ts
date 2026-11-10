@@ -2,9 +2,10 @@
 // Docs: https://docs.typesafe.ai/api  ·  Images: https://docs.typesafe.ai/images
 //
 // One request, several typed questions evaluated in parallel: is this a food label, and is it
-// CLEAN, BAD or UGLY? Jev is the decision-maker. The Claude reading + rules (rules.ts) only fill in
-// the ingredient lists and decide when Jev is unavailable or not confident enough.
-import type { Verdict } from './rules.ts';
+// CLEAN, OKAY or BAD? Jev is the decision-maker. The Claude reading + rules (rules.ts) fill in the
+// ingredient lists, decide when Jev is unavailable or not confident enough, and win whenever they
+// are stricter than Jev (src/lib/combine.ts).
+import type { ShownVerdict as Verdict } from './rules.ts';
 
 export const ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 export const MODEL = 'jev-latest';
@@ -32,33 +33,34 @@ export type JevVerdict =
 
 const VERDICT_CRITERIA = {
   CLEAN: {
-    what: 'No added sugar and no sweeteners of any kind in the ingredient list.',
-    examples: ['Plain yogurt (milk, cultures)', 'Unsweetened almond milk', 'Whole fruit', 'Plain oats'],
-    not_for: 'Anything with sugar, syrup, honey, juice concentrate, or any sweetener listed as an ingredient.',
+    what: 'No added sugar, no sweeteners of any kind and no alcohol in the ingredient list. Sugar that comes with milk, fruit or vegetables is fine, and so is a 100% juice made only from juice (even from concentrate).',
+    examples: ['Plain yogurt (milk, cultures)', 'Unsweetened almond milk', 'Whole fruit', 'Plain oats', '100% orange juice from concentrate', 'Non-alcoholic beer (<0.5% ABV) with no sugar'],
+    not_for: 'Anything with sugar, syrup, honey, juice concentrate used to sweeten another food, any sweetener, or alcohol above 0.5% ABV.',
+  },
+  OKAY: {
+    what:
+      'The nutrition panel shows 4 g or less of added sugar per serving, OR the only sweetener is stevia, monk fruit, thaumatin, ' +
+      'allulose or a sugar alcohol (erythritol, xylitol, sorbitol, maltitol, mannitol, isomalt...), with no artificial sweetener and no alcohol.',
+    examples: ['Bread with 2 g added sugar per serving', 'Stevia-sweetened sparkling water', 'Monk fruit protein bar', 'Keto cookie with erythritol'],
+    not_for: 'More than 4 g added sugar per serving, added sugar with no per-serving grams visible, artificial sweeteners, or alcohol. Those are BAD.',
   },
   BAD: {
     what:
-      'No added sugar at all, but sweetened with stevia, monk fruit, allulose, or a sugar alcohol other than ' +
-      'erythritol and xylitol (for example sorbitol, maltitol, mannitol, isomalt).',
-    examples: ['Stevia-sweetened sparkling water', 'Monk fruit protein bar with no sugar', 'Sugar-free mints with sorbitol'],
-    not_for: 'Anything with ANY added sugar, artificial sweeteners, erythritol, xylitol, or drinking alcohol. Those are UGLY.',
-  },
-  UGLY: {
-    what:
-      'ANY added sugar, in any amount (sugar, cane sugar, syrups, honey, agave, molasses, fruit juice concentrate...), OR any ' +
-      'artificial sweetener (aspartame, sucralose, acesulfame K, saccharin, neotame, advantame, cyclamate, E950-E969), OR ' +
-      'erythritol or xylitol, OR drinking alcohol.',
-    examples: ['Soda', 'Diet soda', 'Bread with 1 g added sugar', 'Keto cookie with erythritol', 'Granola with honey', 'Beer'],
+      'More than 4 g of added sugar per serving, OR added sugar listed with no per-serving Added Sugars grams visible, OR any ' +
+      'artificial sweetener (aspartame, sucralose, acesulfame K, saccharin, neotame, advantame, cyclamate, E950-E969), OR drinking alcohol above 0.5% ABV.',
+    examples: ['Soda', 'Diet soda', 'Granola with honey and no nutrition panel in view', 'Beer (5% ABV)', 'Cereal with 12 g added sugar'],
   },
 };
 
 const INSTRUCTIONS =
   'Read the ingredient list (and the nutrition panel, if visible) in `label_photo` and rate the product for sugar. ' +
   'Sugar hides under many names: cane sugar, sucrose, dextrose, glucose or corn syrup, fruit juice concentrate, ' +
-  'honey, agave, molasses, rice syrup, barley malt and more all count as added sugar. There is no gram threshold: any ' +
-  'added sugar at all makes the product UGLY. Sugars naturally present in whole fruit, milk or plain yogurt are fine. ' +
-  'Maltodextrin, resistant maltodextrin, starches and fibers are not sugars and are not sweeteners.';
-
+  'honey, agave, molasses, rice syrup, malt syrup, malt extract, isomalto-oligosaccharides (IMO, often sold as a "fiber") ' +
+  'and more all count as added sugar (malted barley ' +
+  'itself, the brewing grain, is not sugar). Use the "Added Sugars" grams per ' +
+  'serving from the panel: 4 g or less is OKAY, more than 4 g is BAD, and added sugar with no per-serving grams visible is BAD. ' +
+  'Sugars naturally present in whole fruit, milk, plain yogurt or 100% juice are fine. "<0.5% ABV", "0.0%", "non-alcoholic" ' +
+  'and "alcohol-free" are not alcohol. Maltodextrin, resistant maltodextrin, starches and fibers are not sugars and are not sweeteners.';
 /** Builds the System One request. `ref` is the per-request image reference (a UUID). */
 export function buildJevRequest(imageBase64: string, ref: string) {
   return {
@@ -81,7 +83,7 @@ export function buildJevRequest(imageBase64: string, ref: string) {
   };
 }
 
-const VERDICTS: Verdict[] = ['CLEAN', 'BAD', 'UGLY'];
+const VERDICTS: Verdict[] = ['CLEAN', 'OKAY', 'BAD'];
 
 /** Turns a System One response body into a verdict the app can show. */
 export function readJevResponse(body: unknown): JevVerdict {

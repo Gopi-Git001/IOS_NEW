@@ -1,0 +1,25 @@
+# Maestro end-to-end flows, run on a real phone over USB/Wi-Fi (no emulator), against Expo Go.
+#
+# 1. Start the app in a testing build:
+#      EXPO_PUBLIC_GUEST_MODE=1 EXPO_PUBLIC_TEST_PHOTO=1 npx expo start --lan
+#    (guest sign-in also needs GUEST_SIGNIN=on in the target project's Supabase secrets)
+# 2. Run:  maestro test .maestro -e EXPO_URL=exp://<your-lan-ip>:8081
+#    iOS:  add -e APP_ID=host.exp.Exponent   (Android Expo Go is the default)
+#
+# EXPO_PUBLIC_TEST_PHOTO=1 makes the shutter use assets/test/label.jpg instead of the camera
+# (src/lib/testPhoto.ts); production bundles never include it.
+# Flows tagged known-failing test features the app does not have yet (phone sign-in); run them
+# with --include-tags known-failing.
+flows:
+  - "*.yaml"
+excludeTags:
+  - known-failing
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - signup
+    - scan
+    - scan-another
+    - history
+    - sign-out
+    - delete-account

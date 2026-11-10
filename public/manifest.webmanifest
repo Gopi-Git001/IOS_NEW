@@ -1,7 +1,7 @@
 {
   "name": "Sugar Depth",
   "short_name": "Sugar Depth",
-  "description": "Scan a food label and see its added sugar and sweeteners. One verdict: Clean, Bad or Ugly.",
+  "description": "Scan a food label and see its added sugar and sweeteners. One verdict: Clean, Okay or Bad.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#06080D",

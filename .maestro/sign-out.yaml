@@ -1,0 +1,21 @@
+# Sign out lives only in Profile. A guest build signs a new guest straight back in; a normal build
+# shows the Google sign-in screen.
+appId: ${APP_ID || "host.exp.exponent"}
+name: sign-out
+tags:
+  - account
+---
+- runFlow: common/launch.yaml
+- tapOn: "Menu"
+- assertNotVisible: "Sign out"
+- tapOn: "Close menu"
+- tapOn: "Profile"
+- tapOn: "Sign out"
+- assertVisible: "Sign out?"
+# The dialog's button has the same text as the Profile row behind it; the second match is the button.
+- tapOn:
+    text: "Sign out"
+    index: 1
+- extendedWaitUntil:
+    visible: "Scan label|Continue with Google"
+    timeout: 30000

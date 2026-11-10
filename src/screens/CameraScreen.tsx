@@ -7,6 +7,7 @@ import { usePrefs } from '../lib/prefs';
 import { notify } from '../lib/confirm';
 import { BlurryPhotoError, type LabelCameraHandle, type Photo, type ViewBox } from '../lib/photo';
 import { markScan, noteScan, startScanTiming } from '../lib/scanTiming';
+import { testPhoto, testPhotoEnabled } from '../lib/testPhoto';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { Glass } from '../components/Glass';
@@ -71,12 +72,13 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline }: Props)
   }
 
   const shoot = async () => {
-    if (!camera.current || !ready || busy || shooting.current || !active) return;
+    const standIn = testPhoto();
+    if (shooting.current || busy || !active || (!standIn && (!camera.current || !ready))) return;
     shooting.current = true;
     setBusy(true);
     startScanTiming();
     try {
-      const photo = await camera.current.capture();
+      const photo = standIn ?? (await camera.current!.capture());
       markScan('captured');
       noteScan({ photo_px: `${photo.width}x${photo.height}` });
       if (Platform.OS !== 'web') noteScan({ capture_path: 'native' });
@@ -144,7 +146,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline }: Props)
         </View>
 
         <View style={styles.bottom}>
-          <Shutter onPress={shoot} disabled={!ready || busy} busy={busy} />
+          <Shutter onPress={shoot} disabled={!(ready || testPhotoEnabled) || busy} busy={busy} />
           <Footer />
         </View>
       </SafeAreaView>

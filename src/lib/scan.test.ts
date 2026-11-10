@@ -10,7 +10,7 @@ import type { ScanUpdate } from './scan.ts';
 import type { JevVerdict, ScanResult } from '../types';
 
 const result: ScanResult = { verdict: 'CLEAN', headline: 'No added sugar', naturalSugars: [], addedSugars: [], sweeteners: [] };
-const jev: JevVerdict = { status: 'decided', verdict: 'UGLY', confidence: 0.9, model: 'test' };
+const jev: JevVerdict = { status: 'decided', verdict: 'BAD', confidence: 0.9, model: 'test' };
 class RetryableReadError extends Error {}
 class UnreadableError extends Error {}
 const photo = { uri: 'test', width: 1920, height: 1440, upload: 'jpeg', meta: { torch: true } };
@@ -59,7 +59,7 @@ test('streamed reader timeout exposes lists retry and retries only the reader fo
   const failed = updates.at(-1);
   assert.equal(failed?.status, 'done');
   if (failed?.status !== 'done') throw Error('Expected verdict');
-  assert.equal(failed.result.verdict, 'UGLY');
+  assert.equal(failed.result.verdict, 'BAD');
   assert.equal(failed.listsPending, false);
   assert.ok(failed.retryLists);
   failed.retryLists();
@@ -67,7 +67,7 @@ test('streamed reader timeout exposes lists retry and retries only the reader fo
   assert.equal(h.readerCalls(), 1);
   assert.equal(h.quickCalls(), 0);
   const retried = updates.at(-1);
-  assert.equal(retried?.status === 'done' && retried.result.verdict, 'UGLY');
+  assert.equal(retried?.status === 'done' && retried.result.verdict, 'BAD');
   assert.equal(retried?.status === 'done' && retried.listsPending, false);
   assert.equal(retried?.status === 'done' && retried.retryLists, undefined);
 });

@@ -114,5 +114,5 @@ const styles = StyleSheet.create({
   links: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 6, marginTop: 4 },
   link: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },
   linkDisabled: { color: colors.inkFaint, textDecorationLine: 'none' },
-  error: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ugly },
+  error: { fontFamily: fonts.semibold, fontSize: 14, color: colors.bad },
 });

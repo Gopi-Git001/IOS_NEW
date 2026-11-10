@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { REGISTRY } from './ingredients.ts';
 import { codeOf, matchEntry, normalizeKey, parseIngredients } from './normalize.ts';
-import { classify, evaluate, type LiteralLabel, POLICY_VERSION } from './policy.ts';
+import { classify, evaluate, isAlcoholic, type LiteralLabel, POLICY_VERSION } from './policy.ts';
 
 const label = (ingredients_text: string | null, over: Partial<LiteralLabel> = {}): LiteralLabel => ({
   is_food_label: true,
@@ -19,89 +19,178 @@ const label = (ingredients_text: string | null, over: Partial<LiteralLabel> = {}
   ...over,
 });
 
-type Case = { name: string; label: LiteralLabel; verdict: 'CLEAN' | 'BAD' | 'UGLY' | null; rule: string; triggers?: string[] };
+type Case = { name: string; label: LiteralLabel; verdict: 'CLEAN' | 'OKAY' | 'BAD' | 'RETRY'; rule: string; triggers?: string[] };
+
+const perServing = (g: number): Partial<LiteralLabel> => ({ added_sugars_g: g, quantity_basis: 'per_serving' });
 
 const CASES: Case[] = [
-  // Pure plant sweeteners (Rules v2: BAD, no GOOD tier)
-  { name: 'pure stevia', label: label('Carbonated Water, Natural Flavor, Stevia Leaf Extract'), verdict: 'BAD', rule: 'B2-plant-sweetener', triggers: ['stevia'] },
-  { name: 'pure monk fruit', label: label('Water, Citric Acid, Monk Fruit Extract'), verdict: 'BAD', rule: 'B2-plant-sweetener', triggers: ['monk_fruit'] },
-  { name: 'stevia and monk fruit', label: label('Water, Stevia, Luo Han Guo Extract'), verdict: 'BAD', rule: 'B2-plant-sweetener', triggers: ['stevia', 'monk_fruit'] },
-  { name: 'steviol glycosides by code', label: label('Water, Citric Acid, E960'), verdict: 'BAD', rule: 'B2-plant-sweetener', triggers: ['stevia'] },
-  { name: 'thaumatin', label: label('Water, Thaumatin'), verdict: 'BAD', rule: 'B2-plant-sweetener', triggers: ['thaumatin'] },
+  // Pure plant sweeteners (Rules v3: OKAY)
+  { name: 'pure stevia', label: label('Carbonated Water, Natural Flavor, Stevia Leaf Extract'), verdict: 'OKAY', rule: 'O3-plant-sweetener', triggers: ['stevia'] },
+  { name: 'pure monk fruit', label: label('Water, Citric Acid, Monk Fruit Extract'), verdict: 'OKAY', rule: 'O3-plant-sweetener', triggers: ['monk_fruit'] },
+  { name: 'stevia and monk fruit', label: label('Water, Stevia, Luo Han Guo Extract'), verdict: 'OKAY', rule: 'O3-plant-sweetener', triggers: ['stevia', 'monk_fruit'] },
+  { name: 'steviol glycosides by code', label: label('Water, Citric Acid, E960'), verdict: 'OKAY', rule: 'O3-plant-sweetener', triggers: ['stevia'] },
+  { name: 'thaumatin', label: label('Water, Thaumatin'), verdict: 'OKAY', rule: 'O3-plant-sweetener', triggers: ['thaumatin'] },
   // Stevia does not override anything worse
-  { name: 'stevia plus dextrose', label: label('Dextrose, Stevia Leaf Extract, Silica'.replace(', Silica', '')), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['dextrose'] },
-  { name: 'monk fruit plus erythritol', label: label('Erythritol, Monk Fruit Extract'), verdict: 'UGLY', rule: 'U4-erythritol-xylitol', triggers: ['erythritol'] },
-  { name: 'stevia plus sucralose', label: label('Water, Stevia, Sucralose'), verdict: 'UGLY', rule: 'U3-artificial-sweetener', triggers: ['sucralose'] },
-  // Added sugar with 0, positive or unknown grams
-  { name: 'added sugar, 0 g on panel', label: label('Oats, Sugar, Salt', { added_sugars_g: 0, quantity_basis: 'per_serving' }), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['sugar'] },
-  { name: 'added sugar, 6 g on panel', label: label('Oats, Cane Sugar, Salt', { added_sugars_g: 6, quantity_basis: 'per_serving' }), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['sugar'] },
-  { name: 'added sugar, grams unknown', label: label('Oats, Honey, Salt'), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['honey'] },
-  { name: 'panel added sugar, none listed', label: label('Oats, Salt', { added_sugars_g: 2, quantity_basis: 'per_serving' }), verdict: 'UGLY', rule: 'U2-panel-added-sugar', triggers: [] },
-  { name: 'panel added sugar, no ingredient list', label: label(null, { added_sugars_g: 12, quantity_basis: 'per_100g' }), verdict: 'UGLY', rule: 'U2-panel-added-sugar', triggers: [] },
+  { name: 'stevia plus dextrose, no grams', label: label('Dextrose, Stevia Leaf Extract'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['dextrose'] },
+  { name: 'monk fruit plus erythritol', label: label('Erythritol, Monk Fruit Extract'), verdict: 'OKAY', rule: 'O2-sugar-alcohol', triggers: ['erythritol'] },
+  { name: 'stevia plus sucralose', label: label('Water, Stevia, Sucralose'), verdict: 'BAD', rule: 'X3-artificial-sweetener', triggers: ['sucralose'] },
+  // Added sugar graded by grams per serving
+  { name: 'added sugar, 0 g on panel', label: label('Oats, Sugar, Salt', perServing(0)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g', triggers: ['sugar'] },
+  { name: 'added sugar, 2 g on panel', label: label('Oats, Cane Sugar, Salt', perServing(2)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g', triggers: ['sugar'] },
+  { name: 'added sugar, 4 g on panel', label: label('Oats, Cane Sugar, Salt', perServing(4)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g', triggers: ['sugar'] },
+  { name: 'added sugar, 4.1 g on panel', label: label('Oats, Cane Sugar, Salt', perServing(4.1)), verdict: 'BAD', rule: 'X1-added-sugar-over-4g', triggers: ['sugar'] },
+  { name: 'added sugar, 4.5 g on panel', label: label('Oats, Cane Sugar, Salt', perServing(4.5)), verdict: 'BAD', rule: 'X1-added-sugar-over-4g', triggers: ['sugar'] },
+  { name: 'added sugar, 6 g on panel', label: label('Oats, Cane Sugar, Salt', perServing(6)), verdict: 'BAD', rule: 'X1-added-sugar-over-4g', triggers: ['sugar'] },
+  { name: 'added sugar, grams unknown', label: label('Oats, Honey, Salt'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['honey'] },
+  { name: 'added sugar, grams with no basis read as per serving', label: label('Oats, Honey', { added_sugars_g: 3 }), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g', triggers: ['honey'] },
+  { name: 'added sugar, only per 100 g grams', label: label('Oats, Sugar', { added_sugars_g: 3, quantity_basis: 'per_100g' }), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'added sugar, only per 100 ml grams', label: label('Water, Sugar', { added_sugars_g: 3, quantity_basis: 'per_100ml' }), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'panel added sugar, none listed', label: label('Oats, Salt', perServing(2)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g', triggers: [] },
+  { name: 'panel added sugar, no ingredient list', label: label(null, { added_sugars_g: 12, quantity_basis: 'per_100g' }), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: [] },
   // Every artificial sweetener
   ...['Sucralose', 'Aspartame', 'Acesulfame Potassium', 'Ace-K', 'Saccharin', 'Sodium Saccharin', 'Cyclamate', 'Neotame', 'Advantame', 'Neohesperidin DC', 'E 955', 'INS 951', 'E-950'].map((s) => ({
-    name: `artificial: ${s}`, label: label(`Water, ${s}`), verdict: 'UGLY' as const, rule: 'U3-artificial-sweetener',
+    name: `artificial: ${s}`, label: label(`Water, ${s}`), verdict: 'BAD' as const, rule: 'X3-artificial-sweetener',
   })),
-  // Every sugar alcohol
-  { name: 'erythritol', label: label('Almond Flour, Erythritol'), verdict: 'UGLY', rule: 'U4-erythritol-xylitol', triggers: ['erythritol'] },
-  { name: 'xylitol by code', label: label('Gum Base, E967'), verdict: 'UGLY', rule: 'U4-erythritol-xylitol', triggers: ['xylitol'] },
+  // Every sugar alcohol (Rules v3: OKAY, erythritol and xylitol included)
+  { name: 'erythritol', label: label('Almond Flour, Erythritol'), verdict: 'OKAY', rule: 'O2-sugar-alcohol', triggers: ['erythritol'] },
+  { name: 'xylitol by code', label: label('Gum Base, E967'), verdict: 'OKAY', rule: 'O2-sugar-alcohol', triggers: ['xylitol'] },
   ...['Sorbitol', 'Maltitol', 'Maltitol Syrup', 'Mannitol', 'Isomalt', 'Lactitol', 'Polyglycitol Syrup', 'E420', 'E965'].map((s) => ({
-    name: `sugar alcohol: ${s}`, label: label(`Gum Base, ${s}`), verdict: 'BAD' as const, rule: 'B1-sugar-alcohol',
+    name: `sugar alcohol: ${s}`, label: label(`Gum Base, ${s}`), verdict: 'OKAY' as const, rule: 'O2-sugar-alcohol',
   })),
   // Rare sugars
-  { name: 'allulose', label: label('Almonds, Allulose, Salt'), verdict: 'BAD', rule: 'B3-allulose', triggers: ['allulose'] },
-  { name: 'tagatose (FDA counts as sugar)', label: label('Cocoa, Tagatose'), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['tagatose'] },
-  { name: 'isomaltulose', label: label('Water, Isomaltulose'), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['isomaltulose'] },
+  { name: 'allulose', label: label('Almonds, Allulose, Salt'), verdict: 'OKAY', rule: 'O2-sugar-alcohol', triggers: ['allulose'] },
+  { name: 'tagatose (FDA counts as sugar)', label: label('Cocoa, Tagatose'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['tagatose'] },
+  { name: 'isomaltulose', label: label('Water, Isomaltulose'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['isomaltulose'] },
   // Maltodextrin vs resistant maltodextrin
-  { name: 'maltodextrin alone is not sugar', label: label('Maltodextrin, Natural Flavors, Salt'), verdict: 'CLEAN', rule: 'C1-nothing-sweet-added' },
-  { name: 'resistant maltodextrin is fiber', label: label('Water, Resistant Maltodextrin, Citric Acid'), verdict: 'CLEAN', rule: 'C1-nothing-sweet-added' },
-  { name: 'maltodextrin plus sucralose', label: label('Maltodextrin, Sucralose'), verdict: 'UGLY', rule: 'U3-artificial-sweetener', triggers: ['sucralose'] },
+  { name: 'maltodextrin alone is not sugar', label: label('Maltodextrin, Natural Flavors, Salt'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'resistant maltodextrin is fiber', label: label('Water, Resistant Maltodextrin, Citric Acid'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'maltodextrin plus sucralose', label: label('Maltodextrin, Sucralose'), verdict: 'BAD', rule: 'X3-artificial-sweetener', triggers: ['sucralose'] },
   // Fruit context
-  { name: 'whole and dried fruit', label: label('Dates, Almonds, Cocoa'), verdict: 'CLEAN', rule: 'C1-nothing-sweet-added' },
-  { name: 'fruit puree', label: label('Banana Puree, Apple Puree, Ascorbic Acid'), verdict: 'CLEAN', rule: 'C1-nothing-sweet-added' },
-  { name: 'single-strength juice', label: label('Apple Juice, Ascorbic Acid'), verdict: 'CLEAN', rule: 'C1-nothing-sweet-added' },
-  { name: 'juice concentrate is added sugar', label: label('Oats, Apple Juice Concentrate, Cinnamon'), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['juice_concentrate'] },
-  { name: 'concentrated grape juice', label: label('Oats, Concentrated White Grape Juice'), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['juice_concentrate'] },
-  { name: 'juice from concentrate needs context', label: label('Orange Juice From Concentrate'), verdict: null, rule: 'A6-needs-context' },
-  { name: 'puree concentrate needs context', label: label('Oats, Strawberry Puree Concentrate'), verdict: null, rule: 'A6-needs-context' },
+  { name: 'whole and dried fruit', label: label('Dates, Almonds, Cocoa'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'fruit puree', label: label('Banana Puree, Apple Puree, Ascorbic Acid'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'single-strength juice', label: label('Apple Juice, Ascorbic Acid'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'juice concentrate sweetening oats is added sugar', label: label('Oats, Apple Juice Concentrate, Cinnamon'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['juice_concentrate'] },
+  { name: 'concentrated grape juice sweetening oats', label: label('Oats, Concentrated White Grape Juice'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['juice_concentrate'] },
+  { name: 'juice concentrate sweetening tea', label: label('Brewed Green Tea, Apple Juice Concentrate'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['juice_concentrate'] },
+  { name: 'puree concentrate sweetening oats', label: label('Oats, Strawberry Puree Concentrate'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['puree_concentrate'] },
+  { name: '100% juice from concentrate', label: label('Orange Juice From Concentrate'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: '100% juice: water and concentrate', label: label('Filtered Water, Apple Juice Concentrate, Ascorbic Acid (Vitamin C)'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: '100% juice blend with flavor', label: label('Water, Grape Juice Concentrate, Pear Juice Concentrate, Natural Flavors, Citric Acid'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'juice concentrate plus sugar', label: label('Water, Apple Juice Concentrate, Sugar'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['juice_concentrate', 'sugar'] },
   // Lactose
-  { name: 'lactose in milk is natural', label: label('Cultured Pasteurized Milk, Live and Active Cultures'), verdict: 'CLEAN', rule: 'C1-nothing-sweet-added' },
-  { name: 'added lactose', label: label('Potato Flakes, Lactose, Salt'), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['lactose_added'] },
+  { name: 'lactose in milk is natural', label: label('Cultured Pasteurized Milk, Live and Active Cultures'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'added lactose', label: label('Potato Flakes, Lactose, Salt'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['lactose_added'] },
   // Nested blends, aliases, codes, duplicates
-  { name: 'stevia blend hides erythritol', label: label('Water, Stevia Blend (Erythritol, Stevia Leaf Extract [Reb A]), Natural Flavors'), verdict: 'UGLY', rule: 'U4-erythritol-xylitol', triggers: ['erythritol'] },
-  { name: 'monk fruit blend', label: label('Monk Fruit Sweetener (Erythritol, Monk Fruit Extract)'), verdict: 'UGLY', rule: 'U4-erythritol-xylitol', triggers: ['erythritol'] },
-  { name: 'chocolate chips hide sugar', label: label('Almonds, Chocolate Chips (Unsweetened Chocolate, Cane Sugar, Cocoa Butter), Sea Salt'), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['sugar'] },
-  { name: 'sweetener with child', label: label('Water, Sweetener (Sucralose)'), verdict: 'UGLY', rule: 'U3-artificial-sweetener', triggers: ['sucralose'] },
-  { name: 'organic modifier stripped', label: label('Organic Oats, Organic Coconut Sugar'), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['sugar'] },
-  { name: 'and/or split', label: label('Wheat Flour, Sugar and/or Dextrose'), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['sugar', 'dextrose'] },
-  { name: 'contains 2% or less lead-in', label: label('Water, Contains 2% or less of: Citric Acid, Stevia'), verdict: 'BAD', rule: 'B2-plant-sweetener', triggers: ['stevia'] },
-  { name: 'duplicates merge', label: label('Sugar, Oats, Sugar, SUGAR.'), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['sugar'] },
-  { name: 'non-sweetener E-number', label: label('Water, E330, Salt'), verdict: 'CLEAN', rule: 'C1-nothing-sweet-added' },
-  { name: 'qualifier child', label: label('Sugar (Cane), Salt'), verdict: 'UGLY', rule: 'U1-added-sugar', triggers: ['sugar'] },
-  // Unresolved
-  { name: 'unknown sweet-sounding ingredient', label: label('Water, Yacon Syrup'), verdict: null, rule: 'A5-unknown-ingredient' },
-  { name: 'bare "sweetener"', label: label('Water, Sweetener, Citric Acid'), verdict: null, rule: 'A5-unknown-ingredient' },
-  { name: 'unknown sweetener E-number in range', label: label('Water, E963'), verdict: null, rule: 'A5-unknown-ingredient' },
-  { name: 'unknown non-sweet ingredient does not block CLEAN', label: label('Water, Spirulina'), verdict: 'CLEAN', rule: 'C1-nothing-sweet-added' },
-  // Incomplete and missing
-  { name: 'incomplete list, nothing sweet seen', label: label('Water, Salt', { ingredients_complete: false }), verdict: null, rule: 'A4-incomplete-list' },
-  { name: 'incomplete list, stevia seen', label: label('Water, Stevia', { ingredients_complete: false }), verdict: null, rule: 'A4-incomplete-list' },
-  { name: 'incomplete list, sugar seen', label: label('Water, Sugar', { ingredients_complete: false }), verdict: 'UGLY', rule: 'U1-added-sugar' },
-  { name: 'no ingredient list, 0 g added', label: label(null, { added_sugars_g: 0, quantity_basis: 'per_serving' }), verdict: null, rule: 'A3-no-ingredient-list' },
-  { name: 'not a label', label: label(null, { is_food_label: false }), verdict: null, rule: 'A1-not-a-label' },
-  { name: 'unreadable', label: label('Sugar', { is_readable: false }), verdict: null, rule: 'A2-unreadable' },
+  { name: 'stevia blend hides erythritol', label: label('Water, Stevia Blend (Erythritol, Stevia Leaf Extract [Reb A]), Natural Flavors'), verdict: 'OKAY', rule: 'O2-sugar-alcohol', triggers: ['erythritol'] },
+  { name: 'monk fruit blend', label: label('Monk Fruit Sweetener (Erythritol, Monk Fruit Extract)'), verdict: 'OKAY', rule: 'O2-sugar-alcohol', triggers: ['erythritol'] },
+  { name: 'chocolate chips hide sugar', label: label('Almonds, Chocolate Chips (Unsweetened Chocolate, Cane Sugar, Cocoa Butter), Sea Salt'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'sweetener with child', label: label('Water, Sweetener (Sucralose)'), verdict: 'BAD', rule: 'X3-artificial-sweetener', triggers: ['sucralose'] },
+  { name: 'organic modifier stripped', label: label('Organic Oats, Organic Coconut Sugar'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'and/or split', label: label('Wheat Flour, Sugar and/or Dextrose'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar', 'dextrose'] },
+  { name: 'contains 2% or less lead-in', label: label('Water, Contains 2% or less of: Citric Acid, Stevia'), verdict: 'OKAY', rule: 'O3-plant-sweetener', triggers: ['stevia'] },
+  { name: 'duplicates merge', label: label('Sugar, Oats, Sugar, SUGAR.'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'non-sweetener E-number', label: label('Water, E330, Salt'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'qualifier child', label: label('Sugar (Cane), Salt'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  // Unknown ingredients that may sweeten: OKAY, and logged
+  { name: 'unknown sweet-sounding ingredient', label: label('Water, Yacon Syrup'), verdict: 'OKAY', rule: 'O4-unknown-sweetener' },
+  { name: 'bare "sweetener"', label: label('Water, Sweetener, Citric Acid'), verdict: 'OKAY', rule: 'O4-unknown-sweetener' },
+  { name: 'unknown sweetener E-number in range', label: label('Water, E963'), verdict: 'OKAY', rule: 'O4-unknown-sweetener' },
+  { name: 'unknown sweetener never softens a worse one', label: label('Water, Yacon Syrup, Sucralose'), verdict: 'BAD', rule: 'X3-artificial-sweetener', triggers: ['sucralose'] },
+  { name: 'unknown non-sweet ingredient does not block CLEAN', label: label('Water, Spirulina'), verdict: 'CLEAN', rule: 'C1-clean' },
+  // Cut-off lists: anything sweet that is visible decides; RETRY only when nothing usable was seen
+  { name: 'incomplete list, nothing sweet seen', label: label('Water, Salt', { ingredients_complete: false }), verdict: 'RETRY', rule: 'R4-incomplete-list' },
+  { name: 'incomplete list, stevia seen', label: label('Water, Stevia', { ingredients_complete: false }), verdict: 'OKAY', rule: 'O3-plant-sweetener', triggers: ['stevia'] },
+  { name: 'incomplete list, sugar seen', label: label('Water, Sugar', { ingredients_complete: false }), verdict: 'BAD', rule: 'X2-added-sugar-no-grams' },
+  { name: 'cut-off list with Sugar', label: label('Enriched Flour (Wheat Flour, Niacin), Sugar, Palm Oil, Cocoa, Salt, Leav', { ingredients_complete: false }), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'incomplete list, erythritol seen', label: label('Almond Flour, Erythritol', { ingredients_complete: false }), verdict: 'OKAY', rule: 'O2-sugar-alcohol', triggers: ['erythritol'] },
+  // A cut-off word ("Corn Syr…") looks like an unknown sweetener, so it is not usable evidence.
+  { name: 'incomplete list, only an unknown sweetener seen', label: label('Water, Yacon Syrup', { ingredients_complete: false }), verdict: 'RETRY', rule: 'R4-incomplete-list' },
+  { name: 'incomplete list, clean so far is never CLEAN', label: label('Water, Sea Salt, Lemon', { ingredients_complete: false }), verdict: 'RETRY', rule: 'R4-incomplete-list' },
+  // Footnote marks are stripped before matching
+  { name: 'footnoted cane sugar', label: label('Water, Tea, cane sugar*♦, Lemon Juice', { ingredients_complete: false }), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'superscript footnote', label: label('Oats¹, Honey², Salt'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['honey'] },
+  { name: 'dagger footnote', label: label('Water, Stevia†, Citric Acid‡'), verdict: 'OKAY', rule: 'O3-plant-sweetener', triggers: ['stevia'] },
+  // Non-English lists: foreign sugar words, and Claude's English names
+  { name: 'Dutch ketchup', label: label('Tomaten (148 g per 100 g Tomato Ketchup), azijn, suiker, zout, specerij- en kruidextracten (bevatten selderij), specerij'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'French: sucre', label: label('Farine de blé, sucre, sel'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'German: Zucker', label: label('Haferflocken, Zucker, Salz'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'Spanish: azúcar', label: label('Harina, azúcar, sal'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'Italian: zucchero', label: label('Farina, zucchero, sale'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'Portuguese: açúcar', label: label('Farinha, açúcar, sal'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'Polish: cukier', label: label('Mąka, cukier, sól'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'glucose-fructose syrup', label: label('Water, Glucose-Fructose Syrup, Citric Acid'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams' },
+  { name: 'unknown foreign syrup still may sweeten', label: label('Water, sirop de yacon'), verdict: 'OKAY', rule: 'O4-unknown-sweetener' },
+  {
+    name: 'English names resolve an unknown printed list',
+    label: label('Tomaten, azijn, zoetmiddel, zout', {
+      ingredients_english: [
+        { printed: 'Tomaten', english: 'tomatoes' },
+        { printed: 'azijn', english: 'vinegar' },
+        { printed: 'zoetmiddel', english: 'sucralose' },
+        { printed: 'zout', english: 'salt' },
+      ],
+    }),
+    verdict: 'BAD',
+    rule: 'X3-artificial-sweetener',
+    triggers: ['sucralose'],
+  },
+  {
+    name: 'English names make a foreign clean list CLEAN',
+    label: label('Tomaten, azijn, zout', {
+      ingredients_english: [
+        { printed: 'Tomaten', english: 'tomatoes' },
+        { printed: 'azijn', english: 'vinegar' },
+        { printed: 'zout', english: 'salt' },
+      ],
+    }),
+    verdict: 'CLEAN',
+    rule: 'C1-clean',
+  },
+  // Two or more unrecognised ingredients: never CLEAN
+  { name: 'two unknown ingredients is OKAY at best', label: label('Water, Spirulina, Chlorella'), verdict: 'OKAY', rule: 'O5-unrecognised-ingredients' },
+  { name: 'untranslated foreign list is never CLEAN', label: label('Tomaten, azijn, zout, specerij'), verdict: 'OKAY', rule: 'O5-unrecognised-ingredients' },
+  // Ordinary unsweetened labels must still resolve to CLEAN
+  { name: 'energy drink with theanine (Ardor)', label: label('Carbonated Purified Water, Organic L-Theanine, Organic Green Tea, Organic Flavor, Organic Caffeine (From Green Tea), Sea Salt'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'alfredo sauce', label: label('Light Cream (Cream, Milk), Water, Butter (Cream, Natural Flavorings), Parmesan and Romano Cheese (Pasteurized Part-Skim Milk, Cheese Cultures, Salt, Enzymes), Enzyme Modified Egg Yolks, Parmesan Cheese (Pasteurized Milk, Salt, Rennet), Sea Salt, Black Pepper, White Pepper, Modified Cornstarch, Disodium Phosphate, Xanthan Gum'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'marinara sauce', label: label('Italian Whole Peeled Tomatoes, Olive Oil, Onions, Salt, Garlic, Basil, Black Pepper, Oregano'), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'unknown ingredients never soften added sugar', label: label('Spirulina, Chlorella, Sugar'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  // Missing or not a label
+  { name: 'no ingredient list, 0 g added', label: label(null, perServing(0)), verdict: 'RETRY', rule: 'R3-no-ingredient-list' },
+  { name: 'not a label', label: label(null, { is_food_label: false }), verdict: 'RETRY', rule: 'R1-not-food' },
+  { name: 'unreadable', label: label('Sugar', { is_readable: false }), verdict: 'RETRY', rule: 'R2-unreadable' },
   // Contradictory
-  { name: 'panel 0 g but sugar listed', label: label('Sugar, Water', { added_sugars_g: 0, quantity_basis: 'per_serving' }), verdict: 'UGLY', rule: 'U1-added-sugar' },
-  { name: 'panel 3 g but nothing listed', label: label('Water, Salt', { added_sugars_g: 3, quantity_basis: 'per_serving' }), verdict: 'UGLY', rule: 'U2-panel-added-sugar' },
-  // Drinking alcohol (Rules v2) vs sugar alcohol
-  { name: 'beer', label: label('Water, Barley, Hops, Yeast', { abv_text: '5% ABV' }), verdict: 'UGLY', rule: 'U5-drinking-alcohol' },
-  { name: 'wine as ingredient', label: label('Tomatoes, Red Wine, Salt'), verdict: 'UGLY', rule: 'U5-drinking-alcohol' },
-  { name: 'wine vinegar is not alcohol', label: label('Tomatoes, Red Wine Vinegar, Salt'), verdict: 'CLEAN', rule: 'C1-nothing-sweet-added' },
+  { name: 'panel 0 g but sugar listed', label: label('Sugar, Water', perServing(0)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g' },
+  { name: 'panel 3 g but nothing listed', label: label('Water, Salt', perServing(3)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g' },
+  // Drinking alcohol above 0.5% ABV vs sugar alcohol and "non-alcoholic" claims
+  { name: 'beer', label: label('Water, Barley, Hops, Yeast', { abv_text: '5% ABV' }), verdict: 'BAD', rule: 'X4-alcohol' },
+  { name: 'wine as ingredient', label: label('Tomatoes, Red Wine, Salt'), verdict: 'BAD', rule: 'X4-alcohol', triggers: ['drinking_alcohol'] },
+  { name: 'wine vinegar is not alcohol', label: label('Tomatoes, Red Wine Vinegar, Salt'), verdict: 'CLEAN', rule: 'C1-clean' },
+  ...['<0.5% ABV', '< 0.5% alc/vol', 'Less than 0.5% alcohol by volume', '0.0%', '0.0% ABV', '0.5% ABV or less', 'Alc. 0.5% vol', 'Non-alcoholic', 'Non-Alcoholic Brew', 'Alcohol-free', 'Alcohol free'].map((abv) => ({
+    name: `not alcohol: "${abv}"`, label: label('Water, Barley, Hops, Yeast', { abv_text: abv }), verdict: 'CLEAN' as const, rule: 'C1-clean',
+  })),
+  // Malted barley is the brewing grain, not sugar; malt syrup and malt extract are added sugar.
+  { name: 'non-alcoholic beer with malted barley', label: label('Water, Malted Barley, Hops, Yeast', { abv_text: '<0.5% ABV' }), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'non-alcoholic beer with barley malt', label: label('Water, Barley Malt, Hops, Yeast', { abv_text: '0.0%' }), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: 'beer with malted barley is still alcohol', label: label('Water, Malted Barley, Hops, Yeast', { abv_text: '5% ABV' }), verdict: 'BAD', rule: 'X4-alcohol' },
+  ...['Malt Syrup', 'Malt Extract', 'Barley Malt Syrup', 'Barley Malt Extract'].map((s) => ({
+    name: `${s} is added sugar`, label: label(`Oats, ${s}, Salt`), verdict: 'BAD' as const, rule: 'X2-added-sugar-no-grams', triggers: ['malt_syrup'],
+  })),
+  { name: 'brown sugar syrup is added sugar', label: label('Oats, Brown Sugar Syrup, Salt'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'brown sugar syrup at 3 g per serving', label: label('Oats, Brown Sugar Syrup, Salt', perServing(3)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g', triggers: ['sugar'] },
+  ...['Isomaltooligosaccharides', 'Isomalto-Oligosaccharides', 'Isomaltooligosaccharide', 'IMO'].map((s) => ({
+    name: `${s} is added sugar, not fiber`, label: label(`Milk Protein Isolate, ${s}, Cocoa`), verdict: 'BAD' as const, rule: 'X2-added-sugar-no-grams', triggers: ['imo'],
+  })),
+  { name: 'IMO with erythritol at 2 g per serving', label: label('Milk Protein Isolate, Isomalto-Oligosaccharides, Erythritol', perServing(2)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g' },
+  { name: 'malt extract at 2 g per serving', label: label('Oats, Malt Extract, Salt', perServing(2)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g', triggers: ['malt_syrup'] },
+  { name: 'beer listed with a <0.5% claim', label: label('Dealcoholized Beer (Water, Barley, Hops), Beer', { abv_text: '<0.5% ABV' }), verdict: 'CLEAN', rule: 'C1-clean' },
+  { name: '0.6% ABV is alcohol', label: label('Water, Barley, Hops', { abv_text: '0.6% ABV' }), verdict: 'BAD', rule: 'X4-alcohol' },
+  { name: 'European comma decimal', label: label('Water, Barley, Hops', { abv_text: '4,5 % vol' }), verdict: 'BAD', rule: 'X4-alcohol' },
+  { name: '"contains alcohol" with no number', label: label('Water, Barley, Hops', { abv_text: 'Contains alcohol' }), verdict: 'BAD', rule: 'X4-alcohol' },
   // Plain CLEAN
-  { name: 'plain clean', label: label('Water, Sea Salt, Lemon'), verdict: 'CLEAN', rule: 'C1-nothing-sweet-added' },
-  // Boundaries: any amount counts; tiny positive panel value
-  { name: 'boundary 0.1 g added', label: label('Water, Salt', { added_sugars_g: 0.1, quantity_basis: 'per_serving' }), verdict: 'UGLY', rule: 'U2-panel-added-sugar' },
-  { name: 'boundary negative grams ignored', label: label('Water, Salt', { added_sugars_g: -2 as number }), verdict: 'CLEAN', rule: 'C1-nothing-sweet-added' },
+  { name: 'plain clean', label: label('Water, Sea Salt, Lemon'), verdict: 'CLEAN', rule: 'C1-clean' },
+  // Boundaries: tiny positive panel value is still added sugar
+  { name: 'boundary 0.1 g added', label: label('Water, Salt', perServing(0.1)), verdict: 'OKAY', rule: 'O1-added-sugar-up-to-4g' },
+  { name: 'boundary negative grams ignored', label: label('Water, Salt', { added_sugars_g: -2 as number }), verdict: 'CLEAN', rule: 'C1-clean' },
 ];
 
 for (const c of CASES) {
@@ -109,7 +198,7 @@ for (const c of CASES) {
     const ev = evaluate(c.label);
     assert.equal(ev.verdict, c.verdict, `${c.name}: verdict (${ev.ruleId}: ${ev.explanation})`);
     assert.equal(ev.ruleId, c.rule, `${c.name}: rule`);
-    assert.equal(ev.status, c.verdict ? 'decided' : 'unresolved');
+    assert.equal(ev.status, c.verdict === 'RETRY' ? 'retry' : 'decided');
     assert.equal(ev.policyVersion, POLICY_VERSION);
     if (c.triggers) assert.deepEqual(ev.triggers.map((t) => t.id).sort(), [...c.triggers].sort(), `${c.name}: triggers`);
     // Explanations must agree with the classification: each trigger's literal text appears in it.
@@ -119,6 +208,27 @@ for (const c of CASES) {
   });
 }
 
+test('isAlcoholic: above 0.5% ABV only', () => {
+  for (const t of ['5% ABV', '0.51%', '12% alc./vol.', 'Contains alcohol']) assert.equal(isAlcoholic(t), true, t);
+  for (const t of [null, '', '0.5%', '0.4% ABV', '<0.5%', '0.0%', 'non-alcoholic', 'alcohol-free', '0.5% ABV or less']) assert.equal(isAlcoholic(t), false, String(t));
+});
+
+test('unknown sweeteners are kept separately so they can be logged', () => {
+  const ev = evaluate(label('Water, Yacon Syrup, Spirulina'));
+  assert.deepEqual(ev.unknownSweeteners, ['Yacon Syrup']);
+  assert.deepEqual(ev.unresolved, ['Yacon Syrup', 'Spirulina']);
+});
+
+test('classify: concentrates are natural in a juice product, added everywhere else', () => {
+  const juice = classify('Water, Apple Juice Concentrate');
+  assert.equal(juice.juiceProduct, true);
+  assert.deepEqual(juice.found.naturally_occurring_sugar.map((e) => e.id), ['juice_concentrate']);
+  assert.deepEqual(juice.found.added_sugar, []);
+  const bar = classify('Oats, Apple Juice Concentrate');
+  assert.equal(bar.juiceProduct, false);
+  assert.deepEqual(bar.found.added_sugar.map((e) => e.id), ['juice_concentrate']);
+  assert.deepEqual(bar.found.context_dependent, []);
+});
 test('registry: aliases and codes are unique and lowercase-normalized', () => {
   const seen = new Map<string, string>();
   for (const e of REGISTRY) {
@@ -142,6 +252,14 @@ test('registry: no entry is both sugar and sweetener; identities match expectati
   assert.equal(cls('Whole Milk'), 'naturally_occurring_sugar');
   assert.equal(cls('Banana Puree'), 'naturally_occurring_sugar');
   assert.equal(cls('Strawberry Puree Concentrate'), 'context_dependent');
+  assert.equal(cls('Malted Barley'), 'non_sweet');
+  assert.equal(cls('Barley Malt'), 'non_sweet');
+  assert.equal(cls('Barley Malt Syrup'), 'added_sugar');
+  assert.equal(cls('Malt Extract'), 'added_sugar');
+  assert.equal(cls('Brown Sugar Syrup'), 'added_sugar');
+  assert.equal(cls('Isomalto-Oligosaccharides'), 'added_sugar');
+  assert.equal(cls('Isomaltooligosaccharides'), 'added_sugar');
+  assert.equal(cls('Soluble Corn Fiber'), 'other_carbohydrate');
 });
 
 test('normalize: no substring matching', () => {
@@ -188,6 +306,36 @@ test('warnings: rounding note and contradiction are exposed', () => {
 test('unknown non-sweet ingredients are reported, not hidden', () => {
   const ev = evaluate(label('Water, Spirulina'));
   assert.deepEqual(ev.unresolved, ['Spirulina']);
+});
+
+test('normalize: footnote marks are stripped ("cane sugar*♦" matches)', () => {
+  assert.equal(normalizeKey('cane sugar*♦'), 'cane sugar');
+  assert.equal(normalizeKey('Honey¹'), 'honey');
+  assert.equal(normalizeKey('Stevia†‡'), 'stevia');
+  assert.equal(normalizeKey('▲Cane Sugar'), 'cane sugar');
+  assert.equal(matchEntry(normalizeKey('cane sugar*♦')).entry?.id, 'sugar');
+});
+
+test('Brown Sugar Syrup is listed next to Sugar, not merged into it (items 35, 37, 57)', () => {
+  const c = classify('Whole Grain Oats, Sugar, Corn Starch, Honey, Brown Sugar Syrup, Salt');
+  assert.deepEqual(c.found.added_sugar.map((e) => e.literal), ['Sugar', 'Honey', 'Brown Sugar Syrup']);
+  // Same ingredient twice, or with only a modifier changed, still merges.
+  assert.deepEqual(classify('Sugar, Oats, SUGAR, Organic Sugar').found.added_sugar.map((e) => e.literal), ['Sugar']);
+  // Different names for the same sugar are each shown.
+  assert.deepEqual(classify('Oats, Cane Sugar, Sugar').found.added_sugar.map((e) => e.literal), ['Cane Sugar', 'Sugar']);
+});
+
+test('English names are kept for display; printed text stays for the record', () => {
+  const ev = evaluate(label('Haver, suiker', { ingredients_english: [{ printed: 'Haver', english: 'oats' }, { printed: 'suiker', english: 'sugar' }] }));
+  const sugar = ev.found.added_sugar[0];
+  assert.equal(sugar.literal, 'suiker');
+  assert.equal(sugar.english, 'sugar');
+});
+
+test('unrecognised ingredients are listed for the log', () => {
+  const ev = evaluate(label('Tomaten, azijn, zout'));
+  assert.deepEqual(ev.unresolved, ['Tomaten', 'azijn', 'zout']);
+  assert.match(ev.explanation, /Tomaten/);
 });
 
 test('classify keeps the printed text and blend path', () => {

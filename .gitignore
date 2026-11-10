@@ -48,3 +48,11 @@ dist-web/
 
 # Scan timing traces (metro.config.js)
 .scan-timing/
+
+# Local-only: agent state and the secrets reference file
+.cursor/
+.env_new
+
+# Eval: label photos are downloaded (tests/eval/fetch-photos.mjs), the report is generated
+tests/eval/photos/*.jpg
+tests/eval/report.md

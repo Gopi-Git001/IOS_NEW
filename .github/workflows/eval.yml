@@ -1,0 +1,43 @@
+name: Eval
+# Manual only: runs real label photos through the deployed scan pipeline (paid model calls, capped at $2).
+# Secrets: EVAL_SUPABASE_URL, EVAL_SUPABASE_KEY (publishable key) and either EVAL_USER_EMAIL +
+# EVAL_USER_PASSWORD (a test account) or EVAL_ACCESS_TOKEN. The model keys stay in Supabase secrets.
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: Comma-separated item ids (blank = every verified item)
+        required: false
+        default: ''
+permissions:
+  contents: read
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix tests/eval
+      - name: Download the label photos recorded in labels.json
+        run: node tests/eval/fetch-photos.mjs --from-sources
+      - name: Eval
+        env:
+          EVAL_SUPABASE_URL: ${{ secrets.EVAL_SUPABASE_URL }}
+          EVAL_SUPABASE_KEY: ${{ secrets.EVAL_SUPABASE_KEY }}
+          EVAL_USER_EMAIL: ${{ secrets.EVAL_USER_EMAIL }}
+          EVAL_USER_PASSWORD: ${{ secrets.EVAL_USER_PASSWORD }}
+          EVAL_ACCESS_TOKEN: ${{ secrets.EVAL_ACCESS_TOKEN }}
+          ONLY: ${{ inputs.only }}
+        run: npm run eval -- ${ONLY:+--only "$ONLY"}
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: tests/eval/report.md
+          if-no-files-found: ignore

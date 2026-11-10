@@ -7,7 +7,9 @@ export const brand = { name: 'Sugar Depth', tagline: 'Read the fine print.' };
 
 // Colors live in brand/tokens.json, shared with the marketing site (sites/sugardepth). Edit them there.
 // Verdict colors are tuned for white-on-dark glass (each at least 7:1 on #0B0F18).
-export const colors = tokens.colors;
+// brand/tokens.json (and the site) still call the amber "bad" and the rose "ugly"; the app names them by verdict.
+const { bad: okay, ugly: bad, ...base } = tokens.colors;
+export const colors = { ...base, okay, bad };
 export const ambient = tokens.ambient;
 // Scoped to verdict surfaces: camera controls and the rest of the app keep their dark glass.
 export const crystal = {
@@ -16,8 +18,8 @@ export const crystal = {
   muted: colors.crystalMuted,
   rule: colors.crystalRule,
   CLEAN: { tint: colors.clean, deep: colors.cleanInk },
-  BAD: { tint: colors.bad, deep: colors.badInk },
-  UGLY: { tint: colors.ugly, deep: colors.uglyInk },
+  OKAY: { tint: colors.okay, deep: colors.badInk },
+  BAD: { tint: colors.bad, deep: colors.uglyInk },
 };
 
 export const fonts = {

@@ -1,0 +1,7 @@
+appId: ${APP_ID || "host.exp.exponent"}
+name: scan
+tags:
+  - scan
+---
+- runFlow: common/launch.yaml
+- runFlow: common/scan.yaml

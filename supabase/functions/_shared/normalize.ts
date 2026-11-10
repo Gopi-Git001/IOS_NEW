@@ -31,7 +31,22 @@ export type Resolved = {
   via: 'alias' | 'code' | 'juice_rule' | 'additive_code' | 'none';
   /** True when an unmatched item has wording that hints it might sweeten. */
   sweetSignal: boolean;
+  /** The English name the reader gave for a non-English ingredient, when it has one. */
+  english?: string;
 };
+
+/** Normalized printed name -> English name, from the reader's translation of a non-English list. */
+export type Translations = Map<string, string>;
+
+export function translationsFrom(pairs: { printed: string; english: string }[] | null | undefined): Translations {
+  const map: Translations = new Map();
+  for (const p of pairs ?? []) {
+    const key = normalizeKey(p?.printed ?? '');
+    const english = p?.english?.trim();
+    if (key && english && normalizeKey(english) !== key) map.set(key, english);
+  }
+  return map;
+}
 
 const OPEN = '([{';
 const CLOSE = ')]}';
@@ -63,12 +78,40 @@ export function stripLeadIns(text: string): string {
 }
 
 /** Qualifier words that do not change identity. Stripped only when the exact key has no match. */
-const MODIFIERS = ['certified organic', 'organic', 'non-gmo', 'non gmo', 'natural', 'pure', 'unrefined', 'unsulphured', 'unsulfured', 'fair trade', 'dried', 'filtered'];
+const MODIFIERS = [
+  'certified organic', 'organic', 'non-gmo', 'non gmo', 'natural', 'pure', 'unrefined', 'unsulphured', 'unsulfured', 'fair trade',
+  'dried', 'filtered', 'grade a', 'pasteurized', 'pasteurised', 'only', 'raw', 'roasted', 'dry roasted',
+];
+
+/** Every leading-modifier-stripped form of `key`, the key itself first ("organic pure cane sugar" -> ..., "cane sugar"). */
+export function modifierForms(key: string): string[] {
+  const forms = [key];
+  let stripped = key;
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (const m of MODIFIERS) {
+      if (stripped.startsWith(`${m} `)) {
+        stripped = stripped.slice(m.length + 1);
+        forms.push(stripped);
+        changed = true;
+      }
+    }
+  }
+  return forms;
+}
+
+/** `key` with its leading modifiers removed: "Organic Cane Sugar" and "Cane Sugar" share one base. */
+export const baseKey = (key: string) => modifierForms(key).at(-1)!;
+
+/**
+ * Footnote and trademark marks printed next to ingredient names (* ♦ † ‡ ▲ ¹ ² ® ™ …). Removed before
+ * NFKD, which would otherwise turn "¹" into "1" and "™" into "tm".
+ */
+const FOOTNOTE_MARKS = /[*†‡§¶#♦◆◇◊●•▲△▼▽►■□★☆✝✱✲✳^~⁰¹²³⁴⁵⁶⁷⁸⁹®™©]/g;
 
 /** Lowercase, strip diacritics, footnote marks, percentages and extra spaces. Keeps hyphens and slashes. */
 export function normalizeKey(text: string): string {
-  let s = text.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  s = s.replace(/[*†‡§¹²³]/g, ' ');
+  let s = text.replace(FOOTNOTE_MARKS, ' ').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   s = s.replace(/[\u2018\u2019]/g, "'").replace(/[\u2010-\u2015]/g, '-');
   s = stripLeadIns(s);
   s = s.replace(/\b\d+(?:\.\d+)?\s*%/g, ' ');
@@ -157,18 +200,7 @@ export function matchEntry(key: string): { entry: Entry | null; via: Resolved['v
     if (!isSweetenerCode(code)) return { entry: null, via: 'additive_code' };
     return { entry: null, via: 'none' };
   }
-  const candidates = [key];
-  let stripped = key;
-  for (let changed = true; changed; ) {
-    changed = false;
-    for (const m of MODIFIERS) {
-      if (stripped.startsWith(`${m} `)) {
-        stripped = stripped.slice(m.length + 1);
-        candidates.push(stripped);
-        changed = true;
-      }
-    }
-  }
+  const candidates = modifierForms(key);
   for (const k of candidates) {
     const hit = lookupAlias(k);
     if (hit) return { entry: hit, via: 'alias' };
@@ -193,16 +225,22 @@ const maySweeten = (key: string) => {
  * and treats unmatched children as qualifiers ("Sugar (Cane)"). A parent that does not match is a
  * compound ("Chocolate Chips (Sugar, Cocoa)"): only its children are classified.
  */
-export function resolveAll(items: ParsedItem[], path: string[] = []): Resolved[] {
+export function resolveAll(items: ParsedItem[], path: string[] = [], translations: Translations = new Map()): Resolved[] {
   const out: Resolved[] = [];
   for (const it of items) {
-    const own = matchEntry(it.key);
-    const kids = it.children.length ? resolveAll(it.children, [...path, it.literal]) : [];
+    const english = translations.get(it.key);
+    const englishKey = english ? normalizeKey(english) : '';
+    // The printed name first; the reader's English name only when the printed one isn't known.
+    let own = matchEntry(it.key);
+    if (!own.entry && own.via === 'none' && englishKey) own = matchEntry(englishKey);
+    const sweetSignal = maySweeten(it.key) || (englishKey !== '' && maySweeten(englishKey));
+    const kids = it.children.length ? resolveAll(it.children, [...path, it.literal], translations) : [];
     if (own.entry || own.via === 'additive_code') {
-      out.push({ literal: it.literal, key: it.key, path, entry: own.entry, via: own.via, sweetSignal: false });
+      out.push({ literal: it.literal, key: it.key, path, entry: own.entry, via: own.via, sweetSignal: false, english });
       // Keep children that are themselves known (e.g. "Stevia Blend" is not known, but
-      // "Sweetener (Sucralose)" should surface sucralose). Unknown children of a known parent are qualifiers.
-      out.push(...kids.filter((k) => k.entry || k.via === 'additive_code'));
+      // "Sweetener (Sucralose)" should surface sucralose). Unknown children of a known parent are qualifiers,
+      // and so is a known child that only restates the parent ("Stevia Leaf Extract [Reb A]").
+      out.push(...kids.filter((k) => (k.entry && k.entry.id !== own.entry?.id) || k.via === 'additive_code'));
     } else if (it.children.length) {
       // Compound: classify by children. The compound name itself is only a concern if it
       // signals sweetness AND none of its children explain it.
@@ -210,13 +248,13 @@ export function resolveAll(items: ParsedItem[], path: string[] = []): Resolved[]
       if (it.key && !explained) {
         // Unexplained compound: report the ingredient itself; its unknown children are likely notes
         // like "(To Protect Taste)", so only keep children that are known or may sweeten.
-        out.push({ literal: it.literal, key: it.key, path, entry: null, via: 'none', sweetSignal: maySweeten(it.key) });
+        out.push({ literal: it.literal, key: it.key, path, entry: null, via: 'none', sweetSignal, english });
         out.push(...kids.filter((k) => k.entry || k.sweetSignal || k.via === 'additive_code'));
       } else {
         out.push(...kids);
       }
     } else if (it.key) {
-      out.push({ literal: it.literal, key: it.key, path, entry: null, via: 'none', sweetSignal: maySweeten(it.key) });
+      out.push({ literal: it.literal, key: it.key, path, entry: null, via: 'none', sweetSignal, english });
     }
   }
   return out;

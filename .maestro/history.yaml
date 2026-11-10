@@ -1,0 +1,24 @@
+# A finished scan shows up in Menu -> Scan history (kept on the phone).
+appId: ${APP_ID || "host.exp.exponent"}
+name: history
+tags:
+  - history
+---
+- runFlow: common/launch.yaml
+- tapOn: "Menu"
+- tapOn: "Clear history"
+- runFlow:
+    when:
+      visible: "Clear"
+    commands:
+      - tapOn: "Clear"
+- tapOn: "Close menu"
+- runFlow: common/scan.yaml
+- tapOn: "Scan another"
+- tapOn: "Menu"
+- assertVisible: "Scan history"
+- tapOn: "Scan history"
+- assertVisible: "BAD"
+- assertNotVisible: "No scans yet.*"
+- tapOn: "Back"
+- tapOn: "Close menu"

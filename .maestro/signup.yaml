@@ -1,0 +1,12 @@
+# Sign-up in a testing build: guest mode creates a fresh hidden account with no sign-in step
+# (the app's real sign-in is Google, which Maestro can't drive). Phone sign-up is signup-phone.yaml.
+appId: ${APP_ID || "host.exp.exponent"}
+name: signup
+tags:
+  - signup
+---
+- runFlow: common/launch.yaml
+- tapOn: "Profile"
+- assertVisible: "Test session"
+- tapOn: "Close profile"
+- assertVisible: "Scan label"

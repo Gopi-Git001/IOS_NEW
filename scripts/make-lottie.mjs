@@ -534,8 +534,8 @@ function happy() {
   ]);
 }
 
-function bad() {
-  // BAD: a slow, unconvinced shrug with a head tilt, one raised brow and a nervous sweat drop.
+function okay() {
+  // OKAY: a slow, unconvinced shrug with a head tilt, one raised brow and a nervous sweat drop.
   const op = 84;
   const pal = HEALTHY;
   const shrug = (side) =>
@@ -577,8 +577,8 @@ function bad() {
   ]);
 }
 
-function ugly() {
-  // UGLY: the cane has gone off. It wilts forward, leaves droop and brown at the tips,
+function bad() {
+  // BAD: the cane has gone off. It wilts forward, leaves droop and brown at the tips,
   // it shivers and sobs, and a fly circles it. Colours are sick from frame 0 so the loop is seamless.
   const op = 72;
   const pal = SICK;
@@ -640,7 +640,7 @@ function ugly() {
 }
 
 mkdirSync('assets/lottie', { recursive: true });
-const moods = { idle, scanning, clean: happy, bad, ugly };
+const moods = { idle, scanning, clean: happy, okay, bad };
 for (const [name, build] of Object.entries(moods)) {
   const anim = build();
   anim.nm = name;

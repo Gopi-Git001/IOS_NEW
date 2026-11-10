@@ -1,0 +1,11 @@
+# Opens the dev bundle in Expo Go and waits for the camera screen (signed in).
+appId: ${APP_ID || "host.exp.exponent"}
+---
+- launchApp:
+    appId: ${APP_ID || "host.exp.exponent"}
+    permissions:
+      camera: allow
+- openLink: ${EXPO_URL}
+- extendedWaitUntil:
+    visible: "Scan label"
+    timeout: 90000

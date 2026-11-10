@@ -46,7 +46,7 @@ const ICON = require('../../assets/brand-icon.png');
 
 export type MarkState = 'idle' | 'scanning' | Verdict;
 
-const MARK_GLOW: Record<Verdict, string> = { CLEAN: colors.clean, BAD: colors.bad, UGLY: colors.ugly };
+const MARK_GLOW: Record<Verdict, string> = { CLEAN: colors.clean, OKAY: colors.okay, BAD: colors.bad };
 
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false);

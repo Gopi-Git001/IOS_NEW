@@ -1,11 +1,13 @@
 // POST { image: <base64 JPEG>, scan_id?: string }  →  { jev: JevVerdict, timing } | { error: string, timing }
-// Signed-in users only. The fast path: Jev reads the label photo and makes the CLEAN / BAD / UGLY
+// Signed-in users only. The fast path: Jev reads the label photo and makes the CLEAN / OKAY / BAD
 // call in one request. The app calls this and scan-label (ingredient lists) at the same time and
-// shows the verdict as soon as this one answers.
+// shows one verdict once both have answered (or Jev's 6 s timeout passes).
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
 import { askJev } from '../_shared/jev.ts';
 import { env } from '../_shared/env.ts';
 import { allow, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
+import { padForJev } from '../_shared/pad.ts';
+import { VERDICT_SCHEME } from '../_shared/rules.ts';
 import { clientFields, imageKb, requestTimer, timed } from '../_shared/timing.ts';
 
 export default {
@@ -38,8 +40,10 @@ export default {
     timer.mark('checks');
     if (!allowed) return tooMany();
 
+    const prepared = padForJev(image);
+    if (prepared.padded) timer.set({ jev_padded: `${prepared.from}->${prepared.to}` });
     timer.mark('jev_start');
-    const jev = await askJev(image, env('TYPESAFE_API_KEY'));
+    const jev = await askJev(prepared.image, env('TYPESAFE_API_KEY'));
     timer.mark('jev_end');
     timer.set({
       jev_status: jev.status,
@@ -47,6 +51,6 @@ export default {
       ...(jev.status === 'unavailable' ? { jev_reason: jev.reason } : {}),
     });
 
-    return json({ jev });
+    return json({ jev, verdicts: VERDICT_SCHEME });
   })),
 };

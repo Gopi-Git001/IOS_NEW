@@ -1,0 +1,29 @@
+# KNOWN FAILING: the app has no phone sign-in (Google only; SMS was removed from quickgob-phone-auth).
+# Written to the requested spec so it passes once phone sign-in exists. Needs the Supabase test OTP
+# 15555550100 = "123456" under [auth.sms.test_otp]. Run with --include-tags known-failing.
+appId: ${APP_ID || "host.exp.exponent"}
+name: signup-phone
+tags:
+  - known-failing
+---
+- launchApp:
+    appId: ${APP_ID || "host.exp.exponent"}
+    clearState: true
+    permissions:
+      camera: allow
+- openLink: ${EXPO_URL}
+- extendedWaitUntil:
+    visible: "Phone number"
+    timeout: 90000
+- tapOn: "Phone number"
+- inputText: "5555550100"
+- tapOn: "Send code"
+- extendedWaitUntil:
+    visible: "Code"
+    timeout: 20000
+- tapOn: "Code"
+- inputText: "123456"
+- tapOn: "Verify"
+- extendedWaitUntil:
+    visible: "Scan label"
+    timeout: 30000

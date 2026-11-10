@@ -9,6 +9,7 @@
     "docs",
     "sites",
     "supabase/functions",
+    "tests/eval",
     "**/*.test.ts"
   ]
 }

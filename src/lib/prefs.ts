@@ -2,9 +2,9 @@ import { stored } from './stored';
 import { isConfigured, supabase } from './supabase';
 
 export type Prefs = {
-  /** Plant sweeteners (stevia, monk fruit…) keep a product at BAD at best. On = the server's own rule. */
+  /** Plant sweeteners (stevia, monk fruit…) keep a product at OKAY at best. On = the server's own rule. */
   strict: boolean;
-  /** For UGLY, the character shows its calm reaction instead of crying. */
+  /** For BAD, the character shows its calm reaction instead of crying. */
   gentle: boolean;
   /** Vibrate when a verdict appears. */
   haptics: boolean;

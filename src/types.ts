@@ -1,4 +1,5 @@
-export type Verdict = 'CLEAN' | 'BAD' | 'UGLY';
+/** What a result panel shows. RETRY (no verdict, take another photo) is shown as an error instead. */
+export type Verdict = 'CLEAN' | 'OKAY' | 'BAD';
 
 export type ScanResult = {
   verdict: Verdict;

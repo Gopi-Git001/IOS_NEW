@@ -13,10 +13,10 @@ import { kindTag, type Pick } from './GlossaryCard';
 import { CameraIcon } from './Icons';
 import { CrystalVerdict, useCrystalReducedMotion } from './CrystalVerdict';
 
-const kindInk = { added: crystal.UGLY.deep, sweetener: crystal.BAD.deep, natural: crystal.CLEAN.deep };
+const kindInk = { added: crystal.BAD.deep, sweetener: crystal.OKAY.deep, natural: crystal.CLEAN.deep };
 
-export const verdictColor: Record<Verdict, string> = { CLEAN: colors.clean, BAD: colors.bad, UGLY: colors.ugly };
-export const verdictWord: Record<Verdict, string> = { CLEAN: 'Clean', BAD: 'Bad', UGLY: 'Ugly' };
+export const verdictColor: Record<Verdict, string> = { CLEAN: colors.clean, OKAY: colors.okay, BAD: colors.bad };
+export const verdictWord: Record<Verdict, string> = { CLEAN: 'Clean', OKAY: 'Okay', BAD: 'Bad' };
 
 const SECTIONS: { kind: Kind; title: string; key: 'addedSugars' | 'sweeteners' | 'naturalSugars' }[] = [
   { kind: 'added', title: 'Added sugars', key: 'addedSugars' },

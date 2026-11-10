@@ -59,13 +59,13 @@ function MenuList({ open }: { open: (p: Page) => void }) {
         <Row
           icon={ShieldCheck}
           label="Strict mode"
-          detail="Stevia and monk fruit count as BAD at best."
+          detail="Stevia and monk fruit count as OKAY at best."
           toggle={{ value: prefs.strict, onChange: toggle('strict') }}
         />
         <Row
           icon={Feather}
           label="Gentle mode"
-          detail="For UGLY, the cube stays calm instead of crying."
+          detail="For BAD, the cube stays calm instead of crying."
           toggle={{ value: prefs.gentle, onChange: toggle('gentle') }}
         />
         <Row icon={Vibrate} label="Haptics" detail="Vibrate when a verdict appears." toggle={{ value: prefs.haptics, onChange: toggle('haptics') }} />
@@ -131,17 +131,17 @@ function formatDate(iso: string) {
 
 // ---------- How verdicts work ----------
 
-/** One-line definitions for the menu; "How verdicts work" has the full rules. There is no GOOD tier (Rules v2). */
+/** One-line definitions for the menu; "How verdicts work" has the full rules (Rules v3). */
 const definitions: { verdict: keyof typeof verdictColor; text: string }[] = [
-  { verdict: 'CLEAN', text: 'No added sugar or sweeteners. Only sugars that are naturally in the food.' },
-  { verdict: 'BAD', text: 'No added sugar, but a gentler sweetener such as stevia, monk fruit or a sugar alcohol.' },
-  { verdict: 'UGLY', text: 'Any added sugar, including honey and syrups, or an artificial sweetener.' },
+  { verdict: 'CLEAN', text: 'No added sugar, sweeteners or alcohol. Only sugars that are naturally in the food.' },
+  { verdict: 'OKAY', text: '4 g or less of added sugar per serving, or a gentler sweetener such as stevia, monk fruit or a sugar alcohol.' },
+  { verdict: 'BAD', text: 'More than 4 g of added sugar per serving, an artificial sweetener, or alcohol.' },
 ];
 
 const rules: { verdict: keyof typeof verdictColor; text: string }[] = [
-  { verdict: 'CLEAN', text: 'No added sugar and no sweeteners. Sugars that are naturally in the food, like the lactose in milk or the fructose in fruit, are fine.' },
-  { verdict: 'BAD', text: 'No added sugar, but a gentler sweetener: stevia, monk fruit, allulose, or a sugar alcohol such as sorbitol or maltitol.' },
-  { verdict: 'UGLY', text: 'Any added sugar at all, including honey, syrups and fruit juice concentrate. Also artificial sweeteners such as sucralose or aspartame, erythritol, xylitol, or alcohol.' },
+  { verdict: 'CLEAN', text: 'No added sugar, no sweeteners and no alcohol. Sugars that are naturally in the food, like the lactose in milk, the fructose in fruit or a 100% juice, are fine.' },
+  { verdict: 'OKAY', text: '4 g or less of added sugar per serving, or a gentler sweetener: stevia, monk fruit, allulose, or a sugar alcohol such as erythritol, xylitol, sorbitol or maltitol.' },
+  { verdict: 'BAD', text: 'More than 4 g of added sugar per serving, or added sugar when the grams per serving are not shown. Also artificial sweeteners such as sucralose or aspartame, or alcohol above 0.5% ABV.' },
 ];
 
 function Methodology() {
@@ -160,8 +160,8 @@ function Methodology() {
         </View>
       ))}
       <Text style={styles.paragraph}>
-        There is no gram cutoff. The 2025–2030 Dietary Guidelines say no amount of added sugar or sweetener is recommended, so any added
-        sugar makes a product UGLY. Ingredient lists don't say how many grams were added, so the verdict goes by what is in the list.
+        Added sugar is graded by the Added Sugars grams per serving on the nutrition panel. When the grams can't be read, any added sugar
+        makes a product BAD, so scan the panel too. Added sugar, artificial sweeteners and alcohol never get CLEAN.
       </Text>
       <Text style={styles.paragraph}>
         With Strict mode off, a product whose only sweetener is stevia, monk fruit or a similar plant sweetener shows as CLEAN.
