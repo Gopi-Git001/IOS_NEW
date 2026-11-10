@@ -1,0 +1,12 @@
+# Taps the shutter (the test photo stands in for the camera) and waits for a full result.
+appId: ${APP_ID || "host.exp.exponent"}
+---
+- tapOn: "Scan label"
+- extendedWaitUntil:
+    visible: "Verdict Facts"
+    timeout: 30000
+# The test photo is Honey Nut Cheerios (sugar, honey, brown sugar syrup): UGLY.
+- extendedWaitUntil:
+    visible: "Ugly\\..*"
+    timeout: 15000
+- assertVisible: "Scan another"

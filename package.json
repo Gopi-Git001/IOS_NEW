@@ -45,6 +45,12 @@
     "lottie": "node scripts/make-lottie.mjs",
     "timing:report": "node scripts/scan-timing-report.mjs",
     "tokens": "node scripts/sync-tokens.mjs",
+    "test": "npm run test:unit && npm run test:backend",
+    "test:unit": "npx -y tsx --test tests/unit/*.test.ts supabase/functions/_shared/*.test.ts src/lib/*.test.ts",
+    "test:backend": "node scripts/test-backend.mjs",
+    "test:db": "node scripts/test-backend.mjs --db",
+    "test:functions": "node scripts/test-backend.mjs --functions",
+    "eval": "npx -y tsx tests/eval/run-eval.mjs",
     "test:rules": "npx -y tsx --test supabase/functions/_shared/*.test.ts src/lib/combine.test.ts src/lib/display.test.ts src/lib/glossary.test.ts src/lib/photo.test.ts src/lib/sharpness.test.ts",
     "build:web": "expo export --platform web --output-dir dist-web && sh scripts/fix-web-assets.sh dist-web"
   },

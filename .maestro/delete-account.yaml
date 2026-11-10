@@ -1,0 +1,23 @@
+# Deletes the signed-in (guest) account from Profile; history on the phone goes with it.
+appId: ${APP_ID || "host.exp.exponent"}
+name: delete-account
+tags:
+  - account
+---
+- runFlow: common/launch.yaml
+- runFlow: common/scan.yaml
+- tapOn: "Scan another"
+- tapOn: "Profile"
+- tapOn: "Delete account"
+- assertVisible: "Delete account?"
+- tapOn: "Delete"
+- extendedWaitUntil:
+    visible: "Scan label|Continue with Google"
+    timeout: 30000
+- runFlow:
+    when:
+      visible: "Scan label"
+    commands:
+      - tapOn: "Menu"
+      - tapOn: "Scan history"
+      - assertVisible: "No scans yet.*"

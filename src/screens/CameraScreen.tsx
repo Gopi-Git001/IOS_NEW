@@ -5,6 +5,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { notify } from '../lib/confirm';
 import { BlurryPhotoError, type LabelCameraHandle, type Photo, type ViewBox } from '../lib/photo';
 import { markScan, noteScan, startScanTiming } from '../lib/scanTiming';
+import { testPhoto, testPhotoEnabled } from '../lib/testPhoto';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { Glass } from '../components/Glass';
@@ -66,11 +67,12 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline }: Props)
   }
 
   const shoot = async () => {
-    if (!camera.current || !ready || busy) return;
+    const standIn = testPhoto();
+    if (busy || (!standIn && (!camera.current || !ready))) return;
     setBusy(true);
     startScanTiming();
     try {
-      const photo = await camera.current.capture();
+      const photo = standIn ?? (await camera.current!.capture());
       markScan('captured');
       noteScan({ photo_px: `${photo.width}x${photo.height}` });
       // After the shot, so the buzz can't shake the phone while the photo is taken.
@@ -134,7 +136,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline }: Props)
         </View>
 
         <View style={styles.bottom}>
-          <Shutter onPress={shoot} disabled={!ready || busy} busy={busy} />
+          <Shutter onPress={shoot} disabled={!(ready || testPhotoEnabled) || busy} busy={busy} />
           <Footer />
         </View>
       </SafeAreaView>
