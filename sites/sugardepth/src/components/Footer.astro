@@ -1,7 +1,7 @@
 ---
 import { ORG, POLICY_VERSION, REGISTRY_VERSION, TAGLINE, APP_URL } from '../config';
-import { getCollection } from 'astro:content';
-const guides = (await getCollection('ingredients')).sort((a, b) => a.data.order - b.data.order).slice(0, 6);
+import { getFeaturedGuides } from '../data/guides';
+const guides = (await getFeaturedGuides()).slice(0, 6);
 const year = 2026;
 ---
 <footer class="site-footer">
@@ -28,7 +28,7 @@ const year = 2026;
       <div>
         <h2>Ingredient guides</h2>
         <ul>
-          {guides.map((g) => <li><a href={`/ingredients/${g.id}`}>{g.data.name}</a></li>)}
+          {guides.map((g) => <li><a href={`/ingredients/${g.slug}`}>{g.name}</a></li>)}
           <li><a href="/ingredients">All guides</a></li>
         </ul>
       </div>

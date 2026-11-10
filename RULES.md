@@ -58,6 +58,14 @@ Jev makes the call from the photo (`_shared/jev.ts`, `src/lib/combine.ts`). The 
 - A printed 0 g doesn't cancel a listed added sugar: it is OKAY (O1). US labels may round amounts under 0.5 g down to 0, and the output says so in `warnings`.
 - If the panel shows added sugar but no added sugar was found in a complete list, the panel grams decide (X1 or O1) and the contradiction is reported in `warnings`.
 
+## Sugar stacking and the first sugar's place (information only)
+
+`evaluate()` also returns `sugarStacking`, and the result carries it as an optional `sugarStacking` field. It is shown next to the verdict and never changes one.
+
+- Stacking: the list has 2 or more different added sugars. "Different" means different registry entries, so "Sugar", "Cane Sugar" and "Molasses" (all the `sugar` entry) count once, and so do two juice concentrates. Sweeteners and sugar alcohols don't count.
+- Place: the 1-based place of the first added sugar among the top-level ingredients, e.g. "First sugar at ingredient 2 of 14". A sub-ingredient in brackets takes the place of the ingredient it is inside ("inside ingredient 1 of 3") and doesn't add to the count.
+- Nothing is reported, rather than a guess, for RETRY, a cut-off list, a non-English list (the reader sent `ingredients_english`), a list with no added sugar in it, an unclosed bracket, an allergen or storage statement in the list ("Contains: Milk"), or component lists ("Crust: ... Filling: ...").
+
 ## Identity vs. treatment (examples)
 
 | Ingredient | Class | US label treatment | QuickGOB v3 |

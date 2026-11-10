@@ -8,9 +8,9 @@
 //
 // Jev makes the call from the photo (see _shared/jev.ts and src/lib/combine.ts). These rules decide when
 // Jev is unavailable or unsure, and win whenever they are stricter than Jev (src/lib/combine.ts).
-import { evaluate, type Evaluation, type Evidence, type LiteralLabel, type ShownVerdict, type Verdict } from './policy.ts';
+import { evaluate, type Evaluation, type Evidence, type LiteralLabel, type ShownVerdict, type SugarStacking, type Verdict } from './policy.ts';
 
-export type { Evaluation, LiteralLabel, ShownVerdict, Verdict };
+export type { Evaluation, LiteralLabel, ShownVerdict, SugarStacking, Verdict };
 export { POLICY_VERSION } from './policy.ts';
 
 /** Sent with every response so the app can tell CLEAN / OKAY / BAD from the old CLEAN / BAD / UGLY. */
@@ -24,6 +24,8 @@ export type ScanResult = {
   addedSugars: string[];
   sweeteners: string[];
   note?: string;
+  /** Sugar stacking and the place of the first added sugar. Left out when it can't be trusted; never changes the verdict. */
+  sugarStacking?: SugarStacking;
   /** Full structured output: policy version, rule id, evidence, quantities, missing info. */
   analysis?: Evaluation;
 };
@@ -72,7 +74,11 @@ export function toScanResult(ev: Evaluation): ScanResult {
       : ev.ruleId === 'C1-clean'
         ? 'Great pick, no added sugar'
         : undefined;
-  return { verdict: ev.verdict as ShownVerdict, headline, naturalSugars, addedSugars, sweeteners, note, analysis: ev };
+  return {
+    verdict: ev.verdict as ShownVerdict, headline, naturalSugars, addedSugars, sweeteners, note,
+    ...(ev.sugarStacking ? { sugarStacking: ev.sugarStacking } : {}),
+    analysis: ev,
+  };
 }
 
 export function decide(label: LiteralLabel): Decision {

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { ScanResult } from '../types.ts';
-import { addToHistory, applyStrictMode, HISTORY_LIMIT, ingredientNames, reasonLine, ingredientSummary, initials, maskPhone, percent } from './display.ts';
+import { addToHistory, applyStrictMode, HISTORY_LIMIT, ingredientNames, reasonLine, ingredientSummary, initials, maskPhone, percent, sugarStackingLine } from './display.ts';
 
 const result = (over: Partial<ScanResult>): ScanResult => ({
   verdict: 'OKAY',
@@ -73,4 +73,35 @@ test('percent rounds and handles no scans', () => {
 test('reasonLine adds the added-sugar grams to the headline when known', () => {
   assert.equal(reasonLine(result({ headline: 'Too much sugar', addedSugars: ['Cane Sugar', '6 g added per serving'] })), 'Too much sugar · 6 g added per serving');
   assert.equal(reasonLine(result({ headline: 'Contains sweeteners' })), 'Contains sweeteners');
+});
+
+test('sugarStackingLine shows the badge only for 2 or more different added sugars', () => {
+  const s = { distinct: 3, stacked: true, firstPosition: 2, firstNested: false, ingredientCount: 14 };
+  assert.deepEqual(sugarStackingLine(result({ sugarStacking: s })), { badge: 'Sugar stacking', line: '3 different added sugars, first at ingredient 2 of 14' });
+  assert.deepEqual(sugarStackingLine(result({ sugarStacking: { ...s, distinct: 1, stacked: false } })), { badge: null, line: 'First sugar at ingredient 2 of 14' });
+  // A sub-ingredient in brackets is inside an ingredient, not at its place.
+  assert.deepEqual(sugarStackingLine(result({ sugarStacking: { ...s, distinct: 1, stacked: false, firstPosition: 1, firstNested: true } })), { badge: null, line: 'First sugar inside ingredient 1 of 14' });
+  assert.equal(sugarStackingLine(result({ sugarStacking: { ...s, firstNested: true } }))?.line, '3 different added sugars, first inside ingredient 2 of 14');
+});
+
+test('sugarStackingLine shows nothing for older results or a place that does not add up', () => {
+  const s = { distinct: 2, stacked: true, firstPosition: 2, firstNested: false, ingredientCount: 5 };
+  assert.equal(sugarStackingLine(result({})), null);
+  assert.equal(sugarStackingLine(result({ sugarStacking: { ...s, firstPosition: 6 } })), null);
+  assert.equal(sugarStackingLine(result({ sugarStacking: { ...s, firstPosition: 0 } })), null);
+  assert.equal(sugarStackingLine(result({ sugarStacking: { ...s, ingredientCount: 0 } })), null);
+  assert.equal(sugarStackingLine(result({ sugarStacking: { ...s, distinct: 0 } })), null);
+  assert.equal(sugarStackingLine(result({ sugarStacking: { ...s, ingredientCount: 4.5 } })), null);
+  // Saved scans come back from storage as plain JSON: missing or wrong-typed numbers show nothing.
+  assert.equal(sugarStackingLine(result({ sugarStacking: { stacked: true } as never })), null);
+  assert.equal(sugarStackingLine(result({ sugarStacking: { ...s, firstPosition: '2' } as never })), null);
+  // "stacked" without 2 different sugars is not shown as stacking.
+  assert.equal(sugarStackingLine(result({ sugarStacking: { ...s, distinct: 1 } }))?.badge, null);
+});
+
+test('strict mode keeps the stacking line', () => {
+  const s = { distinct: 2, stacked: true, firstPosition: 1, firstNested: false, ingredientCount: 3 };
+  const r = result({ addedSugars: ['Sugar', 'Honey'], sugarStacking: s });
+  assert.deepEqual(applyStrictMode(r, false), r);
+  assert.equal(sugarStackingLine(applyStrictMode(r, false))?.line, '2 different added sugars, first at ingredient 1 of 3');
 });
