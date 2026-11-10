@@ -8,6 +8,8 @@ export type Prefs = {
   gentle: boolean;
   /** Vibrate when a verdict appears. */
   haptics: boolean;
+  /** Web camera can capture a sharp, steady label without tapping. */
+  autoCapture: boolean;
 };
 
 // The account's settings live on the profiles row. This local copy makes them work offline;
@@ -16,7 +18,7 @@ type Saved = Prefs & { unsynced?: boolean };
 
 export type PrefsRow = { strict_mode: boolean; gentle_mode: boolean; haptics: boolean };
 
-const defaults: Prefs = { strict: true, gentle: false, haptics: true };
+const defaults: Prefs = { strict: true, gentle: false, haptics: true, autoCapture: true };
 
 const store = stored<Saved>('quickgab.prefs', defaults, (saved) => ({ ...defaults, ...(saved as Partial<Saved>) }));
 
@@ -37,7 +39,7 @@ export function setPref<K extends keyof Prefs>(key: K, value: Prefs[K]) {
 export async function syncPrefs(row: PrefsRow | null) {
   await store.loaded;
   if (store.get().unsynced) return push();
-  if (row) store.set({ strict: row.strict_mode, gentle: row.gentle_mode, haptics: row.haptics });
+  if (row) store.set({ ...store.get(), strict: row.strict_mode, gentle: row.gentle_mode, haptics: row.haptics });
 }
 
 export const resetPrefs = () => store.set(defaults);

@@ -2,7 +2,7 @@ import { type CSSProperties, useEffect, useImperativeHandle, useRef, useState } 
 import { AppState } from 'react-native';
 import { BlurryPhotoError, boxInImage, type CaptureMeta, type LabelCameraProps, type Rect, uploadPlan, type ViewBox } from '../lib/photo';
 import { markScan, noteScan } from '../lib/scanTiming';
-import { laplacianVariance, MIN_SHARPNESS, SAMPLE_WIDTH, toGray } from '../lib/sharpness';
+import { autoCaptureStep, initialAutoCapture, lockAutoCapture, laplacianVariance, MIN_SHARPNESS, SAMPLE_WIDTH, toGray } from '../lib/sharpness';
 
 // Browsers stream 640×480 unless asked for more. 4:3 is the phone sensor's full frame, and 1920×1440
 // is plenty for a 1568 px upload while staying light on iPhones.
@@ -30,6 +30,8 @@ type StreamStats = { label: string; openedAt: number; openMs?: number; settleMs?
 
 let lastUrl: string | null = null;
 let sampler: HTMLCanvasElement | null = null;
+// Keep the shot's scene even if the browser eventually releases and reopens the stream.
+let autoState = initialAutoCapture();
 let cameraStarts = 0;
 const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
 const queues = new WeakMap<MediaStreamTrack, Promise<unknown>>();
@@ -39,7 +41,7 @@ const queues = new WeakMap<MediaStreamTrack, Promise<unknown>>();
  * The stream stays open under the result screen so "Scan another" is instant, and is released
  * after a minute there or whenever the page is hidden.
  */
-export function LabelCamera({ torch, box, active, onReadyChange, onTorchSupport, onTorchFailed, ref }: LabelCameraProps) {
+export function LabelCamera({ torch, box, active, onReadyChange, onTorchSupport, onTorchFailed, autoCapture = false, onAutoCapture, ref }: LabelCameraProps) {
   const video = useRef<HTMLVideoElement>(null);
   const track = useRef<MediaStreamTrack | null>(null);
   const stats = useRef<StreamStats>({ label: '', openedAt: 0 });
@@ -49,6 +51,14 @@ export function LabelCamera({ torch, box, active, onReadyChange, onTorchSupport,
   const [live, setLive] = useState(false);
   const [foreground, setForeground] = useState(AppState.currentState !== 'background');
   const [expired, setExpired] = useState(false);
+  const canRearm = useRef(true);
+  const autoCallback = useRef(onAutoCapture);
+  autoCallback.current = onAutoCapture;
+
+  // The camera stays mounted now: returning from the result, not remounting, permits re-arming.
+  useEffect(() => {
+    if (active) canRearm.current = true;
+  }, [active]);
 
   useEffect(() => {
     callbacks.current = { onReadyChange, onTorchSupport, onTorchFailed };
@@ -141,10 +151,49 @@ export function LabelCamera({ torch, box, active, onReadyChange, onTorchSupport,
     measureSettle(v, t, stats.current);
   };
 
+  useEffect(() => {
+    if (!live || !active || !foreground || !autoCapture || !box) return;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    const timer = setInterval(() => {
+      const v = video.current;
+      if (document.hidden || !v?.videoWidth || v.paused || v.readyState < 2) {
+        autoState = { ...autoState, since: undefined, count: 0, lastAt: undefined };
+        return;
+      }
+      try {
+        const r = boxInImage(box, v.videoWidth, v.videoHeight);
+        canvas.width = 240;
+        canvas.height = Math.max(3, Math.round(240 * r.height * v.videoHeight / (r.width * v.videoWidth)));
+        ctx.drawImage(v, r.x * v.videoWidth, r.y * v.videoHeight, r.width * v.videoWidth, r.height * v.videoHeight, 0, 0, canvas.width, canvas.height);
+        const gray = toGray(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
+        const decision = autoCaptureStep(autoState, {
+          gray, sharpness: laplacianVariance(gray, canvas.width, canvas.height),
+          at: performance.now(), canRearm: canRearm.current,
+        });
+        autoState = decision.state;
+        if (decision.fire) {
+          canRearm.current = false;
+          autoCallback.current?.();
+        }
+      } catch {
+        // Sampling failure must not prevent a manual shot.
+        autoState = { ...autoState, since: undefined, count: 0, lastAt: undefined };
+      }
+    }, 140);
+    return () => {
+      clearInterval(timer);
+      autoState = { ...autoState, since: undefined, count: 0, lastAt: undefined };
+    };
+  }, [live, active, foreground, autoCapture, box]);
+
   useImperativeHandle(
     ref,
     () => ({
       async capture() {
+        canRearm.current = false;
+        autoState = lockAutoCapture(autoState);
         const v = video.current;
         const t = track.current;
         if (!v || !t || !v.videoWidth) throw new Error('Camera not ready');

@@ -27,6 +27,9 @@ export type LabelCameraProps = {
   onTorchSupport: (supported: boolean) => void;
   /** The torch was asked for but didn't come on. */
   onTorchFailed: () => void;
+  /** Web only. Native keeps the manual shutter. */
+  autoCapture?: boolean;
+  onAutoCapture?: () => void;
   ref?: Ref<LabelCameraHandle>;
 };
 

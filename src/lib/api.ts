@@ -6,6 +6,8 @@ import type { JevVerdict, ScanResult } from '../types';
 import { type CaptureMeta, type Photo, type Rect, toPixels } from './photo';
 import { noteScan, scanTimingId } from './scanTiming';
 import { supabase } from './supabase';
+import { postScan } from './scanTransport';
+import { requestScanStream, RetryableScanError, type ScanEvent } from './scanStream';
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
 async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
@@ -31,6 +33,20 @@ export class RetryableReadError extends Error {}
 /** The verdict is already on screen by then, so the lists get a short leash. */
 const LISTS_TIMEOUT_MS = 12_000;
 const READ_FAILED = "Couldn't read the label. Try again.";
+
+/** A single streamed upload, retaining the live reader's timeout and explicit lists retry. */
+export async function streamScan(image: string, onEvent: (event: ScanEvent) => void, client?: CaptureMeta): Promise<boolean> {
+  try {
+    return await requestScanStream(
+      (signal) => postScan({ image, scan_id: scanTimingId(), client }, signal),
+      onEvent,
+      LISTS_TIMEOUT_MS,
+    );
+  } catch (error) {
+    if (error instanceof RetryableScanError) throw new RetryableReadError(error.message);
+    throw error;
+  }
+}
 
 /** Jev rejects any side over 1568 px or under 280 px. */
 const MAX_SIDE = 1568;
@@ -63,6 +79,7 @@ async function encodeForUpload({ uri, width, height }: Photo, crop: Rect | undef
   }
   if (Math.max(width, height) > MAX_SIDE) ctx.resize(height > width ? { height: MAX_SIDE } : { width: MAX_SIDE });
   const rendered = await ctx.renderAsync();
+  noteScan({ upload_px: `${rendered.width}x${rendered.height}` });
   const { base64 } = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: UPLOAD_QUALITY, base64: true });
   if (!base64) throw new Error('Could not prepare the photo.');
   return base64;

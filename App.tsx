@@ -157,7 +157,7 @@ export default function App() {
           ) : (
             <>
               {/* Stays mounted under the result so the camera stream survives "Scan another". */}
-              <CameraScreen active={!scan} onCapture={handleCapture} onOpenSheet={setSheet} tagline={tagline} />
+              <CameraScreen active={!scan && sheet === null} onCapture={handleCapture} onOpenSheet={setSheet} tagline={tagline} />
               {scan && (
                 <View style={StyleSheet.absoluteFill}>
                   <ResultScreen

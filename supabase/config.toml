@@ -433,6 +433,11 @@ verify_jwt = true
 verify_jwt = true
 
 # Slugs the app calls (src/lib/api.ts); each publishes the matching folder above.
+[functions.quickgob-scan]
+verify_jwt = true
+entrypoint = "./functions/scan/index.ts"
+import_map = "./functions/scan/deno.json"
+
 [functions.quickgob-scan-label]
 verify_jwt = true
 entrypoint = "./functions/scan-label/index.ts"

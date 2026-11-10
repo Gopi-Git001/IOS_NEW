@@ -1,6 +1,8 @@
 import { Platform } from 'react-native';
+import { postScanQuietly } from './scanTransport';
+import { clientTrace } from '../../supabase/functions/_shared/clientTrace';
 
-// Dev-only trace of one scan, from shutter tap to lists on screen. Printed to the console as
+// Trace of one scan, from shutter tap to lists on screen. Printed to the console as
 // `[scan-timing] {...}`; in the browser it is also posted to the Metro dev server (see
 // metro.config.js), which appends it to .scan-timing/scans.jsonl for `npm run timing:report`.
 
@@ -9,7 +11,7 @@ type Trace = { id: string; t0: number; marks: Record<string, number>; info: Reco
 let current: Trace | null = null;
 
 export function startScanTiming() {
-  current = { id: Math.random().toString(36).slice(2, 10), t0: performance.now(), marks: {}, info: {} };
+  current = { id: Math.random().toString(36).slice(2, 10), t0: performance.now(), marks: { tap: 0 }, info: {} };
 }
 
 export const scanTimingId = () => current?.id;
@@ -47,6 +49,8 @@ export function finishScanTiming() {
       ...trace.info,
     };
     console.log('[scan-timing]', JSON.stringify(record));
+    // Explicit allowlist on both ends: no free-text errors, label content, IDs or model results.
+    postScanQuietly({ action: 'timing', trace: clientTrace(record) });
     if (__DEV__ && Platform.OS === 'web') {
       fetch('/__scan-timing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record) }).catch(() => {});
     }
