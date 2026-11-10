@@ -9,7 +9,6 @@ import { GlossaryCard, type Pick } from '../components/GlossaryCard';
 import { ResultSheet, VerdictContent } from '../components/VerdictPanel';
 import { colors, crystal, fonts } from '../theme';
 import { CrystalSlab, useCrystalReducedMotion } from '../components/CrystalVerdict';
-import { ShareVerdictButton } from '../components/ShareVerdictButton';
 import type { ScanResult } from '../types';
 
 const CUBE = 130;
@@ -37,7 +36,6 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
   const [headerBottom, setHeaderBottom] = useState(insets.top + 60);
   const [sheetHeight, setSheetHeight] = useState(0);
   const [pick, setPick] = useState<Pick>(null);
-  const [scannedAt] = useState(() => new Date());
   const sheetBottom = Math.max(insets.bottom, 8);
   // Leave room above the sheet for the header and the perched cube.
   const sheetMax = window.height - sheetBottom - headerBottom - CUBE + PERCH - 8;
@@ -56,7 +54,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
         <View onLayout={(e) => setHeaderBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}>
           <Header
             tagline={tagline}
-            mark={state.status === 'reading' ? 'scanning' : state.status === 'done' ? state.result.verdict : 'idle'}
+            brand={false}
             right={<ProfileButton onOpen={onOpenSheet} />}
           />
         </View>
@@ -76,10 +74,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
 
       {state.status !== 'reading' && (
         <>
-          <ResultSheet key={state.status} action={action} footer={<>
-            {state.status === 'done' && !state.listsPending && <ShareVerdictButton result={state.result} scannedAt={scannedAt} />}
-            <Text style={styles.footer}>Not medical advice · Doesn't check allergens</Text>
-          </>} maxHeight={sheetMax} bottom={sheetBottom} onHeight={setSheetHeight}>
+          <ResultSheet key={state.status} action={action} footer={<Text style={styles.footer}>Not medical advice · Doesn't check allergens</Text>} maxHeight={sheetMax} bottom={sheetBottom} onHeight={setSheetHeight}>
             {state.status === 'done' ? (
               <VerdictContent result={state.result} listsPending={state.listsPending} onRetryLists={state.retryLists} onPick={setPick} />
             ) : (

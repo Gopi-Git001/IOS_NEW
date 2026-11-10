@@ -117,6 +117,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
       <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
         <Header
           tagline={tagline}
+          brand={false}
           right={
             <ProfileButton
               onOpen={onOpenSheet}
