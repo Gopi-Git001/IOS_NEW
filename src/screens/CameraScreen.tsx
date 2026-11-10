@@ -1,6 +1,6 @@
 import { useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { type ComponentRef, useRef, useState } from 'react';
+import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { notify } from '../lib/confirm';
 import { BlurryPhotoError, type LabelCameraHandle, type Photo, type ViewBox } from '../lib/photo';
@@ -12,17 +12,39 @@ import { FlashIcon } from '../components/Icons';
 import { LabelCamera } from '../components/LabelCamera';
 import { brand, colors, fonts } from '../theme';
 
-type Props = { onCapture: (photo: Photo) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string };
+const HINT = 'Fit the ingredient list in the panel';
+const NO_FLASH = 'Flash not available on this camera';
+const NO_FLASH_MS = 3000;
 
-export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
+/** `active` is false while a result covers this screen: it stays mounted so the camera can keep running. */
+type Props = { active: boolean; onCapture: (photo: Photo) => void; onOpenSheet: (sheet: Sheet) => void; tagline?: string };
+
+export function CameraScreen({ active, onCapture, onOpenSheet, tagline }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const camera = useRef<LabelCameraHandle>(null);
   const root = useRef<ComponentRef<typeof View>>(null);
   const frame = useRef<ComponentRef<typeof View>>(null);
   const [box, setBox] = useState<ViewBox | null>(null);
   const [torch, setTorch] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
+  const [noFlash, setNoFlash] = useState(false);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!noFlash) return;
+    const timer = setTimeout(() => setNoFlash(false), NO_FLASH_MS);
+    return () => clearTimeout(timer);
+  }, [noFlash]);
+
+  const onTorchSupport = (supported: boolean) => {
+    setTorchSupported(supported);
+    if (!supported) setTorch(false);
+  };
+  const onTorchFailed = () => {
+    setTorch(false);
+    setNoFlash(true);
+  };
 
   const measureBox = () =>
     root.current?.measureInWindow((rootX, rootY, viewWidth, viewHeight) =>
@@ -64,8 +86,16 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
   };
 
   return (
-    <View ref={root} style={styles.fill}>
-      <LabelCamera ref={camera} torch={torch} box={box} onReady={() => setReady(true)} />
+    <View ref={root} style={styles.fill} pointerEvents={active ? 'auto' : 'none'} aria-hidden={!active}>
+      <LabelCamera
+        ref={camera}
+        torch={torch}
+        box={box}
+        active={active}
+        onReadyChange={setReady}
+        onTorchSupport={onTorchSupport}
+        onTorchFailed={onTorchFailed}
+      />
       <Scrims />
 
       <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
@@ -75,15 +105,17 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
             <ProfileButton
               onOpen={onOpenSheet}
               leading={
-                <Pressable
-                  hitSlop={8}
-                  onPress={() => setTorch((t) => !t)}
-                  accessibilityRole="button"
-                  accessibilityLabel={torch ? 'Turn flash off' : 'Turn flash on'}
-                  style={[styles.flash, torch && styles.flashOn]}
-                >
-                  <FlashIcon on={torch} size={20} color={torch ? '#FFD24A' : '#FFFFFF'} />
-                </Pressable>
+                torchSupported ? (
+                  <Pressable
+                    hitSlop={8}
+                    onPress={() => setTorch((t) => !t)}
+                    accessibilityRole="button"
+                    accessibilityLabel={torch ? 'Turn flash off' : 'Turn flash on'}
+                    style={[styles.flash, torch && styles.flashOn]}
+                  >
+                    <FlashIcon on={torch} size={20} color={torch ? '#FFD24A' : '#FFFFFF'} />
+                  </Pressable>
+                ) : undefined
               }
             />
           }
@@ -97,7 +129,7 @@ export function CameraScreen({ onCapture, onOpenSheet, tagline }: Props) {
             <View style={styles.frameBase} />
           </View>
           <Glass style={styles.hint}>
-            <Text style={styles.hintText}>Fit the ingredient list in the panel</Text>
+            <Text style={styles.hintText}>{noFlash ? NO_FLASH : HINT}</Text>
           </Glass>
         </View>
 

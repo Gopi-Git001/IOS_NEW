@@ -1,64 +1,145 @@
 import { type CSSProperties, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { BlurryPhotoError, boxInImage, CROP_MARGIN, type LabelCameraProps, type Rect, type ViewBox, withMargin } from '../lib/photo';
+import { AppState } from 'react-native';
+import { BlurryPhotoError, boxInImage, type CaptureMeta, type LabelCameraProps, type Rect, uploadPlan, type ViewBox } from '../lib/photo';
 import { markScan, noteScan } from '../lib/scanTiming';
 import { laplacianVariance, MIN_SHARPNESS, SAMPLE_WIDTH, toGray } from '../lib/sharpness';
 
-// Browsers stream 640×480 unless asked for more. 4:3 is the phone sensor's full frame.
-const SIZE: MediaTrackConstraints = { width: { ideal: 4032 }, height: { ideal: 3024 } };
+// Browsers stream 640×480 unless asked for more. 4:3 is the phone sensor's full frame, and 1920×1440
+// is plenty for a 1568 px upload while staying light on iPhones.
+const SIZE: MediaTrackConstraints = { width: { ideal: 1920 }, height: { ideal: 1440 } };
 const BURST = 3;
 const BURST_GAP_MS = 70;
 const STILL_TIMEOUT_MS = 2500;
-const JPEG_QUALITY = 0.92;
+const JPEG_QUALITY = 0.85;
+/** A result left open this long releases the camera; it restarts when the camera screen returns. */
+const IDLE_STOP_MS = 60_000;
+const SETTLE_POLL_MS = 200;
+const SETTLE_LIMIT_MS = 5000;
 const CENTER: Rect = { x: 0.2, y: 0.2, width: 0.6, height: 0.6 };
+const CAMERA_KEY = 'reallabel.camera';
 
 type Caps = MediaTrackCapabilities & { focusMode?: string[]; torch?: boolean };
-type Shot = { blob: Blob; width: number; height: number; score: number; crop: Rect | null };
 type ImageCaptureLike = {
   getPhotoCapabilities(): Promise<{ imageWidth?: { max?: number }; imageHeight?: { max?: number } }>;
   takePhoto(settings?: { imageWidth?: number; imageHeight?: number }): Promise<Blob>;
 };
 type ImageCaptureCtor = new (track: MediaStreamTrack) => ImageCaptureLike;
+/** One captured moment: a full-size frame for the result screen and the cropped, scaled upload. */
+type Frame = { display: HTMLCanvasElement; upload: HTMLCanvasElement; width: number; height: number; score: number; cropped: boolean };
+type StreamStats = { label: string; openedAt: number; openMs?: number; settleMs?: number; torch?: Record<string, unknown> };
 
 let lastUrl: string | null = null;
 let sampler: HTMLCanvasElement | null = null;
+let cameraStarts = 0;
+const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+const queues = new WeakMap<MediaStreamTrack, Promise<unknown>>();
 
-/** The live back camera in the browser, at the highest resolution it offers. Phones use LabelCamera.tsx. */
-export function LabelCamera({ torch, box, onReady, ref }: LabelCameraProps) {
+/**
+ * The live back camera in the browser. Phones use LabelCamera.tsx.
+ * The stream stays open under the result screen so "Scan another" is instant, and is released
+ * after a minute there or whenever the page is hidden.
+ */
+export function LabelCamera({ torch, box, active, onReadyChange, onTorchSupport, onTorchFailed, ref }: LabelCameraProps) {
   const video = useRef<HTMLVideoElement>(null);
   const track = useRef<MediaStreamTrack | null>(null);
+  const stats = useRef<StreamStats>({ label: '', openedAt: 0 });
+  const torchSupported = useRef(false);
   const rejected = useRef(false);
-  const readyCallback = useRef(onReady);
+  const callbacks = useRef({ onReadyChange, onTorchSupport, onTorchFailed });
   const [live, setLive] = useState(false);
+  const [foreground, setForeground] = useState(AppState.currentState !== 'background');
+  const [expired, setExpired] = useState(false);
 
   useEffect(() => {
-    readyCallback.current = onReady;
+    callbacks.current = { onReadyChange, onTorchSupport, onTorchFailed };
   });
 
   useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => setForeground(state === 'active'));
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    if (active) return;
+    const timer = setTimeout(() => setExpired(true), IDLE_STOP_MS);
+    return () => {
+      clearTimeout(timer);
+      setExpired(false);
+    };
+  }, [active]);
+
+  const run = foreground && (active || !expired);
+
+  useEffect(() => {
+    if (!run) return;
     let stream: MediaStream | null = null;
     let cancelled = false;
-    navigator.mediaDevices
-      .getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, ...SIZE } })
+    const openedAt = performance.now();
+    cameraStarts++;
+    openCamera()
       .then((s) => {
         if (cancelled) return stopStream(s);
         stream = s;
-        track.current = s.getVideoTracks()[0] ?? null;
+        const t = s.getVideoTracks()[0] ?? null;
+        track.current = t;
+        stats.current = { label: t?.label ?? '', openedAt };
+        console.info('[camera] started', { start: cameraStarts, camera: t?.label });
         if (video.current) {
           video.current.srcObject = s;
           video.current.play().catch(() => {});
         }
       })
-      .catch(() => {});
+      .catch((e) => console.warn('[camera] could not start', e));
     return () => {
       cancelled = true;
       stopStream(stream);
       track.current = null;
+      torchSupported.current = false;
+      if (video.current) video.current.srcObject = null;
+      setLive(false);
+      callbacks.current.onReadyChange(false);
+      callbacks.current.onTorchSupport(false);
+      if (stream) console.info('[camera] stopped');
     };
-  }, []);
+  }, [run]);
+
+  // Under the result screen the preview just pauses; the camera keeps running for the next scan.
+  useEffect(() => {
+    const v = video.current;
+    if (!v || !live) return;
+    if (active) v.play().catch(() => {});
+    else v.pause();
+  }, [active, live]);
 
   useEffect(() => {
-    if (live && track.current && video.current) tune(track.current, video.current, torch, box);
-  }, [live, torch, box]);
+    // The torch only rides along here; switching it must not refocus.
+    if (live && track.current && video.current) focus(track.current, video.current, box, torch && torchSupported.current);
+  }, [live, box]);
+
+  useEffect(() => {
+    const t = track.current;
+    if (!live || !t || !torchSupported.current) return;
+    if (!torch && !(t.getSettings() as { torch?: boolean }).torch) return;
+    setTorch(t, torch).then((result) => {
+      stats.current.torch = result;
+      console.info('[camera] torch', result);
+      if (torch && !result.ok && track.current === t) callbacks.current.onTorchFailed();
+    });
+  }, [live, torch]);
+
+  const started = () => {
+    const t = track.current;
+    const v = video.current;
+    if (!t || !v) return;
+    const caps = (t.getCapabilities?.() ?? {}) as Caps;
+    torchSupported.current = Boolean(caps.torch);
+    stats.current.openMs = Math.round(performance.now() - stats.current.openedAt);
+    console.info('[camera] ready', { camera: t.label, stream_px: `${v.videoWidth}x${v.videoHeight}`, torch_caps: Boolean(caps.torch) });
+    setLive(true);
+    callbacks.current.onReadyChange(true);
+    callbacks.current.onTorchSupport(torchSupported.current);
+    measureSettle(v, t, stats.current);
+  };
 
   useImperativeHandle(
     ref,
@@ -68,40 +149,127 @@ export function LabelCamera({ torch, box, onReady, ref }: LabelCameraProps) {
         const t = track.current;
         if (!v || !t || !v.videoWidth) throw new Error('Camera not ready');
         const region = box ? boxInImage(box, v.videoWidth, v.videoHeight) : null;
-        const still = await takeStill(t, v, region);
+        // takePhoto can switch a lit torch off, and a lit label needs no sharpest-of-three: one frame.
+        const torchOn = torch && torchSupported.current;
+        const still = torchOn ? null : await takeStill(t, v, region);
         markScan('still_attempt_done');
-        const shot = still ?? (await bestFrame(v, region));
-        noteScan({ capture_path: still ? 'still' : 'burst', stream_px: `${v.videoWidth}x${v.videoHeight}` });
+        const shot = still ?? (await grabFrames(v, region, torchOn ? 1 : BURST));
         if (shot.score < MIN_SHARPNESS && !rejected.current) {
           rejected.current = true;
           throw new BlurryPhotoError('Photo is blurry');
         }
         rejected.current = false;
+
+        const encodeStart = performance.now();
+        const [upload, display] = await Promise.all([toJpeg(shot.upload), toJpeg(shot.display)]);
+        const s = stats.current;
+        const meta: CaptureMeta = {
+          capture_path: still ? 'still' : torchOn ? 'frame' : 'burst',
+          stream_px: `${v.videoWidth}x${v.videoHeight}`,
+          camera: s.label.slice(0, 64),
+          torch: torchOn,
+          upload_px: `${shot.upload.width}x${shot.upload.height}`,
+          upload_kb: Math.round(upload.size / 1024),
+          upload_cropped: shot.cropped,
+          display_kb: Math.round(display.size / 1024),
+          encode_ms: Math.round(performance.now() - encodeStart),
+          camera_starts: cameraStarts,
+          stream_age_ms: Math.round(performance.now() - s.openedAt),
+          ...(s.openMs !== undefined && { stream_open_ms: s.openMs }),
+          ...(s.settleMs !== undefined && { stream_settle_ms: s.settleMs }),
+          ...(s.torch && { torch_setting: String(s.torch.setting), torch_ok: Boolean(s.torch.ok) }),
+        };
+        noteScan(meta);
         if (lastUrl) URL.revokeObjectURL(lastUrl);
-        lastUrl = URL.createObjectURL(shot.blob);
-        return { uri: lastUrl, width: shot.width, height: shot.height, crop: shot.crop ? withMargin(shot.crop, CROP_MARGIN) : undefined };
+        lastUrl = URL.createObjectURL(display);
+        return { uri: lastUrl, width: shot.width, height: shot.height, upload: await toBase64(upload), meta };
       },
     }),
-    [box],
+    [box, torch],
   );
 
-  return (
-    <video
-      ref={video}
-      autoPlay
-      playsInline
-      muted
-      onLoadedMetadata={() => {
-        setLive(true);
-        readyCallback.current();
-      }}
-      style={videoStyle}
-    />
-  );
+  return <video ref={video} autoPlay playsInline muted onLoadedMetadata={started} style={videoStyle} />;
 }
 
-/** Continuous focus aimed at the guide box, plus the torch, wherever the browser supports them. */
-function tune(t: MediaStreamTrack, v: HTMLVideoElement, torch: boolean, box: ViewBox | null) {
+/** The back camera; on Android, the one with a torch (remembered once found). */
+async function openCamera(): Promise<MediaStream> {
+  const saved = savedCamera();
+  if (saved) {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: false, video: { deviceId: { exact: saved }, ...SIZE } });
+    } catch {
+      saveCamera(null);
+    }
+  }
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, ...SIZE } });
+  return isAndroid ? preferTorchCamera(stream) : stream;
+}
+
+/**
+ * Android phones list several back cameras and Chrome often opens one without the flash unit.
+ * Tries the others one at a time (phones can't open two at once) and keeps the first with a torch.
+ */
+async function preferTorchCamera(stream: MediaStream): Promise<MediaStream> {
+  const current = stream.getVideoTracks()[0]?.getSettings().deviceId;
+  if (!current || hasTorch(stream)) {
+    saveCamera(current ?? null);
+    return stream;
+  }
+  const others = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput' && d.deviceId && d.deviceId !== current && isBackCamera(d));
+  console.info('[camera] no torch on', stream.getVideoTracks()[0]?.label, '- trying', others.map((d) => d.label));
+  if (others.length === 0) {
+    saveCamera(current);
+    return stream;
+  }
+  stopStream(stream);
+  for (const device of others) {
+    try {
+      const candidate = await navigator.mediaDevices.getUserMedia({ audio: false, video: { deviceId: { exact: device.deviceId }, ...SIZE } });
+      if (hasTorch(candidate)) {
+        saveCamera(device.deviceId);
+        return candidate;
+      }
+      stopStream(candidate);
+    } catch {}
+  }
+  saveCamera(current);
+  return navigator.mediaDevices.getUserMedia({ audio: false, video: { deviceId: { exact: current }, ...SIZE } });
+}
+
+function hasTorch(stream: MediaStream) {
+  const caps = (stream.getVideoTracks()[0]?.getCapabilities?.() ?? {}) as Caps;
+  return Boolean(caps.torch);
+}
+
+function isBackCamera(device: MediaDeviceInfo) {
+  const facing = (device as MediaDeviceInfo & { getCapabilities?: () => { facingMode?: string[] } }).getCapabilities?.().facingMode;
+  return facing?.includes('environment') || /back|rear|environment/i.test(device.label);
+}
+
+function savedCamera(): string | null {
+  try {
+    return localStorage.getItem(CAMERA_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveCamera(deviceId: string | null) {
+  try {
+    if (deviceId) localStorage.setItem(CAMERA_KEY, deviceId);
+    else localStorage.removeItem(CAMERA_KEY);
+  } catch {}
+}
+
+/** Runs constraint changes on a track one after another, so focus and torch can't race. */
+function enqueue<T>(t: MediaStreamTrack, change: () => Promise<T>): Promise<T> {
+  const next = (queues.get(t) ?? Promise.resolve()).then(change, change);
+  queues.set(t, next.catch(() => {}));
+  return next;
+}
+
+/** Continuous focus aimed at the guide box, wherever the browser supports it. */
+function focus(t: MediaStreamTrack, v: HTMLVideoElement, box: ViewBox | null, torchOn: boolean) {
   const caps = (t.getCapabilities?.() ?? {}) as Caps;
   const supported = navigator.mediaDevices.getSupportedConstraints() as Record<string, boolean | undefined>;
   const set: Record<string, unknown> = {};
@@ -110,14 +278,42 @@ function tune(t: MediaStreamTrack, v: HTMLVideoElement, torch: boolean, box: Vie
     const r = boxInImage(box, v.videoWidth, v.videoHeight);
     set.pointsOfInterest = [{ x: r.x + r.width / 2, y: r.y + r.height / 2 }];
   }
-  if (caps.torch) set.torch = torch;
   if (Object.keys(set).length === 0) return;
-  // applyConstraints replaces every constraint, so the size request goes in again.
-  t.applyConstraints({ ...SIZE, advanced: [set as MediaTrackConstraintSet] }).catch(() => {});
+  // applyConstraints replaces every constraint, so the size goes in again, and a lit torch rides along
+  // in its own set so a focus setting the camera can't meet never turns it off.
+  const advanced = [set, ...(torchOn ? [{ torch: true }] : [])] as MediaTrackConstraintSet[];
+  enqueue(t, () => t.applyConstraints({ ...SIZE, advanced })).catch(() => {});
+}
+
+/** The torch on its own, then read back: the browser may accept the request and leave it dark. */
+function setTorch(t: MediaStreamTrack, on: boolean) {
+  return enqueue(t, async () => {
+    try {
+      await t.applyConstraints({ advanced: [{ torch: on } as MediaTrackConstraintSet] });
+    } catch (e) {
+      return { requested: on, ok: false, error: e instanceof Error ? e.name : String(e) };
+    }
+    const setting = (t.getSettings() as { torch?: boolean }).torch;
+    return { requested: on, ok: setting === on, setting };
+  });
+}
+
+/** How long a fresh stream takes to give a frame sharp enough to read (autofocus settling). */
+function measureSettle(v: HTMLVideoElement, t: MediaStreamTrack, s: StreamStats) {
+  const start = performance.now();
+  const poll = () => {
+    if (t.readyState !== 'live' || !v.videoWidth) return;
+    const elapsed = performance.now() - start;
+    if (sharpness(v, v.videoWidth, v.videoHeight, null) >= MIN_SHARPNESS) {
+      s.settleMs = Math.round(elapsed);
+      console.info('[camera] settled', { ms: s.settleMs });
+    } else if (elapsed < SETTLE_LIMIT_MS) setTimeout(poll, SETTLE_POLL_MS);
+  };
+  setTimeout(poll, SETTLE_POLL_MS);
 }
 
 /** A real still photo (Chrome on Android and desktop). Null when unsupported, slow, or rotated differently from the preview. */
-async function takeStill(t: MediaStreamTrack, v: HTMLVideoElement, region: Rect | null): Promise<Shot | null> {
+async function takeStill(t: MediaStreamTrack, v: HTMLVideoElement, region: Rect | null): Promise<Frame | null> {
   const ImageCapture = (window as unknown as { ImageCapture?: ImageCaptureCtor }).ImageCapture;
   if (!ImageCapture) return null;
   try {
@@ -132,35 +328,68 @@ async function takeStill(t: MediaStreamTrack, v: HTMLVideoElement, region: Rect 
     }
     // A still with a different shape from the preview frames a different area, so the box can't be mapped onto it.
     const crop = region && Math.abs(width / height - v.videoWidth / v.videoHeight) < 0.02 ? region : null;
-    const score = sharpness(bitmap, width, height, crop);
+    const frame = newFrame(width, height, crop);
+    paint(frame, bitmap, crop);
+    frame.score = sharpness(bitmap, width, height, crop);
     bitmap.close();
-    return { blob, width, height, score, crop };
+    return frame;
   } catch {
     return null;
   }
 }
 
-/** A few preview frames in quick succession; keeps the sharpest. */
-async function bestFrame(v: HTMLVideoElement, region: Rect | null): Promise<Shot> {
-  const width = v.videoWidth;
-  const height = v.videoHeight;
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d', { alpha: false });
-  if (!ctx) throw new Error('Canvas unavailable');
-  let best = -1;
-  for (let i = 0; i < BURST; i++) {
+/** `count` preview frames in quick succession; keeps the sharpest. */
+async function grabFrames(v: HTMLVideoElement, region: Rect | null, count: number): Promise<Frame> {
+  const frame = newFrame(v.videoWidth, v.videoHeight, region);
+  for (let i = 0; i < count; i++) {
     if (i > 0) await wait(BURST_GAP_MS);
-    const score = sharpness(v, width, height, region);
-    if (score > best) {
-      best = score;
-      ctx.drawImage(v, 0, 0, width, height);
+    const score = sharpness(v, frame.width, frame.height, region);
+    if (score > frame.score) {
+      frame.score = score;
+      paint(frame, v, region);
     }
   }
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY));
-  if (!blob) throw new Error('Could not encode the photo');
-  return { blob, width, height, score: best, crop: region };
+  return frame;
+}
+
+function newFrame(width: number, height: number, region: Rect | null): Frame {
+  const plan = uploadPlan(width, height, region);
+  return { display: canvas(width, height), upload: canvas(plan.width, plan.height), width, height, score: -1, cropped: plan.cropped };
+}
+
+/** Draws one moment into both canvases: the whole frame, and straight from the source the guide box at upload size. */
+function paint(frame: Frame, source: CanvasImageSource, region: Rect | null) {
+  const { src } = uploadPlan(frame.width, frame.height, region);
+  context(frame.display).drawImage(source, 0, 0, frame.width, frame.height);
+  context(frame.upload).drawImage(source, src.originX, src.originY, src.width, src.height, 0, 0, frame.upload.width, frame.upload.height);
+}
+
+function canvas(width: number, height: number) {
+  const c = document.createElement('canvas');
+  c.width = width;
+  c.height = height;
+  return c;
+}
+
+function context(c: HTMLCanvasElement) {
+  const ctx = c.getContext('2d', { alpha: false });
+  if (!ctx) throw new Error('Canvas unavailable');
+  return ctx;
+}
+
+function toJpeg(c: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) =>
+    c.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not encode the photo'))), 'image/jpeg', JPEG_QUALITY),
+  );
+}
+
+function toBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).slice(String(reader.result).indexOf(',') + 1));
+    reader.onerror = () => reject(reader.error ?? new Error('Could not read the photo'));
+    reader.readAsDataURL(blob);
+  });
 }
 
 /** Sharpness of the guide box (or the middle of the frame) in `source`. */

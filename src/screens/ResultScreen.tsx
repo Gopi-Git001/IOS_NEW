@@ -15,7 +15,7 @@ const PERCH = 22; // how far the cube's feet sink below the sheet's top edge
 
 export type ScanState =
   | { status: 'reading' }
-  | { status: 'done'; result: ScanResult; listsPending?: boolean }
+  | { status: 'done'; result: ScanResult; listsPending?: boolean; retryLists?: () => void }
   | { status: 'error'; message: string };
 
 type Props = {
@@ -74,7 +74,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
         <>
           <ResultSheet key={state.status} action={action} footer={<Footer ink />} maxHeight={sheetMax} bottom={sheetBottom} onHeight={setSheetHeight}>
             {state.status === 'done' ? (
-              <VerdictContent result={state.result} listsPending={state.listsPending} onPick={setPick} />
+              <VerdictContent result={state.result} listsPending={state.listsPending} onRetryLists={state.retryLists} onPick={setPick} />
             ) : (
               <>
                 <Text style={styles.errorTitle}>No verdict</Text>

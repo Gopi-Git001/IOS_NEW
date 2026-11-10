@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { boxInImage, toPixels, withMargin } from './photo.ts';
+import { boxInImage, toPixels, uploadPlan, withMargin } from './photo.ts';
 
 const close = (a: number, b: number) => assert.ok(Math.abs(a - b) < 1e-9, `${a} != ${b}`);
 
@@ -27,6 +27,29 @@ test('margin grows the box and stays inside the image', () => {
   close(r.y, 0.38);
   close(r.width, 1);
   close(r.height, 0.24);
+});
+
+test('upload is the guide box plus margin, shrunk to 1568 px on the long side', () => {
+  const p = uploadPlan(4000, 3000, { x: 0.1, y: 0.1, width: 0.8, height: 0.5 });
+  assert.equal(p.cropped, true);
+  assert.deepEqual(p.src, { originX: 16, originY: 120, width: 3968, height: 1860 });
+  assert.equal(p.width, 1568);
+  assert.equal(p.height, Math.round((1860 * 1568) / 3968));
+});
+
+test('a small frame is uploaded as is, never enlarged', () => {
+  const p = uploadPlan(1440, 1080, { x: 0.2, y: 0.2, width: 0.6, height: 0.6 });
+  assert.equal(p.cropped, true);
+  assert.equal(p.width, p.src.width);
+  assert.equal(p.height, p.src.height);
+});
+
+test('a guide box under 280 px falls back to the whole frame', () => {
+  const p = uploadPlan(1920, 1440, { x: 0.45, y: 0.45, width: 0.05, height: 0.05 });
+  assert.equal(p.cropped, false);
+  assert.deepEqual(p.src, { originX: 0, originY: 0, width: 1920, height: 1440 });
+  assert.equal(p.width, 1568);
+  assert.equal(p.height, 1176);
 });
 
 test('pixels are rounded and clamped to the image', () => {

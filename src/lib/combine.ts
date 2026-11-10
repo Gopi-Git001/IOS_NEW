@@ -8,7 +8,7 @@ export const quickHeadline: Record<Verdict, string> = {
 };
 
 export type ScanUpdate =
-  | { status: 'done'; result: ScanResult; listsPending: boolean }
+  | { status: 'done'; result: ScanResult; listsPending: boolean; listsRetry?: true }
   | { status: 'error'; message: string };
 
 const NOT_A_LABEL = "That doesn't look like a food label. Fit the ingredient list in the box.";
@@ -20,6 +20,7 @@ export function combine(
   reading: ScanResult | null,
   readingFailed: boolean,
   readingUnreadable = false,
+  readingRetryable = false,
 ): ScanUpdate | null {
   // The reader couldn't make out the words: never guess a verdict, even if Jev already called one.
   if (readingUnreadable) return { status: 'error', message: UNCLEAR };
@@ -37,15 +38,17 @@ export function combine(
   }
 
   if (decided) {
+    // A timeout or dropped connection can be retried in place; other failures just say so.
+    const retry = readingFailed && readingRetryable;
     const result: ScanResult = {
       verdict: decided,
       headline: quickHeadline[decided],
       naturalSugars: [],
       addedSugars: [],
       sweeteners: [],
-      note: readingFailed ? "Couldn't list the sugars this time" : undefined,
+      note: readingFailed && !retry ? "Couldn't list the sugars this time" : undefined,
     };
-    return { status: 'done', result, listsPending: !readingFailed };
+    return retry ? { status: 'done', result, listsPending: false, listsRetry: true } : { status: 'done', result, listsPending: !readingFailed };
   }
 
   // Jev thinks it's not a label: wait for the reading to confirm instead of flashing an error.

@@ -1,9 +1,9 @@
 import { Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
-import { FunctionsHttpError } from '@supabase/supabase-js';
+import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import type { JevVerdict, ScanResult } from '../types';
-import { type Photo, type Rect, toPixels } from './photo';
+import { type CaptureMeta, type Photo, type Rect, toPixels } from './photo';
 import { noteScan, scanTimingId } from './scanTiming';
 import { supabase } from './supabase';
 
@@ -25,6 +25,13 @@ async function messageFrom(error: unknown, fallback: string) {
 /** Thrown by readLabel when the photo is too blurry, dark or cut off to read. */
 export class UnreadableError extends Error {}
 
+/** Thrown by readLabel when the lists timed out, the connection dropped or the server failed: worth a retry. */
+export class RetryableReadError extends Error {}
+
+/** The verdict is already on screen by then, so the lists get a short leash. */
+const LISTS_TIMEOUT_MS = 12_000;
+const READ_FAILED = "Couldn't read the label. Try again.";
+
 /** Jev rejects any side over 1568 px or under 280 px. */
 const MAX_SIDE = 1568;
 const MIN_SIDE = 280;
@@ -36,6 +43,8 @@ const UPLOAD_QUALITY = 0.85;
  * returns it as base64 JPEG. The full photo stays on screen; only this copy is uploaded.
  */
 export async function preparePhoto(photo: Photo): Promise<string> {
+  // The web camera already cropped, scaled and encoded the upload in one pass.
+  if (photo.upload) return photo.upload;
   try {
     return await encodeForUpload(photo, photo.crop);
   } catch (e) {
@@ -60,9 +69,9 @@ async function encodeForUpload({ uri, width, height }: Photo, crop: Rect | undef
 }
 
 /** Fast path: Jev makes the CLEAN / BAD / UGLY call straight from the photo. Never throws. */
-export async function quickVerdict(image: string): Promise<JevVerdict> {
+export async function quickVerdict(image: string, client?: CaptureMeta): Promise<JevVerdict> {
   const { data, error } = await supabase.functions.invoke<{ jev: JevVerdict; timing?: unknown }>('quickgob-quick-verdict', {
-    body: { image, scan_id: scanTimingId() },
+    body: { image, scan_id: scanTimingId(), client },
   });
   if (error || !data?.jev) {
     const e = await errorFrom(error, 'quick-verdict failed');
@@ -74,17 +83,47 @@ export async function quickVerdict(image: string): Promise<JevVerdict> {
 }
 
 /** Detail path: Claude lists the sugars, and the rules give a backstop verdict. */
-export async function readLabel(image: string): Promise<ScanResult> {
-  const { data, error } = await supabase.functions.invoke<{ result: ScanResult; timing?: unknown }>('quickgob-scan-label', {
-    body: { image, scan_id: scanTimingId() },
+export async function readLabel(image: string, client?: CaptureMeta): Promise<ScanResult> {
+  const started = performance.now();
+  const outcome = (result: string) => noteScan({ scan_label_outcome: result, scan_label_ms: Math.round(performance.now() - started) });
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      outcome('timeout');
+      reject(new RetryableReadError(READ_FAILED));
+    }, LISTS_TIMEOUT_MS);
   });
-  if (error || !data?.result) {
-    const e = await errorFrom(error, "Couldn't read the label. Try again.");
-    noteScan({ scan_label_server: e.timing, scan_label_error: e.code ?? e.message });
-    throw e.code === 'unreadable' ? new UnreadableError(e.message) : new Error(e.message);
+
+  const attempt = async (): Promise<ScanResult> => {
+    const { data, error } = await supabase.functions.invoke<{ result: ScanResult; timing?: unknown }>('quickgob-scan-label', {
+      body: { image, scan_id: scanTimingId(), client },
+      signal: controller.signal,
+    });
+    if (controller.signal.aborted) throw new RetryableReadError(READ_FAILED);
+    if (error instanceof FunctionsFetchError) {
+      outcome('network');
+      throw new RetryableReadError(READ_FAILED);
+    }
+    if (error || !data?.result) {
+      const e = await errorFrom(error, READ_FAILED);
+      const status = error instanceof FunctionsHttpError || error instanceof FunctionsRelayError ? error.context.status : 0;
+      outcome(status ? `http_${status}` : 'error');
+      noteScan({ scan_label_server: e.timing, scan_label_error: e.code ?? e.message });
+      if (e.code === 'unreadable') throw new UnreadableError(e.message);
+      throw status >= 500 || error instanceof FunctionsRelayError ? new RetryableReadError(READ_FAILED) : new Error(e.message);
+    }
+    outcome('ok');
+    noteScan({ scan_label_server: data.timing });
+    return data.result;
+  };
+
+  try {
+    return await Promise.race([attempt(), deadline]);
+  } finally {
+    clearTimeout(timer);
   }
-  noteScan({ scan_label_server: data.timing });
-  return data.result;
 }
 
 export async function deleteAccount() {

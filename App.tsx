@@ -12,7 +12,7 @@ import type { Session } from '@supabase/supabase-js';
 import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { guestMode, signInAsGuest } from './src/lib/api';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { applyStrictMode } from './src/lib/display';
@@ -154,17 +154,23 @@ export default function App() {
         {ready &&
           (isConfigured && !session ? (
             <SignInScreen />
-          ) : scan ? (
-            <ResultScreen
-              photoUri={scan.photoUri}
-              state={shownState ?? scan.state}
-              onScanAnother={handleScanAnother}
-              onOpenSheet={setSheet}
-              gentle={prefs.gentle}
-              tagline={tagline}
-            />
           ) : (
-            <CameraScreen onCapture={handleCapture} onOpenSheet={setSheet} tagline={tagline} />
+            <>
+              {/* Stays mounted under the result so the camera stream survives "Scan another". */}
+              <CameraScreen active={!scan} onCapture={handleCapture} onOpenSheet={setSheet} tagline={tagline} />
+              {scan && (
+                <View style={StyleSheet.absoluteFill}>
+                  <ResultScreen
+                    photoUri={scan.photoUri}
+                    state={shownState ?? scan.state}
+                    onScanAnother={handleScanAnother}
+                    onOpenSheet={setSheet}
+                    gentle={prefs.gentle}
+                    tagline={tagline}
+                  />
+                </View>
+              )}
+            </>
           ))}
         {ready && (
           <>

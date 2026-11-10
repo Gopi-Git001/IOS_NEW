@@ -16,6 +16,23 @@ test('Jev verdict shows before the lists arrive', () => {
   }
 });
 
+test('a timed-out reading keeps the verdict and offers a retry', () => {
+  const u = combine(jev('UGLY'), null, true, false, true);
+  if (u?.status !== 'done') throw new Error('expected done');
+  assert.equal(u.result.verdict, 'UGLY');
+  assert.equal(u.listsPending, false);
+  assert.equal(u.listsRetry, true);
+  assert.equal(u.result.note, undefined);
+});
+
+test('a reading that failed for good says so, with no retry', () => {
+  const u = combine(jev('UGLY'), null, true);
+  if (u?.status !== 'done') throw new Error('expected done');
+  assert.equal(u.listsPending, false);
+  assert.equal(u.listsRetry, undefined);
+  assert.match(u.result.note ?? '', /Couldn't list the sugars/);
+});
+
 test("Jev's call stands when the rules disagree", () => {
   const u = combine(jev('UGLY'), reading, false);
   if (u?.status !== 'done') throw new Error('expected done');
