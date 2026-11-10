@@ -17,7 +17,7 @@ export const ORG = {
   locality: 'Leander',
   region: 'TX',
   country: 'US',
-  email: 'akhil@martiandynamics.com',
+  email: 'support@sugardepth.com',
 };
 
 /** Versions of the rulebook these pages describe (from RULES.md / policy.ts / ingredients.ts). */

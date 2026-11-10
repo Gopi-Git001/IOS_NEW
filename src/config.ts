@@ -4,7 +4,7 @@ export const links = {
   howItWorks: 'https://sugardepth.com/how-it-works',
   privacy: 'https://sugardepth.com/privacy',
   terms: 'https://sugardepth.com/terms',
-  supportEmail: 'support@quickgab.app', // TODO
+  supportEmail: 'support@sugardepth.com',
   appStore: 'https://apps.apple.com/app/id0000000000', // TODO: App Store id
   playStore: 'https://play.google.com/store/apps/details?id=app.quickgab', // TODO: Android package name
 };
