@@ -42,8 +42,8 @@ function error(u: ReturnType<typeof combine>) {
 describe('Jev decided, Claude read the label', () => {
   for (const j of VERDICTS) {
     for (const r of VERDICTS) {
-      // Safety floor: the rules BAD reading has added sugar, so Jev's CLEAN can't stand.
-      const shown = j === 'CLEAN' && r === 'BAD' ? r : j;
+      // The stricter of the two shows: the rules verdict is a floor Jev can only raise.
+      const shown = VERDICTS.indexOf(r) > VERDICTS.indexOf(j) ? r : j;
       const rulesWin = shown === r;
       test(`Jev ${j} vs rules ${r}: ${shown} shows${rulesWin ? ' with the rules headline' : ', lists kept, rules headline and note dropped'}`, () => {
         const u = done(combine(decided(j), READINGS[r], false));
@@ -138,8 +138,12 @@ describe('neither side has a verdict', () => {
 
 describe('arrival order: one verdict, never changed', () => {
   test('Jev first, then a disagreeing reading: nothing shows until both are in, then one verdict', () => {
-    assert.equal(combine(decided('OKAY'), null, false), null);
-    assert.equal(done(combine(decided('OKAY'), READINGS.BAD, false)).result.verdict, 'OKAY');
+    assert.equal(combine(decided('BAD'), null, false), null);
+    assert.equal(done(combine(decided('BAD'), READINGS.OKAY, false)).result.verdict, 'BAD');
+  });
+
+  test('Jev OKAY + a rules BAD in the reading: shows BAD', () => {
+    assert.equal(done(combine(decided('OKAY'), READINGS.BAD, false)).result.verdict, 'BAD');
   });
 
   test('reading first, Jev still pending: no rules verdict is shown yet', () => {

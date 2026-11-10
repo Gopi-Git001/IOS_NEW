@@ -11,7 +11,10 @@ sugarcane character reacts.
   sweetener the rules don't know yet (logged as `unknown_sweetener` so it can be added).
 - BAD — over 4 g added sugar per serving, added sugar whose grams per serving can't be read
   (including per-100 g-only panels), any artificial sweetener, or drinking alcohol.
-- RETRY — not a food label, unreadable, no ingredient list or a cut-off list (no verdict; retake).
+- OKAY also when 2 or more ingredients aren't recognised (never CLEAN; names logged as `unrecognised_ingredients`).
+- RETRY — not a food label, unreadable, no ingredient list, or a cut-off list with nothing usable
+ visible (no verdict; retake). Visible sugar, a sweetener or alcohol on a cut-off list still decides.
+- Non-English lists: Claude returns English names next to the printed ones; foreign sugar words are a backup.
 - Never CLEAN with any added sugar, artificial sweetener or alcohol, whatever Jev says.
 - Juice / fruit concentrate is added sugar only when it sweetens another food; a 100% juice
   product (juice from concentrate and nothing else sweet) is natural sugar.
@@ -48,11 +51,12 @@ sugarcane character reacts.
   the rules (`_shared/rules.ts`, staged pipeline documented in RULES.md) compute a backstop verdict.
 - The app fires both calls at once and keeps the loading state until BOTH have answered (or Jev's
   6 s wait, `JEV_WAIT_MS` in `src/lib/scanFlow.ts`, passes). It then shows one verdict and never changes it.
-- Jev's verdict wins. The rules verdict is used only when Jev is unavailable or its confidence is
-  under 0.45 (`MIN_CONFIDENCE` in `_shared/jev.ts`), or when Jev says CLEAN but the reading found added sugar,
-  an artificial sweetener or alcohol (safety floor, `src/lib/combine.ts`).
+- Final verdict = the stricter of Jev and the rules (CLEAN < OKAY < BAD, `src/lib/combine.ts`): Jev can
+ raise the rules verdict, never lower it. The rules verdict alone is used when Jev is unavailable or its
+ confidence is under 0.45 (`MIN_CONFIDENCE` in `_shared/jev.ts`).
 - Images to Jev need the `TypeSafe-Danger-Zone-Images: true` header and 280–1568 px per side;
-  the app sends a JPEG cropped to the guide box, longest side 1568 px.
+ the app sends a JPEG cropped to the guide box, longest side 1568 px, and `quick-verdict` pads a side
+ under 280 px with white (`_shared/pad.ts`, never stretched).
 
 ## Rules
 - Signup: Google sign-in (Supabase Auth, PKCE). Guest sign-in only for testing builds. Include "Delete account".

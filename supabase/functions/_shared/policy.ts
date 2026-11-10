@@ -5,18 +5,20 @@
 //   BAD   more than 4 g added sugar per serving, added sugar with no per-serving grams, an artificial
 //         sweetener, or drinking alcohol above 0.5% ABV
 //   OKAY  4 g or less added sugar per serving, a sugar alcohol or allulose, stevia / monk fruit /
-//         thaumatin, or an unknown ingredient that may sweeten
+//         thaumatin, an unknown ingredient that may sweeten, or 2+ ingredients the registry doesn't know
 //   CLEAN complete ingredient list with no added sugar, no sweetener and no alcohol
-//   RETRY not a food label, unreadable, no ingredient list, or a cut-off list
+//   RETRY not a food label, unreadable, no ingredient list, or a cut-off list with nothing usable on it
 //
 // Order (first match wins):
 //   R1-R2  not a label / unreadable                          -> RETRY
 //   X1-X4  a confirmed BAD trigger                           -> BAD (a cut-off list can only hide more, never less)
-//   R3-R4  no list / cut-off list                            -> RETRY
-//   O1-O4  a little added sugar, sugar alcohol, plant or unknown sweetener -> OKAY
+//   R3     no ingredient list                                -> RETRY
+//   O1-O3  a little added sugar, sugar alcohol, plant sweetener -> OKAY (seen on the photo, so it stands on a cut-off list too)
+//   R4     cut-off list, nothing usable seen                  -> RETRY
+//   O4-O5  unknown sweetener / 2+ unrecognised ingredients   -> OKAY
 //   C1     complete list, nothing sweet                       -> CLEAN
 import { type Entry, type IngredientClass, REGISTRY_VERSION } from './ingredients.ts';
-import { parseIngredients, type Resolved, resolveAll } from './normalize.ts';
+import { baseKey, parseIngredients, type Resolved, resolveAll, translationsFrom } from './normalize.ts';
 
 export const POLICY_VERSION = 'rules-v3';
 
@@ -28,6 +30,10 @@ export type ShownVerdict = Exclude<Verdict, 'RETRY'>;
 export const MAX_OKAY_ADDED_G = 4;
 /** Above this ABV a drink counts as alcohol. */
 export const MAX_NON_ALCOHOLIC_ABV = 0.5;
+/** With this many ingredients the registry doesn't know, the product can't be called CLEAN. */
+export const MAX_UNKNOWN_FOR_CLEAN = 2;
+
+export type IngredientName = { printed: string; english: string };
 
 export type QuantityBasis = 'per_serving' | 'per_100g' | 'per_100ml' | 'unknown';
 
@@ -37,6 +43,8 @@ export type LiteralLabel = {
   is_readable: boolean;
   /** The ingredient list exactly as printed, or null if no ingredient list is visible. */
   ingredients_text: string | null;
+  /** For a non-English list, each ingredient's printed name with its English name; null when the list is in English. */
+  ingredients_english?: IngredientName[] | null;
   /** False when the ingredient list runs off the photo or part of it can't be read. */
   ingredients_complete: boolean;
   /** Numbers exactly as printed on the nutrition panel; null when not visible. Never estimated. */
@@ -50,6 +58,8 @@ export type LiteralLabel = {
 
 export type Evidence = {
   literal: string;
+  /** English name for a non-English printed name, when the reader gave one. */
+  english?: string;
   path: string[];
   id: string;
   name: string;
@@ -68,7 +78,7 @@ export type Evaluation = {
   ruleId: string;
   /** Ingredients that triggered the rule. */
   triggers: Evidence[];
-  /** Every classified sweet-relevant ingredient, deduplicated by registry id (first printed form wins). */
+  /** Every classified sweet-relevant ingredient, one per printed name ("Organic Cane Sugar" and "Cane Sugar" are one; "Sugar" and "Brown Sugar Syrup" are two). */
   found: Record<'added_sugar' | 'non_sugar_sweetener' | 'sugar_alcohol' | 'rare_sugar' | 'naturally_occurring_sugar' | 'other_carbohydrate' | 'context_dependent' | 'drinking_alcohol', Evidence[]>;
   /** Every ingredient the registry doesn't know. */
   unresolved: string[];
@@ -88,7 +98,7 @@ const SWEET_CLASSES = [
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null);
 
 const toEvidence = (r: Resolved): Evidence => ({
-  literal: r.literal, path: r.path, id: r.entry!.id, name: r.entry!.name, cls: r.entry!.cls,
+  literal: r.literal, ...(r.english ? { english: r.english } : {}), path: r.path, id: r.entry!.id, name: r.entry!.name, cls: r.entry!.cls,
   subtype: r.entry!.subtype, treatment: r.entry!.treatment, labeling: r.entry!.labeling, note: r.entry!.note,
 });
 
@@ -110,15 +120,16 @@ function isJuiceProduct(all: Resolved[]) {
 }
 
 /** Stages 2-3 only: parse and classify, no verdict. Exported for tests and debugging. */
-export function classify(text: string) {
-  const resolved = resolveAll(parseIngredients(text));
+export function classify(text: string, english?: IngredientName[] | null) {
+  const resolved = resolveAll(parseIngredients(text), [], translationsFrom(english));
   const juiceProduct = isJuiceProduct(resolved);
   const found = Object.fromEntries(SWEET_CLASSES.map((c) => [c, [] as Evidence[]])) as Evaluation['found'];
   const seen = new Set<string>();
   for (const r of resolved) {
     if (!r.entry || r.entry.cls === 'non_sweet') continue;
-    if (seen.has(r.entry.id)) continue;
-    seen.add(r.entry.id);
+    const name = `${r.entry.id}|${baseKey(r.key)}`;
+    if (seen.has(name)) continue;
+    seen.add(name);
     const ev = toEvidence(r);
     if (CONCENTRATES.has(ev.id)) {
       found[juiceProduct ? 'naturally_occurring_sugar' : 'added_sugar'].push({ ...ev, treatment: juiceProduct ? 'clean_ok' : 'added_sugar' });
@@ -164,7 +175,7 @@ export function evaluate(label: LiteralLabel): Evaluation {
     servingSize: label.serving_size_text?.trim() || null,
   };
   const text = label.ingredients_text?.trim() || '';
-  const c = text ? classify(text) : null;
+  const c = text ? classify(text, label.ingredients_english) : null;
   const found = c?.found ?? (Object.fromEntries(SWEET_CLASSES.map((k) => [k, []])) as unknown as Evaluation['found']);
   const missing: string[] = [];
   const warnings: string[] = [];
@@ -221,11 +232,10 @@ export function evaluate(label: LiteralLabel): Evaluation {
     return decided('BAD', 'X4-alcohol', alcohol, alcohol.length ? `Contains drinking alcohol: ${names(alcohol)}.` : `Contains drinking alcohol (${label.abv_text!.trim()}).`);
   }
 
-  // R3-R4: nothing BAD confirmed, but the list can't rule it out.
+  // R3: nothing BAD confirmed and no list to look at.
   if (!text) return retry('R3-no-ingredient-list', 'No ingredient list is visible, so sweeteners can\'t be ruled out.');
-  if (!label.ingredients_complete) return retry('R4-incomplete-list', 'Part of the ingredient list is cut off or unreadable.');
 
-  // O1-O4: OKAY.
+  // O1-O3: OKAY. What is printed on the photo counts even when part of the list is cut off.
   if (hasAdded) return decided('OKAY', 'O1-added-sugar-up-to-4g', addedSugars, `${servingAdded} g added sugar per serving${addedSugars.length ? ` (${names(addedSugars)})` : ''}.`);
   const softRare = found.rare_sugar.filter((e) => e.treatment === 'okay');
   if (found.sugar_alcohol.length || softRare.length) {
@@ -234,7 +244,15 @@ export function evaluate(label: LiteralLabel): Evaluation {
   }
   const plant = found.non_sugar_sweetener.filter((e) => e.subtype === 'plant');
   if (plant.length) return decided('OKAY', 'O3-plant-sweetener', plant, `No added sugar, but sweetened with ${names(plant)}.`);
+
+  // R4: a cut-off list with nothing usable on it can't rule anything out.
+  if (!label.ingredients_complete) return retry('R4-incomplete-list', 'Part of the ingredient list is cut off or unreadable.');
+
+  // O4-O5: OKAY because the rules can't vouch for every ingredient.
   if (unknownSweeteners.length) return decided('OKAY', 'O4-unknown-sweetener', [], `Not sure what ${unknownSweeteners.join(', ')} is; it may be a sweetener.`);
+  if (base.unresolved.length >= MAX_UNKNOWN_FOR_CLEAN) {
+    return decided('OKAY', 'O5-unrecognised-ingredients', [], `Couldn't check ${base.unresolved.length} ingredients: ${base.unresolved.join(', ')}.`);
+  }
 
   // C1: CLEAN.
   return decided('CLEAN', 'C1-clean', [], found.naturally_occurring_sugar.length

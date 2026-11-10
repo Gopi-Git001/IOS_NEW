@@ -15,11 +15,13 @@ const NOT_A_LABEL = "That doesn't look like a food label. Fit the ingredient lis
 export const UNCLEAR = "The photo isn't clear enough to read. Hold steady, move closer to the ingredient list, and try again.";
 const READ_FAILED = "Couldn't read the label. Try again.";
 
+const STRICTNESS: Record<Verdict, number> = { CLEAN: 0, OKAY: 1, BAD: 2 };
+
 /**
- * Safety floor: added sugar, an artificial sweetener or alcohol in the reading means the product can never
- * be CLEAN, whatever Jev says. The rules rate every artificial sweetener and alcohol BAD.
+ * The rules verdict comes from the ingredients the reading found, so it is a floor: Jev can make the
+ * verdict stricter, never milder. Added sugar, an artificial sweetener or alcohol is never CLEAN.
  */
-export const blocksClean = (reading: ScanResult) => reading.verdict === 'BAD' || reading.addedSugars.length > 0;
+export const stricter = (a: Verdict, b: Verdict): Verdict => (STRICTNESS[b] > STRICTNESS[a] ? b : a);
 
 /**
  * Combines Jev's verdict (the call) with the Claude reading (the lists and the rules verdict). Returns null
@@ -41,7 +43,7 @@ export function combine(
 
   if (reading) {
     if (!jev && !jevTimedOut) return null;
-    const verdict = decided === 'CLEAN' && blocksClean(reading) ? reading.verdict : decided ?? reading.verdict;
+    const verdict = decided ? stricter(decided, reading.verdict) : reading.verdict;
     // Keep the specific rules headline only when the shown verdict is the rules verdict.
     const result: ScanResult =
       verdict === reading.verdict ? reading : { ...reading, verdict, headline: quickHeadline[verdict], note: undefined };

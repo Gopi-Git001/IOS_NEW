@@ -67,25 +67,25 @@ test('the default wait is 6 s', () => {
 
 test('Jev first, then the reading: nothing shows until both are in, then one verdict', async () => {
   const s = start();
-  s.jev.resolve(decided('OKAY'));
+  s.jev.resolve(decided('BAD'));
   await tick();
   assert.equal(s.updates.length, 0);
-  s.read(0).resolve(reading('BAD', ['Cane Sugar']));
+  s.read(0).resolve(reading('OKAY', ['Honey']));
   await s.run;
   assert.equal(s.updates.length, 1);
-  assert.equal(done(s.updates[0]).result.verdict, 'OKAY');
+  assert.equal(done(s.updates[0]).result.verdict, 'BAD');
   assert.deepEqual(s.marks, ['quick_verdict_response', 'scan_label_response']);
 });
 
 test('reading first, Jev inside the wait: Jev decides and the rules verdict never flashes', async () => {
   const s = start();
-  s.read(0).resolve(reading('BAD', ['Cane Sugar']));
+  s.read(0).resolve(reading('OKAY', ['Honey']));
   await tick();
   assert.equal(s.updates.length, 0);
-  s.jev.resolve(decided('OKAY'));
+  s.jev.resolve(decided('BAD'));
   await s.run;
   assert.equal(s.updates.length, 1);
-  assert.equal(done(s.updates[0]).result.verdict, 'OKAY');
+  assert.equal(done(s.updates[0]).result.verdict, 'BAD');
   assert.deepEqual(s.expired, []);
 });
 

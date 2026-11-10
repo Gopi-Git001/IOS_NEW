@@ -97,10 +97,60 @@ const CASES: Case[] = [
   { name: 'unknown sweetener E-number in range', label: label('Water, E963'), verdict: 'OKAY', rule: 'O4-unknown-sweetener' },
   { name: 'unknown sweetener never softens a worse one', label: label('Water, Yacon Syrup, Sucralose'), verdict: 'BAD', rule: 'X3-artificial-sweetener', triggers: ['sucralose'] },
   { name: 'unknown non-sweet ingredient does not block CLEAN', label: label('Water, Spirulina'), verdict: 'CLEAN', rule: 'C1-clean' },
-  // RETRY: incomplete and missing
+  // Cut-off lists: anything sweet that is visible decides; RETRY only when nothing usable was seen
   { name: 'incomplete list, nothing sweet seen', label: label('Water, Salt', { ingredients_complete: false }), verdict: 'RETRY', rule: 'R4-incomplete-list' },
-  { name: 'incomplete list, stevia seen', label: label('Water, Stevia', { ingredients_complete: false }), verdict: 'RETRY', rule: 'R4-incomplete-list' },
+  { name: 'incomplete list, stevia seen', label: label('Water, Stevia', { ingredients_complete: false }), verdict: 'OKAY', rule: 'O3-plant-sweetener', triggers: ['stevia'] },
   { name: 'incomplete list, sugar seen', label: label('Water, Sugar', { ingredients_complete: false }), verdict: 'BAD', rule: 'X2-added-sugar-no-grams' },
+  { name: 'cut-off list with Sugar', label: label('Enriched Flour (Wheat Flour, Niacin), Sugar, Palm Oil, Cocoa, Salt, Leav', { ingredients_complete: false }), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'incomplete list, erythritol seen', label: label('Almond Flour, Erythritol', { ingredients_complete: false }), verdict: 'OKAY', rule: 'O2-sugar-alcohol', triggers: ['erythritol'] },
+  // A cut-off word ("Corn Syr…") looks like an unknown sweetener, so it is not usable evidence.
+  { name: 'incomplete list, only an unknown sweetener seen', label: label('Water, Yacon Syrup', { ingredients_complete: false }), verdict: 'RETRY', rule: 'R4-incomplete-list' },
+  { name: 'incomplete list, clean so far is never CLEAN', label: label('Water, Sea Salt, Lemon', { ingredients_complete: false }), verdict: 'RETRY', rule: 'R4-incomplete-list' },
+  // Footnote marks are stripped before matching
+  { name: 'footnoted cane sugar', label: label('Water, Tea, cane sugar*♦, Lemon Juice', { ingredients_complete: false }), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'superscript footnote', label: label('Oats¹, Honey², Salt'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['honey'] },
+  { name: 'dagger footnote', label: label('Water, Stevia†, Citric Acid‡'), verdict: 'OKAY', rule: 'O3-plant-sweetener', triggers: ['stevia'] },
+  // Non-English lists: foreign sugar words, and Claude's English names
+  { name: 'Dutch ketchup', label: label('Tomaten (148 g per 100 g Tomato Ketchup), azijn, suiker, zout, specerij- en kruidextracten (bevatten selderij), specerij'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'French: sucre', label: label('Farine de blé, sucre, sel'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'German: Zucker', label: label('Haferflocken, Zucker, Salz'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'Spanish: azúcar', label: label('Harina, azúcar, sal'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'Italian: zucchero', label: label('Farina, zucchero, sale'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'Portuguese: açúcar', label: label('Farinha, açúcar, sal'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'Polish: cukier', label: label('Mąka, cukier, sól'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  { name: 'glucose-fructose syrup', label: label('Water, Glucose-Fructose Syrup, Citric Acid'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams' },
+  { name: 'unknown foreign syrup still may sweeten', label: label('Water, sirop de yacon'), verdict: 'OKAY', rule: 'O4-unknown-sweetener' },
+  {
+    name: 'English names resolve an unknown printed list',
+    label: label('Tomaten, azijn, zoetmiddel, zout', {
+      ingredients_english: [
+        { printed: 'Tomaten', english: 'tomatoes' },
+        { printed: 'azijn', english: 'vinegar' },
+        { printed: 'zoetmiddel', english: 'sucralose' },
+        { printed: 'zout', english: 'salt' },
+      ],
+    }),
+    verdict: 'BAD',
+    rule: 'X3-artificial-sweetener',
+    triggers: ['sucralose'],
+  },
+  {
+    name: 'English names make a foreign clean list CLEAN',
+    label: label('Tomaten, azijn, zout', {
+      ingredients_english: [
+        { printed: 'Tomaten', english: 'tomatoes' },
+        { printed: 'azijn', english: 'vinegar' },
+        { printed: 'zout', english: 'salt' },
+      ],
+    }),
+    verdict: 'CLEAN',
+    rule: 'C1-clean',
+  },
+  // Two or more unrecognised ingredients: never CLEAN
+  { name: 'two unknown ingredients is OKAY at best', label: label('Water, Spirulina, Chlorella'), verdict: 'OKAY', rule: 'O5-unrecognised-ingredients' },
+  { name: 'untranslated foreign list is never CLEAN', label: label('Tomaten, azijn, zout, specerij'), verdict: 'OKAY', rule: 'O5-unrecognised-ingredients' },
+  { name: 'unknown ingredients never soften added sugar', label: label('Spirulina, Chlorella, Sugar'), verdict: 'BAD', rule: 'X2-added-sugar-no-grams', triggers: ['sugar'] },
+  // Missing or not a label
   { name: 'no ingredient list, 0 g added', label: label(null, perServing(0)), verdict: 'RETRY', rule: 'R3-no-ingredient-list' },
   { name: 'not a label', label: label(null, { is_food_label: false }), verdict: 'RETRY', rule: 'R1-not-food' },
   { name: 'unreadable', label: label('Sugar', { is_readable: false }), verdict: 'RETRY', rule: 'R2-unreadable' },
@@ -252,6 +302,36 @@ test('warnings: rounding note and contradiction are exposed', () => {
 test('unknown non-sweet ingredients are reported, not hidden', () => {
   const ev = evaluate(label('Water, Spirulina'));
   assert.deepEqual(ev.unresolved, ['Spirulina']);
+});
+
+test('normalize: footnote marks are stripped ("cane sugar*♦" matches)', () => {
+  assert.equal(normalizeKey('cane sugar*♦'), 'cane sugar');
+  assert.equal(normalizeKey('Honey¹'), 'honey');
+  assert.equal(normalizeKey('Stevia†‡'), 'stevia');
+  assert.equal(normalizeKey('▲Cane Sugar'), 'cane sugar');
+  assert.equal(matchEntry(normalizeKey('cane sugar*♦')).entry?.id, 'sugar');
+});
+
+test('Brown Sugar Syrup is listed next to Sugar, not merged into it (items 35, 37, 57)', () => {
+  const c = classify('Whole Grain Oats, Sugar, Corn Starch, Honey, Brown Sugar Syrup, Salt');
+  assert.deepEqual(c.found.added_sugar.map((e) => e.literal), ['Sugar', 'Honey', 'Brown Sugar Syrup']);
+  // Same ingredient twice, or with only a modifier changed, still merges.
+  assert.deepEqual(classify('Sugar, Oats, SUGAR, Organic Sugar').found.added_sugar.map((e) => e.literal), ['Sugar']);
+  // Different names for the same sugar are each shown.
+  assert.deepEqual(classify('Oats, Cane Sugar, Sugar').found.added_sugar.map((e) => e.literal), ['Cane Sugar', 'Sugar']);
+});
+
+test('English names are kept for display; printed text stays for the record', () => {
+  const ev = evaluate(label('Haver, suiker', { ingredients_english: [{ printed: 'Haver', english: 'oats' }, { printed: 'suiker', english: 'sugar' }] }));
+  const sugar = ev.found.added_sugar[0];
+  assert.equal(sugar.literal, 'suiker');
+  assert.equal(sugar.english, 'sugar');
+});
+
+test('unrecognised ingredients are listed for the log', () => {
+  const ev = evaluate(label('Tomaten, azijn, zout'));
+  assert.deepEqual(ev.unresolved, ['Tomaten', 'azijn', 'zout']);
+  assert.match(ev.explanation, /Tomaten/);
 });
 
 test('classify keeps the printed text and blend path', () => {

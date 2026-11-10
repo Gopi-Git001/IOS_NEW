@@ -3,8 +3,8 @@
 //
 // One request, several typed questions evaluated in parallel: is this a food label, and is it
 // CLEAN, OKAY or BAD? Jev is the decision-maker. The Claude reading + rules (rules.ts) fill in the
-// ingredient lists, decide when Jev is unavailable or not confident enough, and keep added sugar,
-// artificial sweeteners and alcohol from ever showing as CLEAN (src/lib/combine.ts).
+// ingredient lists, decide when Jev is unavailable or not confident enough, and win whenever they
+// are stricter than Jev (src/lib/combine.ts).
 import type { ShownVerdict as Verdict } from './rules.ts';
 
 export const ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
@@ -55,7 +55,8 @@ const VERDICT_CRITERIA = {
 const INSTRUCTIONS =
   'Read the ingredient list (and the nutrition panel, if visible) in `label_photo` and rate the product for sugar. ' +
   'Sugar hides under many names: cane sugar, sucrose, dextrose, glucose or corn syrup, fruit juice concentrate, ' +
-  'honey, agave, molasses, rice syrup, malt syrup, malt extract and more all count as added sugar (malted barley ' +
+  'honey, agave, molasses, rice syrup, malt syrup, malt extract, isomalto-oligosaccharides (IMO, often sold as a "fiber") ' +
+  'and more all count as added sugar (malted barley ' +
   'itself, the brewing grain, is not sugar). Use the "Added Sugars" grams per ' +
   'serving from the panel: 4 g or less is OKAY, more than 4 g is BAD, and added sugar with no per-serving grams visible is BAD. ' +
   'Sugars naturally present in whole fruit, milk, plain yogurt or 100% juice are fine. "<0.5% ABV", "0.0%", "non-alcoholic" ' +

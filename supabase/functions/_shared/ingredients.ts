@@ -19,7 +19,7 @@
 //   Resistant maltodextrin as dietary fiber (FDA 2018): https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/questions-and-answers-dietary-fiber
 //   EU sweetener E-numbers (E420, E421, E950-E969), Regulation (EC) 1333/2008 Annex II.
 
-export const REGISTRY_VERSION = 'registry-2026.11.09';
+export const REGISTRY_VERSION = 'registry-2026.11.10';
 
 export type IngredientClass =
   | 'added_sugar' // free mono/disaccharides, syrups, honey, juice concentrates used to sweeten
@@ -73,19 +73,33 @@ export const REGISTRY: Entry[] = [
     'rapadura', 'panela', 'jaggery', 'sucanat', 'sugar syrup', 'simple syrup', 'liquid sugar', 'invert sugar', 'invert cane sugar',
     'invert syrup', 'invert sugar syrup', 'coconut sugar', 'coconut palm sugar', 'palm sugar', 'date sugar', 'maple sugar',
     'golden syrup', 'treacle', 'molasses', 'blackstrap molasses', 'cane molasses', 'caramel', 'burnt sugar',
+    // Other languages (Dutch, French, German, Spanish, Italian, Portuguese, Polish, Nordic), as normalizeKey prints them.
+    'suiker', 'rietsuiker', 'kristalsuiker', 'basterdsuiker', 'sucre', 'sucre de canne', 'sucre roux', 'sucre de canne roux',
+    'zucker', 'rohrzucker', 'rohrohrzucker', 'azucar', 'azucar de cana', 'azucar moreno', 'zucchero', 'zucchero di canna',
+    'acucar', 'acucar de cana', 'cukier', 'cukier trzcinowy', 'socker', 'sukker', 'sokeri', 'saccharose', 'sacarosa', 'saccarosio',
   ]),
-  added('dextrose', 'Dextrose', ['dextrose', 'dextrose monohydrate', 'anhydrous dextrose', 'glucose', 'grape sugar']),
-  added('fructose', 'Fructose', ['fructose', 'crystalline fructose', 'fruit sugar']),
+  added('dextrose', 'Dextrose', [
+    'dextrose', 'dextrose monohydrate', 'anhydrous dextrose', 'glucose', 'grape sugar', 'dextrosa', 'destrosio', 'glucosa', 'glucosio',
+    'traubenzucker', 'druivensuiker',
+  ]),
+  added('fructose', 'Fructose', ['fructose', 'crystalline fructose', 'fruit sugar', 'fructosa', 'fruttosio', 'fruchtzucker', 'vruchtensuiker']),
   added('maltose', 'Maltose', ['maltose', 'malt sugar']),
   added('trehalose', 'Trehalose', ['trehalose']),
   added('galactose', 'Galactose', ['galactose']),
   added('lactose_added', 'Lactose (added)', ['lactose'],
     'Lactose listed as its own ingredient is added sugar (FDA). Lactose that comes with milk is not.'),
-  added('honey', 'Honey', ['honey', 'raw honey', 'clover honey', 'wildflower honey', 'manuka honey', 'honey powder', 'dried honey']),
+  added('honey', 'Honey', ['honey', 'raw honey', 'clover honey', 'wildflower honey', 'manuka honey', 'honey powder', 'dried honey', 'miel', 'honig', 'honing', 'miele', 'mel', 'miod']),
   added('maple_syrup', 'Maple syrup', ['maple syrup', 'pure maple syrup']),
   added('agave', 'Agave syrup', ['agave', 'agave syrup', 'agave nectar', 'blue agave', 'blue agave syrup', 'agave inulin syrup']),
-  added('corn_syrup', 'Corn syrup', ['corn syrup', 'corn syrup solids', 'glucose syrup', 'glucose syrup solids', 'dried glucose syrup', 'corn sweetener']),
-  added('hfcs', 'High fructose corn syrup', ['high fructose corn syrup', 'hfcs', 'glucose-fructose syrup', 'glucose fructose syrup', 'glucose-fructose', 'fructose syrup', 'fructose-glucose syrup', 'isoglucose']),
+  added('corn_syrup', 'Corn syrup', [
+    'corn syrup', 'corn syrup solids', 'glucose syrup', 'glucose syrup solids', 'dried glucose syrup', 'corn sweetener',
+    'sirop de glucose', 'glukosesirup', 'glucosesirup', 'glucosestroop', 'jarabe de glucosa', 'sciroppo di glucosio', 'xarope de glicose', 'syrop glukozowy',
+  ]),
+  added('hfcs', 'High fructose corn syrup', [
+    'high fructose corn syrup', 'hfcs', 'glucose-fructose syrup', 'glucose fructose syrup', 'glucose-fructose', 'fructose syrup', 'fructose-glucose syrup', 'isoglucose',
+    'sirop de glucose-fructose', 'glukose-fruktose-sirup', 'glucose-fructose-sirup', 'glucose-fructosestroop', 'jarabe de glucosa y fructosa',
+    'jarabe de glucosa-fructosa', 'sciroppo di glucosio-fruttosio', 'syrop glukozowo-fruktozowy',
+  ]),
   added('rice_syrup', 'Rice syrup', ['rice syrup', 'brown rice syrup', 'rice malt syrup', 'tapioca syrup', 'oat syrup', 'sorghum syrup', 'carob syrup', 'date syrup', 'fig syrup']),
   added('malt_syrup', 'Malt syrup', ['malt syrup', 'barley malt syrup', 'barley malt extract', 'malt extract', 'malted barley extract']),
   added('juice_concentrate', 'Fruit juice concentrate', [
@@ -173,6 +187,10 @@ export const REGISTRY: Entry[] = [
     'cultured milk', 'cultured pasteurized milk', 'cultured pasteurized grade a milk', 'pasteurized milk', 'grade a milk',
     'milk powder', 'whole milk powder', 'skim milk powder', 'nonfat dry milk', 'dry milk', 'condensed skim milk', 'ultra-filtered milk',
     'ultrafiltered milk', 'yogurt', 'plain yogurt', 'whey', 'sweet whey', 'whey powder', 'buttermilk', 'kefir', 'goat milk',
+    'skimmed milk', 'skimmed milk powder', 'semi-skimmed milk', 'reduced minerals whey',
+    'lait', 'lait ecreme', 'lait ecreme en poudre', 'lait en poudre', 'lait entier', 'melk', 'magere melk', 'melkpoeder', 'mageremelkpoeder',
+    'milch', 'magermilch', 'magermilchpulver', 'vollmilchpulver', 'milchpulver', 'leche', 'leche desnatada', 'leche en polvo', 'leche desnatada en polvo',
+    'latte', 'latte scremato', 'latte in polvere', 'latte scremato in polvere', 'leite', 'leite em po',
   ], 'Lactose that comes with milk is naturally occurring, not added.'),
   natural('fruit', 'Fruit', [
     'apple', 'apples', 'banana', 'bananas', 'strawberries', 'strawberry', 'blueberries', 'blueberry', 'raspberries', 'raspberry',
@@ -198,17 +216,20 @@ export const REGISTRY: Entry[] = [
       'brandy', 'gin', 'tequila', 'sake', 'liqueur', 'malt beverage', 'cider', 'hard cider'] },
 
   // ---- Common non-sweet ingredients (so ordinary labels can resolve to CLEAN) ----
-  plain('water', 'Water', ['water', 'filtered water', 'purified water', 'carbonated water', 'sparkling water', 'spring water', 'mineral water', 'coconut water']),
+  plain('water', 'Water', [
+    'water', 'filtered water', 'purified water', 'carbonated water', 'sparkling water', 'spring water', 'mineral water', 'coconut water',
+    'vapor distilled water', 'distilled water', 'reverse osmosis water', 'purified carbonated water', 'carbonated filtered water',
+  ]),
   plain('salt', 'Salt', ['salt', 'sea salt', 'kosher salt', 'himalayan pink salt', 'pink salt', 'iodized salt']),
   plain('acids', 'Food acids', ['citric acid', 'malic acid', 'lactic acid', 'tartaric acid', 'phosphoric acid', 'fumaric acid', 'ascorbic acid', 'acetic acid', 'vinegar', 'apple cider vinegar', 'distilled vinegar', 'white vinegar', 'wine vinegar', 'red wine vinegar', 'rice vinegar', 'balsamic vinegar']),
-  plain('flavors', 'Flavors', ['natural flavor', 'natural flavors', 'natural flavour', 'natural flavours', 'artificial flavor', 'artificial flavors', 'flavor', 'flavors', 'flavoring', 'natural flavoring', 'natural and artificial flavors', 'natural and artificial flavor', 'vanilla extract', 'vanilla', 'vanilla bean', 'cinnamon', 'spices', 'spice', 'herbs', 'cocoa', 'cocoa powder', 'cocoa butter', 'cacao', 'unsweetened chocolate', 'chocolate liquor', 'coffee', 'tea', 'green tea', 'black tea', 'caffeine']),
+  plain('flavors', 'Flavors', ['natural flavor', 'natural flavors', 'natural flavour', 'natural flavours', 'artificial flavor', 'artificial flavors', 'flavor', 'flavors', 'flavoring', 'natural flavoring', 'natural and artificial flavors', 'natural and artificial flavor', 'naturally essenced', 'natural essence', 'natural essences', 'other natural flavors', 'vanilla flavor', 'natural vanilla flavor', 'natural vanilla flavor with other natural flavors', 'vanilla extract', 'vanilla', 'vanilla bean', 'cinnamon', 'spices', 'spice', 'herbs', 'cocoa', 'cocoa powder', 'cocoa butter', 'cacao', 'unsweetened chocolate', 'chocolate liquor', 'coffee', 'tea', 'green tea', 'black tea', 'caffeine']),
   plain('gums', 'Thickeners and emulsifiers', ['xanthan gum', 'guar gum', 'gellan gum', 'gum arabic', 'acacia gum', 'locust bean gum', 'carrageenan', 'pectin', 'agar', 'gelatin', 'cellulose', 'cellulose gum', 'microcrystalline cellulose', 'methylcellulose', 'lecithin', 'soy lecithin', 'sunflower lecithin', 'mono and diglycerides', 'mono- and diglycerides']),
   plain('preservatives', 'Preservatives', ['potassium sorbate', 'potassium benzoate', 'sodium phosphate', 'disodium phosphate', 'calcium chloride', 'calcium lactate', 'd-alpha-tocopherol', 'calcium disodium edta', 'edta', 'sodium benzoate', 'calcium propionate', 'sorbic acid', 'rosemary extract', 'tocopherols', 'mixed tocopherols', 'vitamin e', 'nisin']),
-  plain('minerals_vitamins', 'Vitamins and minerals', ['calcium carbonate', 'tricalcium phosphate', 'calcium phosphate', 'dipotassium phosphate', 'potassium citrate', 'sodium citrate', 'magnesium citrate', 'sodium bicarbonate', 'baking soda', 'baking powder', 'potassium chloride', 'magnesium oxide', 'zinc oxide', 'reduced iron', 'iron', 'ferrous sulfate', 'niacin', 'niacinamide', 'thiamine', 'thiamine mononitrate', 'riboflavin', 'folic acid', 'vitamin a', 'vitamin a palmitate', 'vitamin c', 'vitamin d', 'vitamin d2', 'vitamin d3', 'vitamin b6', 'vitamin b12', 'pyridoxine hydrochloride', 'cyanocobalamin', 'biotin', 'zinc', 'calcium', 'potassium', 'magnesium', 'sodium']),
+  plain('minerals_vitamins', 'Vitamins and minerals', ['calcium carbonate', 'tricalcium phosphate', 'calcium phosphate', 'dipotassium phosphate', 'potassium citrate', 'sodium citrate', 'magnesium citrate', 'sodium bicarbonate', 'baking soda', 'baking powder', 'potassium chloride', 'magnesium oxide', 'zinc oxide', 'reduced iron', 'iron', 'ferrous sulfate', 'niacin', 'niacinamide', 'thiamine', 'thiamine mononitrate', 'riboflavin', 'folic acid', 'vitamin a', 'vitamin a palmitate', 'vitamin c', 'vitamin d', 'vitamin d2', 'vitamin d3', 'vitamin b6', 'vitamin b12', 'pyridoxine hydrochloride', 'cyanocobalamin', 'biotin', 'zinc', 'calcium', 'potassium', 'magnesium', 'sodium', 'magnesium chloride', 'potassium bicarbonate', 'electrolytes', 'electrolyte sources', 'monopotassium phosphate', 'tripotassium phosphate', 'magnesium lactate', 'potassium phosphate', 'zinc gluconate', 'calcium pantothenate', 'd-calcium pantothenate', 'ferric orthophosphate', 'thiamin mononitrate', 'vitamin b1', 'vitamin b2', 'vitamin b3', 'vitamin b5']),
   plain('colors', 'Colors', ['caramel color', 'annatto', 'turmeric', 'paprika', 'paprika extract', 'beta carotene', 'beet juice color', 'vegetable juice color', 'fruit and vegetable juice color', 'spirulina extract', 'titanium dioxide', 'red 40', 'yellow 5', 'yellow 6', 'blue 1']),
   plain('fats', 'Fats and oils', ['olive oil', 'extra virgin olive oil', 'canola oil', 'sunflower oil', 'high oleic sunflower oil', 'safflower oil', 'palm oil', 'palm kernel oil', 'coconut oil', 'vegetable oil', 'soybean oil', 'avocado oil', 'butter', 'cream', 'heavy cream', 'ghee', 'shortening']),
-  plain('proteins', 'Proteins', ['egg', 'eggs', 'egg whites', 'egg yolks', 'whey protein isolate', 'whey protein concentrate', 'milk protein concentrate', 'milk protein isolate', 'casein', 'sodium caseinate', 'soy protein isolate', 'pea protein', 'pea protein isolate', 'rice protein', 'collagen', 'cheese', 'cheddar cheese', 'cultures', 'live and active cultures', 'live cultures', 'enzymes', 'rennet', 'yeast', 'nutritional yeast']),
-  plain('grains_nuts', 'Grains, nuts and seeds', ['oats', 'rolled oats', 'whole grain oats', 'oat flour', 'wheat flour', 'enriched flour', 'enriched wheat flour', 'whole wheat flour', 'whole grain wheat', 'bleached flour', 'unbleached flour', 'rice', 'brown rice', 'rice flour', 'brown rice flour', 'corn flour', 'cornmeal', 'quinoa', 'barley', 'rye', 'almonds', 'almond butter', 'almond flour', 'peanuts', 'peanut butter', 'cashews', 'walnuts', 'pecans', 'hazelnuts', 'pistachios', 'sunflower seeds', 'pumpkin seeds', 'chia seeds', 'flax seeds', 'flaxseed', 'sesame seeds', 'hemp seeds', 'soybeans', 'chickpeas', 'black beans', 'lentils']),
+  plain('proteins', 'Proteins', ['egg', 'eggs', 'egg whites', 'egg yolks', 'whey protein isolate', 'whey protein concentrate', 'milk protein concentrate', 'milk protein isolate', 'casein', 'sodium caseinate', 'soy protein isolate', 'pea protein', 'pea protein isolate', 'rice protein', 'collagen', 'cheese', 'cheddar cheese', 'cultures', 'live and active cultures', 'live cultures', 'live active cultures', 'active cultures', 'live active yogurt cultures', 'yogurt cultures', 'enzymes', 'rennet', 'yeast', 'nutritional yeast']),
+  plain('grains_nuts', 'Grains, nuts and seeds', ['oats', 'rolled oats', 'whole grain oats', 'whole grain rolled oats', 'oat flour', 'milled corn', 'wheat flour', 'enriched flour', 'enriched wheat flour', 'whole wheat flour', 'whole grain wheat', 'bleached flour', 'unbleached flour', 'rice', 'brown rice', 'rice flour', 'brown rice flour', 'corn flour', 'cornmeal', 'quinoa', 'barley', 'rye', 'wheat', 'hops', 'almonds', 'almond butter', 'almond flour', 'peanuts', 'peanut butter', 'cashews', 'cashew butter', 'walnuts', 'pecans', 'hazelnuts', 'pistachios', 'sunflower seeds', 'pumpkin seeds', 'chia seeds', 'flax seeds', 'flaxseed', 'sesame seeds', 'hemp seeds', 'soybeans', 'chickpeas', 'black beans', 'lentils']),
   { id: 'malted_barley', name: 'Malted barley', cls: 'non_sweet', labeling: 'not_counted_as_sugar', treatment: 'clean_ok',
     aliases: ['malted barley', 'barley malt'],
     note: 'The brewing grain, not a sugar. Malt syrup and malt extract made from it are added sugar.' },
@@ -257,4 +278,8 @@ export const juiceEntries: Record<'concentrate' | 'reconstituted' | 'single', En
 };
 
 /** Words in an unknown ingredient that suggest it might sweeten. Used only to decide "unresolved", never to classify. */
-export const SWEET_SIGNAL = /(sugar|syrup|sweet|honey|nectar|ose\b|itol\b|malt|molasses|treacle|juice|stevi|monk|dextrin|glycoside|caramel|concentrate|agave|mogros)/;
+export const SWEET_SIGNAL = new RegExp([
+  /(sugar|syrup|sweet|honey|nectar|ose\b|itol\b|malt|molasses|treacle|juice|stevi|monk|dextrin|glycoside|caramel|concentrate|agave|mogros)/.source,
+  // The same ideas in other languages: sugar, syrup, honey, sweetener.
+  /(suiker|sucre|zucker|azucar|zucchero|acucar|cukier|socker|sukker|sokeri|sirop|sirup|stroop|jarabe|sciroppo|xarope|syrop|miel|honig|honing|miele|edulcorant|susstoff|zoetstof|dolcificant)/.source,
+].join('|'));

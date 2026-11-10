@@ -25,6 +25,7 @@ import sharp from 'sharp';
 import { combine } from '../../src/lib/combine.ts';
 import { uploadPlan } from '../../src/lib/photo.ts';
 import { normalizeJev, normalizeResult } from '../../src/lib/verdicts.ts';
+import { canonicalName } from './names.ts';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPORT = path.join(DIR, 'report.md');
@@ -156,6 +157,7 @@ async function scan(token, image, id) {
     shown,
     jev,
     listsError: l.error,
+    rules: l.timing?.rules_verdict ? `${l.timing.rules_verdict} ${l.timing.rule ?? ''}`.trim() : null,
     verdictMs: verdictMs ?? (shown?.status === 'done' ? doneMs : null),
     doneMs,
     cost: (tokensIn * price.in + tokensOut * price.out) / 1e6 + price.jev,
@@ -165,12 +167,11 @@ async function scan(token, image, id) {
 
 // ---------- scoring ----------
 
-const norm = (s) => s.toLowerCase().replace(/\s*\(sugar alcohol\)\s*$/, '').replace(/\s+/g, ' ').trim();
 const isGramsLine = (s) => /^\d+(\.\d+)? g added per serving$/i.test(s.trim());
 
 function diffList(expected, got) {
-  const e = new Map(expected.map((x) => [norm(x), x]));
-  const g = new Map(got.filter((x) => !isGramsLine(x)).map((x) => [norm(x), x]));
+  const e = new Map(expected.map((x) => [canonicalName(x), x]));
+  const g = new Map(got.filter((x) => !isGramsLine(x)).map((x) => [canonicalName(x), x]));
   return {
     missed: [...e].filter(([k]) => !g.has(k)).map(([, v]) => v),
     extra: [...g].filter(([k]) => !e.has(k)).map(([, v]) => v),
@@ -299,7 +300,7 @@ ${new Date().toISOString()} · ${BASE ? new URL(BASE).host : 'no project'}${DRY_
 | Spend | ${usd(spent)} measured${DRY_RUN || !scored.length ? `, ${usd(estimate)} estimated` : ''} (budget ${usd(MAX_SPEND_USD)}) |
 
 Verdicts: CLEAN / OKAY / BAD, or RETRY (no verdict, ask for a retake).
-Lists compare case-insensitively; the "N g added per serving" line and the "(sugar alcohol)" tag are ignored.
+Lists compare names the way the rules match them (case, accents, footnote marks and qualifiers like "Organic" or "Pure" ignored, so "PURE CANE SUGAR" = "Cane Sugar"); the "N g added per serving" line and the "(sugar alcohol)" tag are ignored.
 Prices: Claude $${price.in} / $${price.out} per million tokens in / out, Jev $${price.jev} per scan (override with EVAL_* env).
 
 ## Accuracy by expected verdict
@@ -316,9 +317,9 @@ ${groupTable((s) => s.item.category ?? '–')}
 
 ## Wrong verdicts
 
-| Item | Expected | Got | Jev | Lists error |
-|---|---|---|---|---|
-${scored.filter((s) => !s.correct).map((s) => `| ${s.item.id} | ${s.expected} | ${s.got} | ${s.run.jev.status}${s.run.jev.verdict ? ` ${s.run.jev.verdict}` : ''}${s.run.jev.confidence != null ? ` (${Number(s.run.jev.confidence).toFixed(2)})` : ''} | ${s.run.listsError ?? ''} |`).join('\n') || '| – | | | | |'}
+| Item | Expected | Got | Jev | Claude + rules | Lists error |
+|---|---|---|---|---|---|
+${scored.filter((s) => !s.correct).map((s) => `| ${s.item.id} | ${s.expected} | ${s.got} | ${s.run.jev.status}${s.run.jev.verdict ? ` ${s.run.jev.verdict}` : ''}${s.run.jev.confidence != null ? ` (${Number(s.run.jev.confidence).toFixed(2)})` : ''}${s.run.jev.reason ? ` ${s.run.jev.reason}` : ''} | ${s.run.rules ?? '–'} | ${s.run.listsError ?? ''} |`).join('\n') || '| – | | | | | |'}
 
 ## Misses and false alarms in the sugar lists
 

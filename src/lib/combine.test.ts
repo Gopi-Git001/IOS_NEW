@@ -69,10 +69,24 @@ test('safety floor: Jev CLEAN + an artificial sweetener or alcohol (rules BAD) i
   }
 });
 
-test('Jev CLEAN stands over a rules OKAY with no added sugar (stevia)', () => {
+test('Jev CLEAN + a rules OKAY for stevia shows OKAY (strict mode off turns it CLEAN on screen)', () => {
   const stevia: ScanResult = { verdict: 'OKAY', headline: 'Gentler sweetener', naturalSugars: [], addedSugars: [], sweeteners: ['Stevia'] };
   const u = combine(jev('CLEAN'), stevia, false);
-  assert.equal(u?.status === 'done' && u.result.verdict, 'CLEAN');
+  assert.equal(u?.status === 'done' && u.result.verdict, 'OKAY');
+});
+
+test('rules beat Jev when stricter: Jev OKAY + rules BAD (isomalto-oligosaccharides) is BAD', () => {
+  const imo: ScanResult = { verdict: 'BAD', headline: 'Added sugar', naturalSugars: [], addedSugars: ['Isomalto-oligosaccharides'], sweeteners: ['Stevia'] };
+  const u = combine(jev('OKAY'), imo, false);
+  if (u?.status !== 'done') throw new Error('expected done');
+  assert.equal(u.result.verdict, 'BAD');
+  assert.equal(u.result.headline, 'Added sugar');
+});
+
+test('Jev stricter than the rules: Jev BAD + rules CLEAN stays BAD', () => {
+  const clean: ScanResult = { verdict: 'CLEAN', headline: 'No added sugar', naturalSugars: [], addedSugars: [], sweeteners: [] };
+  const u = combine(jev('BAD'), clean, false);
+  assert.equal(u?.status === 'done' && u.result.verdict, 'BAD');
 });
 
 test('rules decide when Jev is unsure or down', () => {

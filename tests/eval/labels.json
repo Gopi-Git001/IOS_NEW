@@ -1328,7 +1328,8 @@
         "image": "https://images.openfoodfacts.org/images/products/085/535/200/8071/ingredients_en.16.full.jpg"
       },
       "off_ingredients_text": "Water, Malted Barley, Oats, Hops, Wheat, Yeast",
-      "photo_status": "ok"
+      "photo_status": "replace",
+      "photo_issue": "Blurry (255 px short side); Claude read it as unreadable in the Nov 9 eval. Retake the can's ingredient list and ABV line in focus, filling the frame."
     },
     {
       "id": "52-gts-kombucha",
@@ -1560,7 +1561,8 @@
         "image": "https://images.openfoodfacts.org/images/products/037/009/613/0310/ingredients_fr.3.full.jpg"
       },
       "off_ingredients_text": "",
-      "photo_status": "ok"
+      "photo_status": "replace",
+      "photo_issue": "Blurry; both Jev and Claude read it as unreadable in the Nov 9 eval. Retake a non-English (e.g. French) ingredient list in focus, filling the frame."
     }
   ],
   "_photo_status": "ok = usable now; replace = take your own photo of this product (same file name); missing = not taken yet. Only verified=true AND photo_status=ok entries are scored."

@@ -24,13 +24,27 @@ const LABEL_SCHEMA = {
   type: 'object',
   additionalProperties: false,
   required: [
-    'is_food_label', 'is_readable', 'ingredients_text', 'ingredients_complete', 'total_sugars_g', 'added_sugars_g',
+    'is_food_label', 'is_readable', 'ingredients_text', 'ingredients_english', 'ingredients_complete', 'total_sugars_g', 'added_sugars_g',
     'quantity_basis', 'serving_size_text', 'abv_text',
   ],
   properties: {
     is_food_label: { type: 'boolean' },
     is_readable: { type: 'boolean' },
     ingredients_text: strOrNull,
+    ingredients_english: {
+      anyOf: [
+        {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['printed', 'english'],
+            properties: { printed: { type: 'string' }, english: { type: 'string' } },
+          },
+        },
+        { type: 'null' },
+      ],
+    },
     ingredients_complete: { type: 'boolean' },
     total_sugars_g: numOrNull,
     added_sugars_g: numOrNull,
@@ -43,6 +57,9 @@ const LABEL_SCHEMA = {
 const SYSTEM = `You transcribe photos of food and drink labels for a sugar-checking app. Copy what is printed. Do not judge, sort or rate anything.
 
 - ingredients_text: the ingredient list copied exactly as printed, in reading order, including parentheses, brackets, percentages and E-numbers. Do not reword, translate, reorder, summarize or add anything. Leave out the word "Ingredients:" and any allergen statement ("Contains: Milk"). Use null if no ingredient list is visible.
+  - If the list is cut off, covered or partly unreadable, still copy every ingredient you can read, and always include every sugar, syrup, sweetener or alcohol you can see. Never leave out a readable ingredient because the rest of the list is missing.
+  - A footnote that names more ingredients (e.g. "▲Ferment of tea, kiwi juice and cane sugar") is part of the list: copy those ingredients. Leave out footnote claims such as "*Organic", "Used for fermentation, not as an added sweetener" or "naturally occurring sugars"; they never remove an ingredient from the list.
+- ingredients_english: null if the ingredient list is in English. Otherwise, one entry per ingredient in ingredients_text (sub-ingredients included), in the same order: "printed" exactly as in ingredients_text, "english" its common English name (e.g. {"printed": "suiker", "english": "sugar"}, {"printed": "lait écrémé en poudre", "english": "skimmed milk powder"}).
 - ingredients_complete: false if any part of the ingredient list runs off the photo, is covered, or can't be read word by word.
 - total_sugars_g: the "Total Sugars" grams as printed, or null if not visible.
 - added_sugars_g: the "Added Sugars" grams as printed (e.g. "Includes 6g Added Sugars" -> 6), or null if not visible. Never estimate it from total sugars. If the panel prints "0g", use 0.
@@ -144,6 +161,13 @@ export default {
     // Unknown words that may sweeten are rated OKAY for now; the log is how they get added to the registry.
     if (ev.unknownSweeteners.length) {
       console.warn(JSON.stringify({ event: 'unknown_sweetener', names: ev.unknownSweeteners, rule: ev.ruleId, registry: ev.registryVersion }));
+    }
+    // Every ingredient the registry doesn't know; two or more keep the verdict from being CLEAN.
+    if (ev.unresolved.length) {
+      console.warn(JSON.stringify({
+        event: 'unrecognised_ingredients', scan_id: typeof scanId === 'string' ? scanId.slice(0, 32) : undefined,
+        names: ev.unresolved, rule: ev.ruleId, registry: ev.registryVersion,
+      }));
     }
 
     if (decision.status === 'retry') {

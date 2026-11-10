@@ -1,4 +1,4 @@
-# Photos to take yourself (24)
+# Photos to take yourself (26)
 
 Use your own phone, ingredient list filling the frame, normal light. Save with the exact file name into `photos/`, then set `photo_status` to `ok` in labels.json.
 
@@ -24,7 +24,9 @@ Use your own phone, ingredient list filling the frame, normal light. Save with t
 | `43-oreo.jpg` | Oreo cookies | DELETED: the database photo was a screenshot of someone's email, not a label |
 | `49-chobani-vanilla.jpg` | Chobani Vanilla Greek yogurt | Tub photo, ingredient list not readable |
 | `50-coffee-mate-original.jpg` | Coffee mate Original creamer | Front of bottle, no ingredient list |
+| `51-athletic-brewing-na.jpg` | Athletic Brewing non-alcoholic beer (Upside Dawn) | Blurry (255 px short side); read as unreadable. Ingredient list and ABV line in focus |
 | `53-simply-orange-juice.jpg` | Simply Orange 100% orange juice | Only a language line, no ingredients; French product |
 | `55-glare-coke-can.jpg` | Coca-Cola can with strong glare | Photo too small (a 519x168 glare copy of 17); take a real can with glare across the list |
 | `56-curved-gatorade.jpg` | Gatorade bottle, label wraps around the curve | Same store-shelf photo as 21; take a real curved-bottle photo |
 | `59-not-food-shoe.jpg` | A shoe / keyboard (not a food) | Take any non-food object (shoe, keyboard) |
+| `60-non-english-label.jpg` | Any product with a non-English (e.g. French) ingredient list | Blurry; both Jev and Claude read it as unreadable. List in focus, filling the frame |

@@ -7,9 +7,8 @@
 // This file maps the Evaluation onto the ScanResult the app renders.
 //
 // Jev makes the call from the photo (see _shared/jev.ts and src/lib/combine.ts). These rules decide when
-// Jev is unavailable or unsure, and their safety floor keeps added sugar, artificial sweeteners and
-// alcohol from ever showing as CLEAN.
-import { evaluate, type Evaluation, type LiteralLabel, type ShownVerdict, type Verdict } from './policy.ts';
+// Jev is unavailable or unsure, and win whenever they are stricter than Jev (src/lib/combine.ts).
+import { evaluate, type Evaluation, type Evidence, type LiteralLabel, type ShownVerdict, type Verdict } from './policy.ts';
 
 export type { Evaluation, LiteralLabel, ShownVerdict, Verdict };
 export { POLICY_VERSION } from './policy.ts';
@@ -41,22 +40,26 @@ const HEADLINE: Record<string, string> = {
   'O1-added-sugar-up-to-4g': 'A little added sugar',
   'O3-plant-sweetener': 'Gentler sweetener',
   'O4-unknown-sweetener': 'Unfamiliar sweetener',
+  'O5-unrecognised-ingredients': 'Unfamiliar ingredients',
   'C1-clean': 'No added sugar',
 };
 
 const fmtGrams = (g: number) => `${Number.isInteger(g) ? g : g.toFixed(1)} g`;
 
+/** Lists show the English name of a non-English ingredient, else the name as printed. */
+const shown = (e: Evidence) => e.english ?? e.literal;
+
 export function toScanResult(ev: Evaluation): ScanResult {
   const f = ev.found;
-  const naturalSugars = f.naturally_occurring_sugar.map((e) => e.literal);
-  const addedSugars = [...f.added_sugar, ...f.rare_sugar.filter((e) => e.treatment === 'added_sugar')].map((e) => e.literal);
+  const naturalSugars = f.naturally_occurring_sugar.map(shown);
+  const addedSugars = [...f.added_sugar, ...f.rare_sugar.filter((e) => e.treatment === 'added_sugar')].map(shown);
   const g = ev.quantity.addedSugarsG;
   // Only a per-serving amount uses the "N g added per serving" line the app parses; never invented.
   if (g !== null && g > 0 && ev.quantity.basis === 'per_serving') addedSugars.push(`${fmtGrams(g)} added per serving`);
   const sweeteners = [
-    ...f.non_sugar_sweetener.map((e) => e.literal),
-    ...f.sugar_alcohol.map((e) => `${e.literal} (sugar alcohol)`),
-    ...f.rare_sugar.filter((e) => e.treatment !== 'added_sugar').map((e) => e.literal),
+    ...f.non_sugar_sweetener.map(shown),
+    ...f.sugar_alcohol.map((e) => `${shown(e)} (sugar alcohol)`),
+    ...f.rare_sugar.filter((e) => e.treatment !== 'added_sugar').map(shown),
     ...(ev.ruleId === 'O4-unknown-sweetener' ? ev.unknownSweeteners : []),
   ];
   const headline = ev.ruleId === 'O2-sugar-alcohol'
