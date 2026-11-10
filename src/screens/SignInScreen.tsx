@@ -8,7 +8,7 @@ import { signInWithGoogle, takeAuthRedirectError } from '../lib/api';
 import { colors, fonts, frost } from '../theme';
 
 /** Google sign-in only (free through Supabase Auth). Supabase creates the account on first sign-in. */
-export function SignInScreen() {
+export function SignInScreen({ onBack }: { onBack?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +39,7 @@ export function SignInScreen() {
           <GoogleButton onPress={start} busy={busy} />
           <Text style={styles.fineprint}>We only get your name and email from Google.</Text>
           {error && <Text style={styles.error}>{error}</Text>}
+          {onBack && <Pressable onPress={onBack} accessibilityRole="button"><Text style={styles.link}>Back to camera</Text></Pressable>}
         </View>
         <Footer ink />
       </SafeAreaView>
@@ -57,7 +58,7 @@ function GoogleMark() {
   );
 }
 
-function GoogleButton({ onPress, busy }: { onPress: () => void; busy: boolean }) {
+export function GoogleButton({ onPress, busy }: { onPress: () => void; busy: boolean }) {
   return (
     <Pressable
       onPress={onPress}
@@ -79,7 +80,7 @@ function GoogleButton({ onPress, busy }: { onPress: () => void; busy: boolean })
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.paper },
+  root: { flex: 1, backgroundColor: colors.paper, overflow: 'hidden' },
   fill: { flex: 1 },
   body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 12 },
   character: { alignSelf: 'center', marginBottom: 4 },

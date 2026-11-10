@@ -1,6 +1,7 @@
 // One upload, one debit per model allowance, two incremental NDJSON outcomes.
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
-import { allowScan, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
+import { isJpegBase64 } from '../_shared/guard.ts';
+import { guestDenied, guestLimit, guestQuota, isGuest, reserveScan } from '../_shared/guest.ts';
 import { askJev } from '../_shared/jev.ts';
 import { readLabel } from '../_shared/reader.ts';
 import { env } from '../_shared/env.ts';
@@ -24,6 +25,12 @@ export default {
       console.log(JSON.stringify({ event: 'scan_timing_client', ...clientTrace(body.trace) }));
       return Response.json({ ok: true });
     }
+    if (body.action === 'guest_status') {
+      if (!isGuest(ctx.userClaims!)) return Response.json({ guest: false });
+      if (env('GUEST_SIGNIN') !== 'on') return guestDenied('guest_disabled');
+      const quota = await guestQuota(ctx.supabaseAdmin, userId, guestLimit());
+      return quota ? Response.json(quota) : Response.json({ error: 'Could not check free scans.' }, { status: 503 });
+    }
     timer.mark('body');
     const image = body.image;
     if (!isJpegBase64(image)) return Response.json({ error: 'Send a JPEG photo as base64 in "image"' }, { status: 400 });
@@ -31,7 +38,8 @@ export default {
     timer.set(clientFields(body.client));
     timer.set({ image_kb: imageKb(image) });
     // Each model shares its legacy allowance, preventing extra paid calls via mixed clients.
-    if (!await allowScan(ctx.supabaseAdmin, userId, intSetting('SCAN_DAILY_LIMIT', 100))) return tooMany();
+    const denied = await reserveScan(ctx.supabaseAdmin, ctx.userClaims!);
+    if (denied) return denied;
     timer.mark('checks');
     const encoder = new TextEncoder();
     let disconnected = false;

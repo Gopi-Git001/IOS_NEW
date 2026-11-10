@@ -49,7 +49,7 @@ Deno.test('quickgob-phone-auth', async (t) => {
   });
 
   await t.step('guest -> a token that signs in a hidden guest account', async () => {
-    const r = await call(SLUG, { body: { action: 'guest' } });
+    const r = await call(SLUG, { body: { action: 'guest' }, headers: { 'cf-connecting-ip': '192.0.2.123' } });
     assertEquals(r.status, 200, r.text);
     const tokenHash = r.json?.token_hash;
     assert(typeof tokenHash === 'string' && tokenHash.length > 10);
@@ -58,9 +58,16 @@ Deno.test('quickgob-phone-auth', async (t) => {
     const user = data.user!;
     try {
       assertEquals(user.user_metadata?.guest, true);
+      assertEquals(user.app_metadata?.guest, true);
       assert(user.email?.endsWith('@guest.sugarhunter.app'));
     } finally {
       await dropUser(user.id);
     }
+  });
+  await t.step('configuration is free and reports the server allowance', async () => {
+    const r = await call(SLUG, { body: { action: 'guest_config' } });
+    assertEquals(r.status, 200);
+    assertEquals(r.json?.enabled, true);
+    assertEquals(r.json?.limit, 3);
   });
 });

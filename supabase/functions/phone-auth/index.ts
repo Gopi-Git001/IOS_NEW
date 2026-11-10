@@ -1,4 +1,4 @@
-// Guest sign-in for testing builds (EXPO_PUBLIC_GUEST_MODE=1). Real sign-in is Google via Supabase Auth.
+// Guest creation for opt-in visitor trials and legacy testing builds. Real sign-in is Google.
 // POST { action: 'guest' } -> { token_hash }   a fresh hidden account with no identity check
 //
 // Off unless the GUEST_SIGNIN secret is "on", and capped at GUEST_HOURLY_LIMIT new guests per hour
@@ -7,7 +7,7 @@
 // endpoint invites SMS-pumping fraud. The slug stays quickgob-phone-auth so testing builds keep working.)
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import { env } from '../_shared/env.ts';
-import { allow, intSetting } from '../_shared/guard.ts';
+import { guestLimit, reserveGuestCreation } from '../_shared/guest.ts';
 
 const DEFAULT_ORIGINS = ['https://app.sugardepth.com', 'https://quickgob-web.vercel.app', 'http://localhost:8081'];
 
@@ -36,6 +36,8 @@ Deno.serve(async (req) => {
   } catch {
     return json({ error: 'Bad request' }, 400);
   }
+  if (!input || typeof input !== 'object') return json({ error: 'Bad request' }, 400);
+  if (input.action === 'guest_config') return json({ enabled: env('GUEST_SIGNIN') === 'on' && Boolean(env('GUEST_IP_SALT')), limit: guestLimit() });
   if (input.action !== 'guest') return json({ error: 'Unknown action' }, 400);
   if (env('GUEST_SIGNIN') !== 'on') return json({ error: 'Guest sign-in is off.' }, 403);
 
@@ -43,21 +45,23 @@ Deno.serve(async (req) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  if (!(await allow(admin, 'guest:create', 3_600, intSetting('GUEST_HOURLY_LIMIT', 20)))) {
-    return json({ error: 'Too many test sessions right now. Try again later.' }, 429);
+  const creation = await reserveGuestCreation(admin, req.headers);
+  if (creation === 'unavailable') return json({ error: 'Free scans are unavailable. Sign in with Google.', code: 'guest_unavailable' }, 503);
+  if (creation === 'limited') {
+    return json({ error: 'Free scans are unavailable right now. Sign in with Google.', code: 'guest_rate_limited' }, 429);
   }
 
   const email = `guest-${crypto.randomUUID()}@guest.sugarhunter.app`;
-  const created = await admin.auth.admin.createUser({ email, email_confirm: true, user_metadata: { app: 'sugar-hunter', guest: true } });
+  const created = await admin.auth.admin.createUser({ email, email_confirm: true, app_metadata: { guest: true }, user_metadata: { app: 'sugar-hunter', guest: true } });
   if (created.error) {
     console.error('create guest failed', created.error.message);
-    return json({ error: 'Could not start a test session. Try again.' }, 500);
+    return json({ error: 'Could not start free scans. Sign in with Google.' }, 500);
   }
   const link = await admin.auth.admin.generateLink({ type: 'magiclink', email });
   const token_hash = link.data?.properties?.hashed_token;
   if (link.error || !token_hash) {
     console.error('generate link failed', link.error?.message);
-    return json({ error: 'Could not start a test session. Try again.' }, 500);
+    return json({ error: 'Could not start free scans. Sign in with Google.' }, 500);
   }
   return json({ token_hash });
 });
