@@ -11,14 +11,19 @@ import { colors, fonts, frost } from '../theme';
 
 // Option A layout (docs/design/signin-option-a-*.png). Wide = laptop, narrow = phones and tablets.
 const WIDE_FROM = 900;
-// The cube's head starts 2.3% down its image; the big name's letters end this far above the head.
+// Where the big name sits (unchanged from the first Option A build): its letters end NAME_GAP above
+// where a cube at HEAD_RATIO would start, with DESCENDER per px of font size for the "p".
 const HEAD_RATIO = 0.023;
 const NAME_GAP = 12;
-// How far the "p" of "Depth" hangs below the text line, per px of font size (Libre Franklin 800).
 const DESCENDER = { wide: 0.04, narrow: 0.075 };
 // The big mascot is drawn in a box this many times as tall as it is wide (the cube fits the height).
 const MASCOT_BOX_ASPECT = 0.71;
+// Below the measured name: the gap to the mascot's head, and the least room kept above the footer.
+const MASCOT_GAP = 16;
+const FOOTER_GAP = 24;
+const MIN_CUBE = 60;
 
+/** Where the big name sits and how it is set. The mascot, button and note are placed later, under the measured name. */
 function layout(width: number, height: number, topInset: number) {
   const wide = width >= WIDE_FROM;
   const side = wide ? 30 : 20;
@@ -38,20 +43,34 @@ function layout(width: number, height: number, topInset: number) {
   const s = Math.min(1, room / needed);
 
   const cubeSize = cube * s;
-  const cubeTop = buttonTop - cubeSize * MASCOT_FEET_RATIO; // the shoes land on the button's top edge
+  const cubeTop = buttonTop - cubeSize * MASCOT_FEET_RATIO;
   const nameBottom = cubeTop + cubeSize * HEAD_RATIO - (NAME_GAP + descender) * s;
+  const lines = wide ? ['Sugar Depth'] : ['Sugar', 'Depth'];
+  const pitch = fontSize * s * lineHeight; // distance from one line's baseline to the next
   return {
     wide,
     side,
     buttonHeight,
-    buttonTop,
     small,
-    cubeSize,
-    cubeTop,
-    nameBottom,
-    name: { fontSize: fontSize * s, lineHeight: fontSize * s * lineHeight, letterSpacing: -0.04 * fontSize * s },
+    maxCube: cubeSize,
+    lines,
+    pitch,
+    nameTop: nameBottom - pitch * lines.length, // top of the original (tight) line boxes
+    name: { fontSize: fontSize * s, letterSpacing: -0.04 * fontSize * s },
     finePrintGap: wide ? 24 : 18,
   };
+}
+
+/**
+ * The mascot, button and note, hung under the measured name: head MASCOT_GAP below the name's descenders,
+ * shoes on the button's top edge, and the note at least FOOTER_GAP above the footer. On a short screen the
+ * mascot shrinks (the feet stay on the button) instead of anything overlapping.
+ */
+function group(nameBottom: number, maxCube: number, slotHeight: number, footerTop: number) {
+  const cubeTop = nameBottom + MASCOT_GAP;
+  const fits = (footerTop - FOOTER_GAP - slotHeight - cubeTop) / MASCOT_FEET_RATIO;
+  const cubeSize = Math.max(MIN_CUBE, Math.min(maxCube, fits));
+  return { cubeTop, cubeSize, buttonTop: cubeTop + cubeSize * MASCOT_FEET_RATIO };
 }
 
 /** Google sign-in only (free through Supabase Auth). Supabase creates the account on first sign-in. */
@@ -62,6 +81,19 @@ export function SignInScreen() {
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const L = layout(width, height - insets.top - insets.bottom, insets.top);
+
+  // Measured on screen: one name line at its natural height (it holds the g/p descenders on every platform),
+  // the bottom of the whole name, the button + note block, and the footer's top.
+  const [lineHeight, setLineHeight] = useState(0);
+  const [nameHeight, setNameHeight] = useState(0);
+  const [slotHeight, setSlotHeight] = useState(0);
+  const [footerTop, setFooterTop] = useState(0);
+  const ready = lineHeight > 0 && nameHeight > 0 && slotHeight > 0 && footerTop > 0;
+  // Natural-height lines, shifted so each baseline lands where the tight lines put it.
+  const shift = lineHeight ? (L.pitch - lineHeight) / 2 : 0;
+  const nameTop = L.nameTop + shift;
+  // The web reports a new size on layout but not always a new position, so the bottom is our top + its measured height.
+  const G = group(nameTop + nameHeight, L.maxCube, slotHeight, footerTop || height);
 
   // Coming back from Google with an error (for example, the person pressed Cancel).
   useEffect(() => setError(takeAuthRedirectError()), []);
@@ -84,26 +116,43 @@ export function SignInScreen() {
 
       <SmallMascot box={{ ...L.small, top: insets.top + L.small.top, left: insets.left + L.small.left }} still={reduced} />
 
-      <Text
+      <View
         testID="signin-name"
         aria-hidden
-        style={[styles.name, L.name, { bottom: height - L.nameBottom }]}
+        pointerEvents="none"
+        onLayout={(e) => setNameHeight(e.nativeEvent.layout.height)}
+        style={[styles.nameGroup, { top: nameTop }, !ready && styles.hidden]}
       >
-        {L.wide ? 'Sugar Depth' : 'Sugar\nDepth'}
-      </Text>
+        {L.lines.map((line, i) => (
+          <Text
+            key={line}
+            onLayout={i === 0 ? (e) => setLineHeight(e.nativeEvent.layout.height) : undefined}
+            style={[styles.name, L.name, i > 0 && lineHeight > 0 && { marginTop: L.pitch - lineHeight }]}
+          >
+            {line}
+          </Text>
+        ))}
+      </View>
 
-      <View style={[styles.buttonSlot, { top: L.buttonTop, left: L.side, right: L.side }]}>
+      <View
+        onLayout={(e) => setSlotHeight(e.nativeEvent.layout.height)}
+        style={[styles.buttonSlot, { top: G.buttonTop, left: L.side, right: L.side }, !ready && styles.hidden]}
+      >
         <GoogleButton onPress={start} busy={busy} height={L.buttonHeight} />
         <Text style={[styles.fineprint, { marginTop: L.finePrintGap }]}>We only get your name and email from Google.</Text>
         {error && <Text style={styles.error}>{error}</Text>}
       </View>
 
       {/* In front of the button but never in the way of a tap. */}
-      <View testID="signin-mascot" pointerEvents="none" style={[styles.bigMascot, { top: L.cubeTop, left: (width - L.cubeSize) / 2 }]}>
-        <CharacterView mood="idle" size={L.cubeSize} motion={reduced ? 'still' : 'planted'} shadow={false} />
+      <View
+        testID="signin-mascot"
+        pointerEvents="none"
+        style={[styles.bigMascot, { top: G.cubeTop, left: (width - G.cubeSize) / 2 }, !ready && styles.hidden]}
+      >
+        <CharacterView mood="idle" size={G.cubeSize} motion={reduced ? 'still' : 'planted'} shadow={false} />
       </View>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
+      <View onLayout={(e) => setFooterTop(e.nativeEvent.layout.y)} style={[styles.footer, { paddingBottom: insets.bottom }]}>
         <Footer ink />
       </View>
     </View>
@@ -168,14 +217,14 @@ const styles = StyleSheet.create({
   smallMascot: { position: 'absolute', zIndex: 3, alignItems: 'center', justifyContent: 'center', minWidth: 44, minHeight: 44 },
   smallPressed: { opacity: 0.8 },
   // See-through wordmark: the app's heavy Libre Franklin at 800, 20% of the paper white.
+  nameGroup: { position: 'absolute', left: 0, right: 0 },
   name: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
     textAlign: 'center',
     fontFamily: fonts.extrabold,
     color: 'rgba(244,241,234,0.2)',
+    includeFontPadding: false, // Android: the line is exactly ascent + descent, like iOS and the web
   },
+  hidden: { opacity: 0 }, // until the name, button block and footer have been measured
   buttonSlot: { position: 'absolute', zIndex: 1 },
   bigMascot: { position: 'absolute', zIndex: 2 },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0 },
