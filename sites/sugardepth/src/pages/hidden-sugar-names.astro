@@ -3,6 +3,9 @@ import Base from '../layouts/Base.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Sources from '../components/Sources.astro';
 import ScanCta from '../components/ScanCta.astro';
+import EditorialImage from '../components/EditorialImage.astro';
+import Film from '../components/Film.astro';
+import FilmMotion from '../components/FilmMotion.astro';
 import { ADDED_SUGARS, ADDED_SUGAR_ALIAS_COUNT } from '../data/sugars';
 import { breadcrumbs } from '../data/schema';
 import { REGISTRY_VERSION } from '../config';
@@ -15,20 +18,25 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
   path="/hidden-sugar-names"
   jsonLd={[breadcrumbs(crumbs)]}
 >
-  <div class="wrap page-head">
+  <div class="wrap page-head editorial-article">
     <Breadcrumbs items={crumbs} />
     <span class="kicker">Name the disguise</span>
     <h1>Hidden sugar names</h1>
     <p class="lead">This is the list of {ADDED_SUGAR_ALIAS_COUNT} added-sugar names Sugar Depth recognizes on an ingredient list, grouped by what they really are. Any one of them makes a label <strong class="ugly">UGLY</strong>, in any amount.</p>
     <p class="voice">Sugar doesn't lie on the label. It just uses a lot of names.</p>
   </div>
-  <div class="wrap page-body">
+  <div class="wrap page-body editorial-article">
     <nav class="sheet" aria-label="Jump to a group" style="margin-bottom:40px">
       <span class="kicker" style="margin-bottom:8px">Jump to</span>
       <ul class="alias-list" style="margin:0">
         {ADDED_SUGARS.map((g) => <li><a href={`#${slug(g.name)}`} style="text-decoration:none">{g.name}</a></li>)}
       </ul>
     </nav>
+    <figure class="editorial-frame aliases-film">
+      <Film name="aliases" label="Six names, including evaporated cane juice and brown rice syrup, are each revealed as sugar." width={1080} height={1080}>
+        <EditorialImage name="aliases" alt="Six glass trays hold sugar cubes, golden syrup, brown sugar, pale agave syrup, dark malt syrup and white powder." sizes="(max-width: 760px) calc(100vw - 40px), 560px" />
+      </Film>
+    </figure>
     <div class="prose" style="max-width:none">
       {ADDED_SUGARS.map((g) => (
         <section id={slug(g.name)} style="padding:0 0 32px" aria-labelledby={`${slug(g.name)}-h`}>
@@ -53,4 +61,5 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
     </div>
     <div style="margin-top:48px"><ScanCta /></div>
   </div>
+  <FilmMotion />
 </Base>

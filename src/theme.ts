@@ -9,6 +9,16 @@ export const brand = { name: 'Sugar Depth', tagline: 'Read the fine print.' };
 // Verdict colors are tuned for white-on-dark glass (each at least 7:1 on #0B0F18).
 export const colors = tokens.colors;
 export const ambient = tokens.ambient;
+// Scoped to verdict surfaces: camera controls and the rest of the app keep their dark glass.
+export const crystal = {
+  paper: colors.crystalPaper,
+  ink: colors.crystalInk,
+  muted: colors.crystalMuted,
+  rule: colors.crystalRule,
+  CLEAN: { tint: colors.clean, deep: colors.cleanInk },
+  BAD: { tint: colors.bad, deep: colors.badInk },
+  UGLY: { tint: colors.ugly, deep: colors.uglyInk },
+};
 
 export const fonts = {
   regular: 'LibreFranklin_400Regular',

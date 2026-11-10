@@ -13,13 +13,14 @@ interface Props {
 const { verdict, why, rows, label = 'Your label', basis = 'ingredient list', foot, rule } = Astro.props;
 const tone = verdict.toLowerCase();
 ---
-<figure class="sheet facts" style="margin:0">
+<figure class={`sheet facts tone-${tone}`} style="margin:0">
   <p class="facts-title" aria-hidden="true">Verdict Facts</p>
   <hr class="rule-10" />
   <div class="facts-sub"><span>{label}</span><span>{basis}</span></div>
   <hr class="rule-5" />
   <div class="facts-verdict">
     <span class={`facts-word ${tone}`}>{verdict}</span>
+    <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>{verdict}</b></div>
     {rule && <span class="small muted mono">rule {rule}</span>}
   </div>
   <p class="facts-why">{why}</p>

@@ -1,0 +1,26 @@
+---
+interface Props { verdict?: 'CLEAN' | 'BAD' | 'UGLY'; interactive?: boolean; }
+const { verdict = 'UGLY', interactive = false } = Astro.props;
+---
+<div class={`crystal-stage tone-${verdict.toLowerCase()}`} data-crystal>
+  {interactive && (['CLEAN', 'BAD', 'UGLY'] as const).map(word => <input class="crystal-choice" type="radio" name="preview-verdict" id={`preview-${word}`} value={word} checked={word === verdict} />)}
+  <div class="crystal-type">
+    <span class="crystal-eyebrow">Sugar Depth · Verdicts</span>
+    <div class="crystal-wordline">
+      {interactive ? (['CLEAN', 'BAD', 'UGLY'] as const).map(word => <span class={`crystal-word preview-${word}`} data-reflection={word}>{word}</span>) : <span class="crystal-word" data-reflection={verdict}>{verdict}</span>}
+      <span class="crystal-bead" aria-hidden="true"></span>
+    </div>
+    <div class="crystal-signoff">No GOOD tier. No gram cutoff.</div>
+  </div>
+  <div class="crystal-object" aria-hidden="true">
+    <div class="crystal-caustic"></div>
+    <div class="crystal-slab">
+      <span class="crystal-slab-label">Verdict</span>
+      {interactive ? (['CLEAN', 'BAD', 'UGLY'] as const).map(word => <span class={`crystal-slab-word preview-${word}`}>{word}</span>) : <span class="crystal-slab-word">{verdict}</span>}
+      <span class="crystal-glint"></span>
+    </div>
+  </div>
+  {interactive && <div class="crystal-controls" aria-label="Preview the three verdicts">
+    {(['CLEAN', 'BAD', 'UGLY'] as const).map(word => <label for={`preview-${word}`}><span class={`crystal-dot tone-${word.toLowerCase()}`}></span>{word}</label>)}
+  </div>}
+</div>

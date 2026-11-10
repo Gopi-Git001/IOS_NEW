@@ -245,6 +245,7 @@ code,
 .wordmark {
   display: inline-flex;
   align-items: center;
+  min-height: 44px;
   gap: 10px;
   text-decoration: none;
   font-weight: 900;
@@ -799,7 +800,7 @@ a.card:hover h3 {
 .pill {
   display: inline-block;
   font-weight: 900;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
   padding: 3px 9px 2px;
   border-radius: 4px;
@@ -901,8 +902,19 @@ table.facts-table {
   margin-right: 6px;
   opacity: 0.6;
 }
+.breadcrumbs li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.breadcrumbs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  min-width: 40px;
+}
 .page-head {
-  padding: clamp(40px, 6vw, 72px) 0 12px;
+  padding-block: clamp(40px, 6vw, 72px) 12px;
   border-bottom: 2px solid var(--rule-strong);
   margin-bottom: 8px;
 }
@@ -910,7 +922,7 @@ table.facts-table {
   font-size: clamp(2.4rem, 5.6vw, 4.4rem);
 }
 .page-body {
-  padding: 32px 0 80px;
+  padding-block: 32px 80px;
 }
 .two-col {
   display: grid;
@@ -924,9 +936,24 @@ table.facts-table {
 }
 .sources {
   font-size: 0.92rem;
+  line-height: 1.7;
 }
 .sources li {
   margin: 0.4em 0;
+}
+.sources a {
+  display: block;
+  min-height: 40px;
+  padding-block: 8px;
+  overflow-wrap: anywhere;
+}
+.aside nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+.table-label {
+  display: none;
 }
 
 /* CTA band */
@@ -993,8 +1020,11 @@ table.facts-table {
   margin: 0;
 }
 .site-footer li a {
-  display: inline-block;
-  padding: 6px 0;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 0;
+  line-height: 1.7;
 }
 .site-footer a {
   text-decoration: none;
