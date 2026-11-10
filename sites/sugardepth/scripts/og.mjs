@@ -28,7 +28,7 @@ const og = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" vi
   <text x="80" y="420" font-family="Libre Franklin Black" font-weight="900" font-size="56" fill="#F4F6FB" letter-spacing="-1">Evaporated cane juice?</text>
   <text x="80" y="492" font-family="Libre Franklin Black" font-weight="900" font-size="56" fill="#FF7A66" letter-spacing="-1">That's sugar.</text>
   <rect x="80" y="540" width="1040" height="1" fill="#F4F6FB" fill-opacity=".34"/>
-  <text x="80" y="586" font-family="Libre Franklin SemiBold" font-weight="600" font-size="26" fill="#F4F6FB" fill-opacity=".8">Food-label scanner · <tspan fill="#5BE49B" font-family="Libre Franklin Black" font-weight="900">CLEAN</tspan>  <tspan fill="#FFC24D" font-family="Libre Franklin Black" font-weight="900">BAD</tspan>  <tspan fill="#FF7A66" font-family="Libre Franklin Black" font-weight="900">UGLY</tspan></text>
+  <text x="80" y="586" font-family="Libre Franklin SemiBold" font-weight="600" font-size="26" fill="#F4F6FB" fill-opacity=".8">Food-label scanner · <tspan fill="#5BE49B" font-family="Libre Franklin Black" font-weight="900">CLEAN</tspan>  <tspan fill="#FFC24D" font-family="Libre Franklin Black" font-weight="900">OKAY</tspan>  <tspan fill="#FF7A66" font-family="Libre Franklin Black" font-weight="900">BAD</tspan></text>
 </svg>`;
 
 // Favicon: a heavy "S" between panel rules on the dark base, with a coral sugar cube on the baseline.

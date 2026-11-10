@@ -8,7 +8,8 @@ import FilmMotion from '../components/FilmMotion.astro';
 import { APP_URL } from '../config';
 import { organization, website, webApplication } from '../data/schema';
 import { getFeaturedGuides } from '../data/guides';
-import { ADDED_SUGAR_ALIAS_COUNT, pillText, toneClass } from '../data/ingredients';
+import { ADDED_SUGAR_ALIAS_COUNT, MAX_OKAY_ADDED_G as G, pillText, toneClass } from '../data/ingredients';
+import { PRE_V3_MEDIA_NOTE } from '../data/media';
 const guides = await getFeaturedGuides();
 const disguises = [
   { alias: 'Evaporated cane juice', reveal: "That's sugar.", href: '/ingredients/evaporated-cane-juice' },
@@ -22,7 +23,7 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
 ---
 <Base
   title="Sugar Depth: the food-label scanner that names every hidden sugar"
-  description="Sugar Depth is a food-label scanner. Photograph a package's ingredient list and get one verdict, CLEAN, BAD or UGLY, based on added sugars and sweeteners. No barcodes, no product database."
+  description="Sugar Depth is a food-label scanner. Photograph a package's ingredient list and get one verdict, CLEAN, OKAY or BAD, based on added sugars and sweeteners. No barcodes, no product database."
   path="/"
   jsonLd={[organization, website, webApplication]}
 >
@@ -37,7 +38,7 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
         <p class="lead">
           Sugar Depth is a food-label scanner for your phone. Point the camera at a package's ingredient list and it
           tells you, in one word, whether the food has added sugar or sweeteners:{" "}
-          <strong class="clean">CLEAN</strong>, <strong class="bad">BAD</strong> or <strong class="ugly">UGLY</strong>.
+          <strong class="clean">CLEAN</strong>, <strong class="bad">OKAY</strong> or <strong class="ugly">BAD</strong>.
         </p>
         <p class="voice">Evaporated cane juice? That's sugar. Brown rice syrup? Also sugar. "Naturally sweetened"? Let's read the label.</p>
         <div class="cta-row">
@@ -77,14 +78,14 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
         <li class="reveal">
           <span class="step-n" aria-hidden="true">03</span>
           <h3>You get one verdict</h3>
-          <p class="muted">CLEAN, BAD or UGLY, with each sugar named in plain words. If the list is cut off or unreadable, it asks you to retake the photo instead of guessing.</p>
+          <p class="muted">CLEAN, OKAY or BAD, with each sugar named in plain words. If the list is cut off or unreadable, it asks you to retake the photo instead of guessing.</p>
         </li>
       </ol>
       <figure class="editorial-frame steps-film">
         <Film name="three-steps" label="A label is photographed, its ingredient names are read, and a glossy verdict appears." width={1280} height={720}>
           <EditorialImage name="label" alt="A clear glass slab magnifies fine print on a cream package beside a sugar cube." sizes="(max-width: 760px) calc(100vw - 40px), 960px" />
         </Film>
-        <figcaption>A scan of a made-up ingredient list. Not a real product.</figcaption>
+        <figcaption>A scan of a made-up ingredient list. Not a real product. {PRE_V3_MEDIA_NOTE}</figcaption>
       </figure>
     </div>
   </section>
@@ -96,27 +97,27 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
       </figure>
       <div class="section-head reveal">
         <span class="kicker">The three verdicts</span>
-        <h2 id="verdicts-h">No GOOD tier. No gram cutoff.</h2>
-        <p class="lead">The first rule that matches wins, and the worst ingredient decides. These are Sugar Depth's preferences, not medical findings.</p>
+        <h2 id="verdicts-h">Three verdicts. The worst ingredient decides.</h2>
+        <p class="lead">Rules are checked in order and the first one that matches wins. These are Sugar Depth's preferences, not medical findings.</p>
       </div>
       <div class="verdicts">
         <div class="verdict-card tone-ugly reveal">
-          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>UGLY</b></div>
-          <span class="word ugly">UGLY</span>
+          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>BAD</b></div>
+          <span class="word ugly">BAD</span>
           <ul>
-            <li>Any added sugar, in any amount, under any name</li>
+            <li>More than {G}&nbsp;g of added sugar per serving, under any name</li>
+            <li>Added sugar whose grams per serving can't be read</li>
             <li>Any artificial sweetener: sucralose, aspartame, acesulfame K and others</li>
-            <li>Erythritol or xylitol</li>
-            <li>Drinking alcohol</li>
+            <li>Drinking alcohol above 0.5% ABV</li>
           </ul>
         </div>
         <div class="verdict-card tone-bad reveal">
-          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>BAD</b></div>
-          <span class="word bad">BAD</span>
+          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>OKAY</b></div>
+          <span class="word bad">OKAY</span>
           <ul>
-            <li>No UGLY trigger, but a plant sweetener: stevia, monk fruit or thaumatin</li>
-            <li>Allulose</li>
-            <li>Another sugar alcohol: sorbitol, maltitol, mannitol, isomalt, lactitol</li>
+            <li>No BAD trigger, but added sugar at {G}&nbsp;g or less per serving</li>
+            <li>A sugar alcohol such as erythritol or xylitol, or allulose</li>
+            <li>A plant sweetener: stevia, monk fruit or thaumatin</li>
           </ul>
         </div>
         <div class="verdict-card tone-clean reveal">
@@ -160,9 +161,9 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
       </div>
       <figure class="screens">
         <img class="phone p1" src="/app/camera.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The Sugar Depth camera screen framing a cereal box's ingredient list, with the hint Fit the ingredient list in the panel." />
-        <img class="phone p2" src="/app/result-ugly.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The Sugar Depth result: Verdict Facts, Ugly, added sugar. Sucrose, glucose syrup and fruit juice concentrate are tagged sugar; aspartame is tagged sweetener." />
-        <img class="phone p3" src="/app/glossary.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The ingredient card for sucrose: That's sugar. The chemical name for table sugar. Any added sugar makes it UGLY." />
-        <figcaption>Real Sugar Depth screens: scan, verdict, and tap any ingredient for why it counts. Demo label, not a real product.</figcaption>
+        <img class="phone p2" src="/app/result-ugly.webp" width="780" height="1688" loading="lazy" decoding="async" alt="A Sugar Depth result from before the current rules: Verdict Facts with the red verdict and the reason, added sugar. Sucrose, glucose syrup and fruit juice concentrate are tagged sugar; aspartame is tagged sweetener." />
+        <img class="phone p3" src="/app/glossary.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The ingredient card for sucrose: That's sugar. The chemical name for table sugar. Its last line states the earlier rule for added sugar." />
+        <figcaption>Real Sugar Depth screens: scan, verdict, and tap any ingredient for why it counts. Demo label, not a real product. {PRE_V3_MEDIA_NOTE}</figcaption>
       </figure>
     </div>
   </section>

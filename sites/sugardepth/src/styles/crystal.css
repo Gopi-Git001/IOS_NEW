@@ -62,12 +62,12 @@ a { text-decoration-color: var(--rule); }
 .crystal-choice { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .crystal-controls label { cursor: pointer; display: inline-flex; align-items: center; gap: 7px; color: var(--muted); background: transparent; border: 1px solid transparent; border-radius: 24px; padding: 9px 13px; min-height: 44px; font: 800 12px var(--sans); }
 .crystal-stage:has(#preview-CLEAN:checked) { --tint: var(--sd-clean); --deep: var(--sd-clean-ink); }
-.crystal-stage:has(#preview-BAD:checked) { --tint: var(--sd-bad); --deep: var(--sd-bad-ink); }
-.crystal-stage:has(#preview-UGLY:checked) { --tint: var(--sd-ugly); --deep: var(--sd-ugly-ink); }
-.crystal-stage:has(.crystal-choice) .preview-CLEAN, .crystal-stage:has(.crystal-choice) .preview-BAD, .crystal-stage:has(.crystal-choice) .preview-UGLY { display: none; }
-.crystal-stage:has(#preview-CLEAN:checked) .preview-CLEAN, .crystal-stage:has(#preview-BAD:checked) .preview-BAD, .crystal-stage:has(#preview-UGLY:checked) .preview-UGLY { display: block; }
-.crystal-stage:has(#preview-CLEAN:checked) label[for='preview-CLEAN'], .crystal-stage:has(#preview-BAD:checked) label[for='preview-BAD'], .crystal-stage:has(#preview-UGLY:checked) label[for='preview-UGLY'] { border-color: var(--rule); background: #fff8; color: var(--ink); }
-.crystal-stage:has(#preview-CLEAN:focus-visible) label[for='preview-CLEAN'], .crystal-stage:has(#preview-BAD:focus-visible) label[for='preview-BAD'], .crystal-stage:has(#preview-UGLY:focus-visible) label[for='preview-UGLY'] { outline: 2px solid var(--ink); outline-offset: 2px; }
+.crystal-stage:has(#preview-OKAY:checked) { --tint: var(--sd-bad); --deep: var(--sd-bad-ink); }
+.crystal-stage:has(#preview-BAD:checked) { --tint: var(--sd-ugly); --deep: var(--sd-ugly-ink); }
+.crystal-stage:has(.crystal-choice) .preview-CLEAN, .crystal-stage:has(.crystal-choice) .preview-OKAY, .crystal-stage:has(.crystal-choice) .preview-BAD { display: none; }
+.crystal-stage:has(#preview-CLEAN:checked) .preview-CLEAN, .crystal-stage:has(#preview-OKAY:checked) .preview-OKAY, .crystal-stage:has(#preview-BAD:checked) .preview-BAD { display: block; }
+.crystal-stage:has(#preview-CLEAN:checked) label[for='preview-CLEAN'], .crystal-stage:has(#preview-OKAY:checked) label[for='preview-OKAY'], .crystal-stage:has(#preview-BAD:checked) label[for='preview-BAD'] { border-color: var(--rule); background: #fff8; color: var(--ink); }
+.crystal-stage:has(#preview-CLEAN:focus-visible) label[for='preview-CLEAN'], .crystal-stage:has(#preview-OKAY:focus-visible) label[for='preview-OKAY'], .crystal-stage:has(#preview-BAD:focus-visible) label[for='preview-BAD'] { outline: 2px solid var(--ink); outline-offset: 2px; }
 .crystal-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--deep); }
 .scan-example { width: min(280px,100%); margin: 48px auto 0; }
 .scan-example video, .scan-example img { display: block; width: 100%; border-radius: 16px; }

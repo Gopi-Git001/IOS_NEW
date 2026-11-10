@@ -20,11 +20,13 @@ export const ORG = {
   email: 'support@sugardepth.com',
 };
 
-/** Versions of the rulebook these pages describe (from RULES.md / policy.ts / ingredients.ts). */
-export const POLICY_VERSION = 'rules-v2.1';
-export const REGISTRY_VERSION = 'registry-2026.11.06';
+/**
+ * Versions of the rulebook these pages describe. Read from the generated registry data
+ * (src/data/ingredients.generated.json, written from policy.ts and ingredients.ts), so they can't be typed wrong here.
+ */
+export { POLICY_VERSION, REGISTRY_VERSION } from './data/ingredients';
 
 /** Date the content was last reviewed against the rulebook (ISO). */
-export const CONTENT_UPDATED = '2026-11-09';
+export const CONTENT_UPDATED = '2026-11-10';
 
 export const abs = (path: string) => new URL(path, SITE_URL).href;
