@@ -10,8 +10,8 @@ const images = {
   idle: require('../../assets/cube/cube-idle.webp'),
   scanning: require('../../assets/cube/cube-scanning.webp'),
   clean: require('../../assets/cube/cube-clean.webp'),
+  okay: require('../../assets/cube/cube-okay.webp'),
   bad: require('../../assets/cube/cube-bad.webp'),
-  ugly: require('../../assets/cube/cube-ugly.webp'),
 };
 
 export type Mood = keyof typeof images;
@@ -21,11 +21,11 @@ const corner: Record<Mood, [number, number]> = {
   idle: [0.15, 0.05],
   scanning: [0.2, 0.07],
   clean: [0.27, 0.15],
-  bad: [0.23, 0.07],
-  ugly: [0.15, 0.05],
+  okay: [0.23, 0.07],
+  bad: [0.15, 0.05],
 };
 
-export const moodForVerdict: Record<Verdict, Mood> = { CLEAN: 'clean', BAD: 'bad', UGLY: 'ugly' };
+export const moodForVerdict: Record<Verdict, Mood> = { CLEAN: 'clean', OKAY: 'okay', BAD: 'bad' };
 
 /** The character's width and height on a screen this wide (the images are square). */
 export const characterSize = (screenWidth: number) => Math.min(screenWidth * 0.5, 230);
@@ -63,7 +63,7 @@ function moodLoop(mood: Mood, v: Values) {
           Animated.parallel([t(v.r, 0, 500), t(v.x, 0, 500), squash(v, 1, 500)]),
         ]),
       );
-    case 'bad': // nervous shuffle from side to side
+    case 'okay': // nervous shuffle from side to side
       return Animated.loop(
         Animated.sequence([
           Animated.parallel([t(v.x, -5, 300), t(v.r, -3, 300)]),
@@ -74,7 +74,7 @@ function moodLoop(mood: Mood, v: Values) {
           wait(500),
         ]),
       );
-    case 'ugly': // sobbing: quick shudders, then a slump
+    case 'bad': // sobbing: quick shudders, then a slump
       return Animated.loop(
         Animated.sequence([
           ...[3, -3, 2.5, -2.5, 1.5, 0].map((x) => t(v.x, x, 55)),

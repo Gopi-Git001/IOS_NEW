@@ -130,8 +130,8 @@ function StatsCard({ stats }: { stats: Stats | null }) {
   }
   const parts = [
     { label: 'CLEAN', count: stats.clean, color: verdictColor.CLEAN },
+    { label: 'OKAY', count: stats.okay, color: verdictColor.OKAY },
     { label: 'BAD', count: stats.bad, color: verdictColor.BAD },
-    { label: 'UGLY', count: stats.ugly, color: verdictColor.UGLY },
   ] as const;
 
   return (

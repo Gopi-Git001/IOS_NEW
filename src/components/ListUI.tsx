@@ -59,7 +59,7 @@ type RowProps = {
 
 /** 52 px row: icon, label (+ one-line detail), then a value, a toggle or a chevron. */
 export function Row({ icon: Icon, label, detail, value, danger, chevron, onPress, toggle }: RowProps) {
-  const ink = danger ? colors.ugly : colors.ink;
+  const ink = danger ? colors.bad : colors.ink;
   return (
     <Pressable
       onPress={toggle ? () => toggle.onChange(!toggle.value) : onPress}
@@ -68,7 +68,7 @@ export function Row({ icon: Icon, label, detail, value, danger, chevron, onPress
       accessibilityState={toggle ? { checked: toggle.value } : undefined}
       style={({ pressed }) => [listStyles.row, pressed && listStyles.rowPressed]}
     >
-      <Icon size={20} color={danger ? colors.ugly : colors.ink} strokeWidth={1.75} />
+      <Icon size={20} color={danger ? colors.bad : colors.ink} strokeWidth={1.75} />
       <View style={listStyles.rowText}>
         <Text style={[listStyles.rowLabel, { color: ink }]}>{label}</Text>
         {detail && <Text style={listStyles.rowDetail}>{detail}</Text>}

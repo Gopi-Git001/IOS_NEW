@@ -19,7 +19,7 @@
 //   Resistant maltodextrin as dietary fiber (FDA 2018): https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/questions-and-answers-dietary-fiber
 //   EU sweetener E-numbers (E420, E421, E950-E969), Regulation (EC) 1333/2008 Annex II.
 
-export const REGISTRY_VERSION = 'registry-2026.11.06';
+export const REGISTRY_VERSION = 'registry-2026.11.09';
 
 export type IngredientClass =
   | 'added_sugar' // free mono/disaccharides, syrups, honey, juice concentrates used to sweeten
@@ -34,8 +34,8 @@ export type IngredientClass =
 
 export type Labeling = 'counted_as_added_sugar' | 'counted_as_total_sugar_only' | 'not_counted_as_sugar' | 'depends';
 
-/** QuickGOB policy treatment under Rules v2. */
-export type Treatment = 'ugly' | 'bad' | 'clean_ok' | 'needs_context';
+/** QuickGOB policy treatment under Rules v3. Added sugar is graded by grams in policy.ts. */
+export type Treatment = 'added_sugar' | 'bad' | 'okay' | 'clean_ok' | 'needs_context';
 
 export type Entry = {
   id: string;
@@ -54,7 +54,7 @@ export type Entry = {
 };
 
 const added = (id: string, name: string, aliases: string[], note?: string): Entry => ({
-  id, name, cls: 'added_sugar', labeling: 'counted_as_added_sugar', treatment: 'ugly', aliases, note,
+  id, name, cls: 'added_sugar', labeling: 'counted_as_added_sugar', treatment: 'added_sugar', aliases, note,
 });
 const plain = (id: string, name: string, aliases: string[], cls: IngredientClass = 'non_sweet'): Entry => ({
   id, name, cls, labeling: 'not_counted_as_sugar', treatment: 'clean_ok', aliases,
@@ -92,35 +92,35 @@ export const REGISTRY: Entry[] = [
     'fruit juice concentrate', 'juice concentrate', 'concentrated fruit juice', 'concentrated juice', 'fruit juice concentrates',
   ], 'FDA counts juice concentrate used to sweeten as added sugar. Exception: 100% juice products.'),
   // Rare sugars that FDA labels as sugar (chemically sugars).
-  { id: 'tagatose', name: 'Tagatose', cls: 'rare_sugar', labeling: 'counted_as_added_sugar', treatment: 'ugly', aliases: ['tagatose', 'd-tagatose'],
+  { id: 'tagatose', name: 'Tagatose', cls: 'rare_sugar', labeling: 'counted_as_added_sugar', treatment: 'added_sugar', aliases: ['tagatose', 'd-tagatose'],
     note: 'A rare sugar that FDA still counts as added sugar.' },
-  { id: 'isomaltulose', name: 'Isomaltulose', cls: 'rare_sugar', labeling: 'counted_as_added_sugar', treatment: 'ugly', aliases: ['isomaltulose', 'palatinose'],
+  { id: 'isomaltulose', name: 'Isomaltulose', cls: 'rare_sugar', labeling: 'counted_as_added_sugar', treatment: 'added_sugar', aliases: ['isomaltulose', 'palatinose'],
     note: 'A rare sugar that FDA still counts as added sugar.' },
 
   // ---- Rare sugar not counted as sugar on US labels ----
-  { id: 'allulose', name: 'Allulose', cls: 'rare_sugar', labeling: 'not_counted_as_sugar', treatment: 'bad',
+  { id: 'allulose', name: 'Allulose', cls: 'rare_sugar', labeling: 'not_counted_as_sugar', treatment: 'okay',
     aliases: ['allulose', 'd-allulose', 'psicose', 'd-psicose'],
     note: 'Chemically a sugar, but FDA lets labels leave it out of Total and Added Sugars.' },
 
-  // ---- Non-sugar sweeteners, artificial (all UGLY under Rules v2) ----
-  { id: 'sucralose', name: 'Sucralose', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'ugly', aliases: ['sucralose', 'splenda'], codes: ['e955'] },
-  { id: 'aspartame', name: 'Aspartame', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'ugly', aliases: ['aspartame'], codes: ['e951'] },
-  { id: 'acesulfame_k', name: 'Acesulfame K', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'ugly',
+  // ---- Non-sugar sweeteners, artificial (BAD under Rules v3) ----
+  { id: 'sucralose', name: 'Sucralose', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'bad', aliases: ['sucralose', 'splenda'], codes: ['e955'] },
+  { id: 'aspartame', name: 'Aspartame', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'bad', aliases: ['aspartame'], codes: ['e951'] },
+  { id: 'acesulfame_k', name: 'Acesulfame K', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'bad',
     aliases: ['acesulfame k', 'acesulfame-k', 'acesulfame potassium', 'acesulfame', 'ace-k', 'ace k'], codes: ['e950'] },
-  { id: 'saccharin', name: 'Saccharin', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'ugly',
+  { id: 'saccharin', name: 'Saccharin', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'bad',
     aliases: ['saccharin', 'sodium saccharin', 'calcium saccharin'], codes: ['e954'] },
-  { id: 'cyclamate', name: 'Cyclamate', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'ugly',
+  { id: 'cyclamate', name: 'Cyclamate', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'bad',
     aliases: ['cyclamate', 'sodium cyclamate', 'calcium cyclamate'], codes: ['e952'] },
-  { id: 'neotame', name: 'Neotame', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'ugly', aliases: ['neotame'], codes: ['e961'] },
-  { id: 'advantame', name: 'Advantame', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'ugly', aliases: ['advantame'], codes: ['e969'] },
-  { id: 'aspartame_acesulfame', name: 'Aspartame-acesulfame salt', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'ugly',
+  { id: 'neotame', name: 'Neotame', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'bad', aliases: ['neotame'], codes: ['e961'] },
+  { id: 'advantame', name: 'Advantame', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'bad', aliases: ['advantame'], codes: ['e969'] },
+  { id: 'aspartame_acesulfame', name: 'Aspartame-acesulfame salt', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'bad',
     aliases: ['aspartame-acesulfame salt', 'aspartame acesulfame salt'], codes: ['e962'] },
-  { id: 'nhdc', name: 'Neohesperidin DC', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'ugly',
+  { id: 'nhdc', name: 'Neohesperidin DC', cls: 'non_sugar_sweetener', subtype: 'artificial', labeling: 'not_counted_as_sugar', treatment: 'bad',
     aliases: ['neohesperidin dc', 'neohesperidine dc', 'neohesperidin dihydrochalcone', 'nhdc'], codes: ['e959'],
     note: 'Chemically modified from citrus; grouped with artificial sweeteners (assumption, see open items).' },
 
-  // ---- Non-sugar sweeteners, plant-derived (BAD under Rules v2) ----
-  { id: 'stevia', name: 'Stevia', cls: 'non_sugar_sweetener', subtype: 'plant', labeling: 'not_counted_as_sugar', treatment: 'bad',
+  // ---- Non-sugar sweeteners, plant-derived (OKAY under Rules v3) ----
+  { id: 'stevia', name: 'Stevia', cls: 'non_sugar_sweetener', subtype: 'plant', labeling: 'not_counted_as_sugar', treatment: 'okay',
     aliases: [
       'stevia', 'stevia extract', 'stevia leaf extract', 'purified stevia leaf extract', 'stevia leaf', 'stevia rebaudiana',
       'stevia rebaudiana leaf extract', 'steviol glycosides', 'steviol glycoside', 'steviol glycosides from stevia',
@@ -128,23 +128,23 @@ export const REGISTRY: Entry[] = [
       'glucosylated steviol glycosides',
     ],
     codes: ['e960', 'e960a', 'e960b', 'e960c', 'e960d'] },
-  { id: 'monk_fruit', name: 'Monk fruit', cls: 'non_sugar_sweetener', subtype: 'plant', labeling: 'not_counted_as_sugar', treatment: 'bad',
+  { id: 'monk_fruit', name: 'Monk fruit', cls: 'non_sugar_sweetener', subtype: 'plant', labeling: 'not_counted_as_sugar', treatment: 'okay',
     aliases: [
       'monk fruit', 'monk fruit extract', 'monkfruit', 'monkfruit extract', 'monk fruit sweetener', 'luo han guo', 'luo han guo extract',
       'luo han guo fruit extract', 'lo han guo', 'siraitia grosvenorii', 'siraitia grosvenorii fruit extract', 'mogroside', 'mogrosides',
       'mogroside v', 'swingle fruit extract',
     ] },
-  { id: 'thaumatin', name: 'Thaumatin', cls: 'non_sugar_sweetener', subtype: 'plant', labeling: 'not_counted_as_sugar', treatment: 'bad', aliases: ['thaumatin'], codes: ['e957'] },
+  { id: 'thaumatin', name: 'Thaumatin', cls: 'non_sugar_sweetener', subtype: 'plant', labeling: 'not_counted_as_sugar', treatment: 'okay', aliases: ['thaumatin'], codes: ['e957'] },
 
   // ---- Sugar alcohols (polyols). Not drinking alcohol. ----
-  { id: 'erythritol', name: 'Erythritol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'ugly', aliases: ['erythritol', 'non-gmo erythritol'], codes: ['e968'] },
-  { id: 'xylitol', name: 'Xylitol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'ugly', aliases: ['xylitol', 'birch xylitol'], codes: ['e967'] },
-  { id: 'sorbitol', name: 'Sorbitol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'bad', aliases: ['sorbitol', 'sorbitol syrup', 'sorbitol solution'], codes: ['e420'] },
-  { id: 'mannitol', name: 'Mannitol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'bad', aliases: ['mannitol'], codes: ['e421'] },
-  { id: 'isomalt', name: 'Isomalt', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'bad', aliases: ['isomalt'], codes: ['e953'] },
-  { id: 'maltitol', name: 'Maltitol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'bad', aliases: ['maltitol', 'maltitol syrup'], codes: ['e965'] },
-  { id: 'lactitol', name: 'Lactitol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'bad', aliases: ['lactitol'], codes: ['e966'] },
-  { id: 'polyglycitol', name: 'Polyglycitol syrup', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'bad',
+  { id: 'erythritol', name: 'Erythritol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'okay', aliases: ['erythritol', 'non-gmo erythritol'], codes: ['e968'] },
+  { id: 'xylitol', name: 'Xylitol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'okay', aliases: ['xylitol', 'birch xylitol'], codes: ['e967'] },
+  { id: 'sorbitol', name: 'Sorbitol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'okay', aliases: ['sorbitol', 'sorbitol syrup', 'sorbitol solution'], codes: ['e420'] },
+  { id: 'mannitol', name: 'Mannitol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'okay', aliases: ['mannitol'], codes: ['e421'] },
+  { id: 'isomalt', name: 'Isomalt', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'okay', aliases: ['isomalt'], codes: ['e953'] },
+  { id: 'maltitol', name: 'Maltitol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'okay', aliases: ['maltitol', 'maltitol syrup'], codes: ['e965'] },
+  { id: 'lactitol', name: 'Lactitol', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'okay', aliases: ['lactitol'], codes: ['e966'] },
+  { id: 'polyglycitol', name: 'Polyglycitol syrup', cls: 'sugar_alcohol', labeling: 'not_counted_as_sugar', treatment: 'okay',
     aliases: ['polyglycitol', 'polyglycitol syrup', 'hydrogenated starch hydrolysate', 'hydrogenated starch hydrolysates'], codes: ['e964'] },
 
   // ---- Other carbohydrates and fillers: not sugar ----
@@ -187,10 +187,10 @@ export const REGISTRY: Entry[] = [
   ]),
   { id: 'puree_concentrate', name: 'Fruit puree concentrate', cls: 'context_dependent', labeling: 'depends', treatment: 'needs_context',
     aliases: ['fruit puree concentrate', 'puree concentrate', 'apple puree concentrate', 'strawberry puree concentrate', 'pear puree concentrate', 'banana puree concentrate'],
-    note: 'Counts as added sugar if pulp was removed and sugar concentrated; otherwise it does not. The label alone does not say which.' },
+    note: 'Counts as added sugar when it sweetens another food; in a product made only of fruit it does not (policy.ts decides from the rest of the list).' },
 
-  // ---- Drinking alcohol (Rules v2: UGLY) ----
-  { id: 'drinking_alcohol', name: 'Alcohol', cls: 'drinking_alcohol', labeling: 'not_counted_as_sugar', treatment: 'ugly',
+  // ---- Drinking alcohol above 0.5% ABV (Rules v3: BAD) ----
+  { id: 'drinking_alcohol', name: 'Alcohol', cls: 'drinking_alcohol', labeling: 'not_counted_as_sugar', treatment: 'bad',
     aliases: ['alcohol', 'ethanol', 'ethyl alcohol', 'beer', 'wine', 'red wine', 'white wine', 'rum', 'vodka', 'whiskey', 'whisky', 'bourbon',
       'brandy', 'gin', 'tequila', 'sake', 'liqueur', 'malt beverage', 'cider', 'hard cider'] },
 
@@ -242,7 +242,7 @@ export const juiceEntries: Record<'concentrate' | 'reconstituted' | 'single', En
   concentrate: getEntry('juice_concentrate')!,
   reconstituted: {
     id: 'juice_from_concentrate', name: 'Juice from concentrate', cls: 'context_dependent', labeling: 'depends', treatment: 'needs_context', aliases: [],
-    note: 'Reconstituted to normal strength it is not added sugar; used to sweeten another food it is. The label alone does not say which.',
+    note: 'Reconstituted to normal strength it is not added sugar; used to sweeten another food it is (policy.ts decides from the rest of the list).',
   },
   single: {
     id: 'single_strength_juice', name: 'Fruit or vegetable juice', cls: 'naturally_occurring_sugar', labeling: 'counted_as_total_sugar_only', treatment: 'clean_ok', aliases: [],

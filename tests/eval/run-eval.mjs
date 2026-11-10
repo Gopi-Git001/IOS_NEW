@@ -24,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { combine } from '../../src/lib/combine.ts';
 import { uploadPlan } from '../../src/lib/photo.ts';
+import { normalizeJev, normalizeResult } from '../../src/lib/verdicts.ts';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPORT = path.join(DIR, 'report.md');
@@ -36,8 +37,8 @@ const LISTS_TIMEOUT_MS = 12_000;
 /** expo-image-manipulator compress 0.85 in src/lib/api.ts. */
 const JPEG_QUALITY = 85;
 
-/** labels.json speaks the app's words (see its _verdicts note); the code says CLEAN / BAD / UGLY. */
-const EXPECTED_TO_CODE = { CLEAN: 'CLEAN', OKAY: 'BAD', BAD: 'UGLY', RETRY: 'RETRY' };
+/** labels.json and the code (Rules v3) use the same names. RETRY = no verdict, ask for a retake. */
+const EXPECTED_TO_CODE = { CLEAN: 'CLEAN', OKAY: 'OKAY', BAD: 'BAD', RETRY: 'RETRY' };
 
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
@@ -127,7 +128,7 @@ async function scan(token, image, id) {
   let verdictMs = null;
 
   const quick = invoke(token, 'quickgob-quick-verdict', { image, scan_id: scanId, client })
-    .then((r) => (r.status === 200 && r.body.jev ? r.body.jev : { status: 'unavailable', reason: r.body.error ?? `HTTP ${r.status}` }))
+    .then((r) => (r.status === 200 && r.body.jev ? normalizeJev(r.body.jev, r.body.verdicts) : { status: 'unavailable', reason: r.body.error ?? `HTTP ${r.status}` }))
     .catch((e) => ({ status: 'unavailable', reason: String(e) }))
     .then((jev) => {
       if (jev.status === 'decided') verdictMs = performance.now() - started;
@@ -138,7 +139,8 @@ async function scan(token, image, id) {
   const timer = setTimeout(() => controller.abort(), LISTS_TIMEOUT_MS);
   const lists = invoke(token, 'quickgob-scan-label', { image, scan_id: scanId, client }, controller.signal)
     .then((r) => {
-      if (r.status === 200 && r.body.result) return { reading: r.body.result, timing: r.body.timing };
+      const reading = r.status === 200 && r.body.result ? normalizeResult(r.body.result, r.body.verdicts) : null;
+      if (reading) return { reading, timing: r.body.timing };
       return { failed: true, unreadable: r.body.code === 'unreadable', retryable: r.status >= 500, error: r.body.code ?? r.body.error ?? `HTTP ${r.status}`, timing: r.body.timing };
     })
     .catch(() => ({ failed: true, retryable: true, error: controller.signal.aborted ? 'timeout' : 'network' }))
@@ -146,7 +148,8 @@ async function scan(token, image, id) {
 
   const [jev, l] = await Promise.all([quick, lists]);
   const doneMs = performance.now() - started;
-  const shown = combine(jev, l.reading ?? null, !!l.failed, !!l.unreadable, !!l.retryable);
+  // Both answers are in, so Jev's wait is over either way (the app also stops waiting after 6 s).
+  const shown = combine(jev, l.reading ?? null, !!l.failed, !!l.unreadable, !!l.retryable, true);
   const tokensIn = l.timing?.claude_in_tokens ?? 0;
   const tokensOut = l.timing?.claude_out_tokens ?? 0;
   return {
@@ -244,7 +247,7 @@ const doneTimes = scored.map((s) => s.run.doneMs);
 const verdictTimes = scored.map((s) => s.run.verdictMs).filter((x) => x != null);
 const correct = scored.filter((s) => s.correct).length;
 const accuracy = scored.length ? correct / scored.length : 0;
-const sweetCalledClean = scored.filter((s) => (s.expected === 'BAD' || s.expected === 'UGLY') && s.got === 'CLEAN');
+const sweetCalledClean = scored.filter((s) => (s.expected === 'OKAY' || s.expected === 'BAD') && s.got === 'CLEAN');
 const cleanFlagged = scored.filter((s) => s.expected === 'CLEAN' && s.got !== 'CLEAN');
 const slow = p95(doneTimes);
 
@@ -295,7 +298,7 @@ ${new Date().toISOString()} · ${BASE ? new URL(BASE).host : 'no project'}${DRY_
 | Verdict on screen, median | ${sec(median(verdictTimes))} |
 | Spend | ${usd(spent)} measured${DRY_RUN || !scored.length ? `, ${usd(estimate)} estimated` : ''} (budget ${usd(MAX_SPEND_USD)}) |
 
-Verdicts are in code terms: labels.json CLEAN / OKAY / BAD / RETRY = CLEAN / BAD / UGLY / RETRY (no verdict, ask for a retake).
+Verdicts: CLEAN / OKAY / BAD, or RETRY (no verdict, ask for a retake).
 Lists compare case-insensitively; the "N g added per serving" line and the "(sugar alcohol)" tag are ignored.
 Prices: Claude $${price.in} / $${price.out} per million tokens in / out, Jev $${price.jev} per scan (override with EVAL_* env).
 

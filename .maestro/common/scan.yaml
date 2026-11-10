@@ -5,8 +5,8 @@ appId: ${APP_ID || "host.exp.exponent"}
 - extendedWaitUntil:
     visible: "Verdict Facts"
     timeout: 30000
-# The test photo is Honey Nut Cheerios (sugar, honey, brown sugar syrup): UGLY.
+# The test photo is Honey Nut Cheerios (sugar, honey, brown sugar syrup): BAD.
 - extendedWaitUntil:
-    visible: "Ugly\\..*"
+    visible: "Bad\\..*"
     timeout: 15000
 - assertVisible: "Scan another"

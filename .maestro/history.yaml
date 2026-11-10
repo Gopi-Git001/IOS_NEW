@@ -18,7 +18,7 @@ tags:
 - tapOn: "Menu"
 - assertVisible: "Scan history"
 - tapOn: "Scan history"
-- assertVisible: "UGLY"
+- assertVisible: "BAD"
 - assertNotVisible: "No scans yet.*"
 - tapOn: "Back"
 - tapOn: "Close menu"

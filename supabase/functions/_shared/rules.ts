@@ -1,21 +1,25 @@
-// Sugar rules adapter (CLEAN / BAD / UGLY). Pure functions: no network, no Deno APIs.
+// Sugar rules adapter (CLEAN / OKAY / BAD / RETRY). Pure functions: no network, no Deno APIs.
 //
 // The pipeline is staged so no model judgment reaches the rules verdict:
 //   1. extraction   scan-label asks Claude only for the literal label text and printed numbers (LiteralLabel)
 //   2. normalization normalize.ts parses the list and matches the registry exactly (ingredients.ts)
-//   3. classification + 4. policy   policy.ts evaluate(), one ordered function, Rules v2
+//   3. classification + 4. policy   policy.ts evaluate(), one ordered function, Rules v3
 // This file maps the Evaluation onto the ScanResult the app renders.
 //
-// Jev's role is unchanged (user decision, Nov 6, 2026): Jev makes the final call from the photo
-// (see _shared/jev.ts and src/lib/combine.ts). These rules decide when Jev is unavailable or unsure.
-import { evaluate, type Evaluation, type LiteralLabel, type Verdict } from './policy.ts';
+// Jev makes the call from the photo (see _shared/jev.ts and src/lib/combine.ts). These rules decide when
+// Jev is unavailable or unsure, and their safety floor keeps added sugar, artificial sweeteners and
+// alcohol from ever showing as CLEAN.
+import { evaluate, type Evaluation, type LiteralLabel, type ShownVerdict, type Verdict } from './policy.ts';
 
-export type { Evaluation, LiteralLabel, Verdict };
+export type { Evaluation, LiteralLabel, ShownVerdict, Verdict };
 export { POLICY_VERSION } from './policy.ts';
+
+/** Sent with every response so the app can tell CLEAN / OKAY / BAD from the old CLEAN / BAD / UGLY. */
+export const VERDICT_SCHEME = 'v3';
 
 /** The shape the app renders. Keep in sync with src/types.ts. */
 export type ScanResult = {
-  verdict: Verdict;
+  verdict: ShownVerdict;
   headline: string;
   naturalSugars: string[];
   addedSugars: string[];
@@ -27,18 +31,17 @@ export type ScanResult = {
 
 export type Decision =
   | { status: 'decided'; result: ScanResult; evaluation: Evaluation }
-  | { status: 'unresolved'; retake: boolean; message: string; evaluation: Evaluation };
+  | { status: 'retry'; message: string; evaluation: Evaluation };
 
 const HEADLINE: Record<string, string> = {
-  'U1-added-sugar': 'Added sugar',
-  'U2-panel-added-sugar': 'Added sugar',
-  'U3-artificial-sweetener': 'Artificial sweeteners',
-  'U4-erythritol-xylitol': '',
-  'U5-drinking-alcohol': 'Contains alcohol',
-  'B1-sugar-alcohol': 'Contains sugar alcohols',
-  'B2-plant-sweetener': 'Gentler sweetener',
-  'B3-allulose': 'Gentler sweetener',
-  'C1-nothing-sweet-added': 'No added sugar',
+  'X1-added-sugar-over-4g': 'Too much added sugar',
+  'X2-added-sugar-no-grams': 'Added sugar',
+  'X3-artificial-sweetener': 'Artificial sweeteners',
+  'X4-alcohol': 'Contains alcohol',
+  'O1-added-sugar-up-to-4g': 'A little added sugar',
+  'O3-plant-sweetener': 'Gentler sweetener',
+  'O4-unknown-sweetener': 'Unfamiliar sweetener',
+  'C1-clean': 'No added sugar',
 };
 
 const fmtGrams = (g: number) => `${Number.isInteger(g) ? g : g.toFixed(1)} g`;
@@ -46,39 +49,38 @@ const fmtGrams = (g: number) => `${Number.isInteger(g) ? g : g.toFixed(1)} g`;
 export function toScanResult(ev: Evaluation): ScanResult {
   const f = ev.found;
   const naturalSugars = f.naturally_occurring_sugar.map((e) => e.literal);
-  const addedSugars = [...f.added_sugar, ...f.rare_sugar.filter((e) => e.treatment === 'ugly')].map((e) => e.literal);
+  const addedSugars = [...f.added_sugar, ...f.rare_sugar.filter((e) => e.treatment === 'added_sugar')].map((e) => e.literal);
   const g = ev.quantity.addedSugarsG;
   // Only a per-serving amount uses the "N g added per serving" line the app parses; never invented.
   if (g !== null && g > 0 && ev.quantity.basis === 'per_serving') addedSugars.push(`${fmtGrams(g)} added per serving`);
   const sweeteners = [
     ...f.non_sugar_sweetener.map((e) => e.literal),
     ...f.sugar_alcohol.map((e) => `${e.literal} (sugar alcohol)`),
-    ...f.rare_sugar.filter((e) => e.treatment !== 'ugly').map((e) => e.literal),
+    ...f.rare_sugar.filter((e) => e.treatment !== 'added_sugar').map((e) => e.literal),
+    ...(ev.ruleId === 'O4-unknown-sweetener' ? ev.unknownSweeteners : []),
   ];
-  const headline = ev.ruleId === 'U4-erythritol-xylitol'
-    ? `Contains ${ev.triggers[0].name.toLowerCase()}`
+  const headline = ev.ruleId === 'O2-sugar-alcohol'
+    ? (f.sugar_alcohol.length ? 'Contains sugar alcohols' : 'Gentler sweetener')
     : HEADLINE[ev.ruleId] ?? 'Checked';
-  const note = ev.ruleId.startsWith('U1') && g === null
+  const note = ev.ruleId === 'X2-added-sugar-no-grams'
     ? 'Scan the nutrition panel to see the grams'
-    : ev.ruleId.startsWith('B2') || ev.ruleId.startsWith('B3')
+    : ev.ruleId === 'O3-plant-sweetener' || (ev.ruleId === 'O2-sugar-alcohol' && !f.sugar_alcohol.length)
       ? 'The gentlest option, but still a sweetener'
-      : ev.ruleId === 'C1-nothing-sweet-added'
+      : ev.ruleId === 'C1-clean'
         ? 'Great pick, no added sugar'
         : undefined;
-  return { verdict: ev.verdict!, headline, naturalSugars, addedSugars, sweeteners, note, analysis: ev };
+  return { verdict: ev.verdict as ShownVerdict, headline, naturalSugars, addedSugars, sweeteners, note, analysis: ev };
 }
 
 export function decide(label: LiteralLabel): Decision {
   const evaluation = evaluate(label);
-  if (evaluation.status === 'unresolved') {
-    return { status: 'unresolved', retake: evaluation.retake, message: evaluation.explanation, evaluation };
-  }
+  if (evaluation.status === 'retry') return { status: 'retry', message: evaluation.explanation, evaluation };
   return { status: 'decided', result: toScanResult(evaluation), evaluation };
 }
 
-/** Headline for a verdict when only Jev's call is known (the ingredient lists come later). */
-export const quickHeadline: Record<Verdict, string> = {
+/** Headline for a verdict when only Jev's call is known. */
+export const quickHeadline: Record<ShownVerdict, string> = {
   CLEAN: 'No added sugar',
-  BAD: 'Contains sweeteners',
-  UGLY: 'Added sugar or harsh sweeteners',
+  OKAY: 'A little sugar or a gentler sweetener',
+  BAD: 'Added sugar or harsh sweeteners',
 };

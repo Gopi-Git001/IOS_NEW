@@ -1,5 +1,66 @@
 # Review: check each photo, fix labels.json, set verified = true
 
+## RE-CHECK AFTER RULE CHANGE
+
+Rules v3 (RULES.md, Nov 9, 2026) changed what OKAY and BAD mean. labels.json was pre-filled with the old
+policy (any added sugar, sugar alcohol, artificial sweetener or alcohol = BAD). The expected verdicts below
+were NOT changed; check each photo and set `expected_verdict` yourself. Items not listed keep their verdict
+(nothing sweet, stevia or monk fruit only, an artificial sweetener, or alcohol over 0.5% ABV).
+
+**Added sugar: now OKAY at 4 g or less per serving, BAD over 4 g or when the grams can't be read**
+
+| id | was | why it may change |
+|---|---|---|
+| 17-coca-cola, 18-sprite, 55-glare-coke-can | BAD | read the per-serving added-sugar grams on the photo |
+| 21-gatorade-lemon-lime, 56-curved-gatorade | BAD | grams per serving; grams may be off-photo on a curved bottle |
+| 25-liquid-iv-lemon-lime | BAD | cane sugar + dextrose grams per stick (also has stevia) |
+| 27-red-bull | BAD | grams per can |
+| 28-vitaminwater | BAD | the database text is vitaminwater ZERO (stevia, monk fruit): check which bottle the photo shows |
+| 30-starbucks-frappuccino | BAD | grams per bottle |
+| 32-simply-lemonade | BAD | grams per serving (the lemon juice stays natural) |
+| 35-honey-nut-cheerios, 57-dim-light-cereal | BAD | grams per serving; dim photo may hide the panel |
+| 36-frosted-flakes | BAD | grams per serving |
+| 37-nature-valley-oats-honey | BAD | grams per serving |
+| 38-kind-dark-choc-nuts | BAD | grams per bar |
+| 39-clif-chocolate-chip | BAD | grams per bar |
+| 41-halo-top-vanilla | BAD | cane sugar grams per serving (erythritol + stevia alone would be OKAY) |
+| 43-oreo, 44-nutella, 46-syrup-corn-syrup | BAD | grams per serving |
+| 45-heinz-ketchup | BAD | grams per 1 tbsp serving (small serving) |
+| 47-daves-killer-bread | BAD | grams per slice (small serving) |
+| 48-ritz-crackers | BAD | grams per serving (small) |
+| 49-chobani-vanilla | BAD | grams per cup |
+| 50-coffee-mate-original | BAD | grams per 1 tsp serving (small) |
+
+**Sugar alcohols and allulose: now OKAY (were BAD)**
+
+| id | was | why it may change |
+|---|---|---|
+| 29-vitaminwater-zero | BAD | erythritol + stevia, no added sugar, no artificial sweetener |
+| 42-lilys-dark-chocolate | BAD | database text shows maltitol + stevia; expected list says erythritol: check the photo |
+| 40-quest-bar | BAD | expected list has sucralose, but the database text (Kirkland bar) has erythritol + stevia only: check the photo |
+
+**Juice and fruit concentrate: added sugar only when it sweetens another food**
+
+| id | was | why it may change |
+|---|---|---|
+| 53-simply-orange-juice | (DECIDE) | a 100% juice product is not added sugar |
+| 04-spindrift-grapefruit | CLEAN | juice in sparkling water; check whether the label says "concentrate" (database match is a different product) |
+
+**Alcohol: "<0.5%", "0.0%", "0.5% ABV or less", "non-alcoholic", "alcohol-free" are not alcohol**
+
+| id | was | why it may change |
+|---|---|---|
+| 51-athletic-brewing-na | (DECIDE) | NA claim is not alcohol. "Malted Barley" is not in the sweetener registry, so the rules call it an unknown sweetener (OKAY) unless it is added |
+| 52-gts-kombucha | (DECIDE) | check for a <0.5% ABV / non-alcoholic claim and for added cane sugar grams |
+
+**Other rule changes**
+
+| id | was | why it may change |
+|---|---|---|
+| 58-nutrition-panel-only | RETRY | a panel showing more than 4 g added sugar is now BAD before "no ingredient list" asks for a retake |
+| 60-non-english-label | (DECIDE) | grams per 100 g only count as unreadable grams: any added sugar is BAD |
+| 05-blue-diamond-almonds, 08-larabar-cashew-cookie | CLEAN | the database text lists sugar (wasabi seasoning, chocolate chips); the safety rule never allows CLEAN with added sugar. Check the photo is the plain product |
+
 | id | matched product | label text from database | expected verdict | natural | added | sweeteners |
 |---|---|---|---|---|---|---|
 | 01-lacroix-pamplemousse | Coconut Sparkling Water,  LaCroix · Naturally Essenced Coconut Sparkling Water | ONLY CARBONATED WATER, NATURALLY ESSENCED | CLEAN | — | — | — |

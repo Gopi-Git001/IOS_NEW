@@ -1,16 +1,18 @@
 # Sugar Depth (formerly SUG_SCAN)
 
-Point the phone at a food label, get one sugar verdict: **CLEAN**, **BAD** or **UGLY**.
+Point the phone at a food label, get one sugar verdict: **CLEAN**, **OKAY** or **BAD**.
 Expo app (iOS + Android) with a Supabase backend. Full brief: [CLAUDE.md](CLAUDE.md).
 
 ## How a scan works
 
 ```
-photo ──► quick-verdict ──► Jev (TypeSafe): CLEAN / BAD / UGLY      ← shown first
-      └─► scan-label ────► Claude vision: sugar names → rules       ← lists fill in
+photo ──► quick-verdict ──► Jev (TypeSafe): CLEAN / OKAY / BAD
+      └─► scan-label ────► Claude vision: sugar names → rules
 ```
 
-Jev's verdict is the one shown. The rules only step in if Jev is down or unsure.
+The app waits for both (or Jev's 6 s), then shows one verdict that never changes. Jev's verdict is the one
+shown; the rules step in if Jev is down or unsure, or if Jev says CLEAN but added sugar, an artificial
+sweetener or alcohol was found. Rules table: [RULES.md](RULES.md). Local testing: [tests/README-local-testing.md](tests/README-local-testing.md).
 
 ## Run it
 

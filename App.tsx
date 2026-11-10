@@ -45,8 +45,8 @@ type Scan = { photoUri: string; state: ScanState };
 
 const verdictHaptic: Record<Verdict, Haptics.NotificationFeedbackType> = {
   CLEAN: Haptics.NotificationFeedbackType.Success,
-  BAD: Haptics.NotificationFeedbackType.Warning,
-  UGLY: Haptics.NotificationFeedbackType.Error,
+  OKAY: Haptics.NotificationFeedbackType.Warning,
+  BAD: Haptics.NotificationFeedbackType.Error,
 };
 
 export default function App() {
@@ -122,7 +122,7 @@ export default function App() {
         show({ status: 'done', result: await demoScan() });
         return;
       }
-      // Jev's verdict shows first; the ingredient lists fill in when Claude finishes.
+      // One verdict, shown once Jev and Claude have both answered (or Jev's wait has passed).
       let shown = false;
       await runScan(photo, (u) => {
         shown = true;

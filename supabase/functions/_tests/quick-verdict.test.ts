@@ -30,6 +30,7 @@ Deno.test('quickgob-quick-verdict', async (t) => {
       const r = await call(SLUG, { token: user.token, body: { image: JPEG, scan_id: 'fn-test', client: { platform: 'test' } } });
       assertEquals(r.status, 200, r.text);
       assertEquals(r.json?.jev, { status: 'unavailable', reason: 'TYPESAFE_API_KEY not set' });
+      assertEquals(r.json?.verdicts, 'v3', 'new verdict names are marked');
     });
 
     await t.step('over the daily limit -> 429', async () => {

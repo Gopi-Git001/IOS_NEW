@@ -11,7 +11,7 @@ export const placeholderResults: ScanResult[] = [
     note: 'Great pick, no added sugar',
   },
   {
-    verdict: 'BAD',
+    verdict: 'OKAY',
     headline: 'Gentler sweetener',
     naturalSugars: ['Fructose'],
     addedSugars: [],
@@ -19,8 +19,8 @@ export const placeholderResults: ScanResult[] = [
     note: 'The gentlest option, but still a sweetener',
   },
   {
-    verdict: 'UGLY',
-    headline: 'Added sugar',
+    verdict: 'BAD',
+    headline: 'Too much added sugar',
     naturalSugars: [],
     addedSugars: ['Sucrose', 'Glucose syrup', 'Fruit juice concentrate', '12 g added per serving'],
     sweeteners: ['Aspartame'],

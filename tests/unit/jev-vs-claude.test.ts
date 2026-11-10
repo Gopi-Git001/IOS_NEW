@@ -6,14 +6,14 @@ import { MIN_CONFIDENCE, readJevResponse } from '../../supabase/functions/_share
 import { combine, quickHeadline, UNCLEAR } from '../../src/lib/combine.ts';
 import type { JevVerdict, ScanResult, Verdict } from '../../src/types.ts';
 
-const VERDICTS: Verdict[] = ['CLEAN', 'BAD', 'UGLY'];
+const VERDICTS: Verdict[] = ['CLEAN', 'OKAY', 'BAD'];
 const NOT_A_LABEL = "That doesn't look like a food label. Fit the ingredient list in the box.";
 const READ_FAILED = "Couldn't read the label. Try again.";
 
 const READINGS: Record<Verdict, ScanResult> = {
   CLEAN: { verdict: 'CLEAN', headline: 'No added sugar', naturalSugars: ['Milk'], addedSugars: [], sweeteners: [], note: 'Great pick, no added sugar' },
-  BAD: { verdict: 'BAD', headline: 'Gentler sweetener', naturalSugars: [], addedSugars: [], sweeteners: ['Stevia'], note: 'The gentlest option, but still a sweetener' },
-  UGLY: { verdict: 'UGLY', headline: 'Added sugar', naturalSugars: [], addedSugars: ['Cane Sugar'], sweeteners: [], note: 'Scan the nutrition panel to see the grams' },
+  OKAY: { verdict: 'OKAY', headline: 'Gentler sweetener', naturalSugars: [], addedSugars: [], sweeteners: ['Stevia'], note: 'The gentlest option, but still a sweetener' },
+  BAD: { verdict: 'BAD', headline: 'Added sugar', naturalSugars: [], addedSugars: ['Cane Sugar'], sweeteners: [], note: 'Scan the nutrition panel to see the grams' },
 };
 
 const decided = (verdict: Verdict, confidence = 0.9): JevVerdict => ({ status: 'decided', verdict, confidence, model: 'jev' });
@@ -42,17 +42,19 @@ function error(u: ReturnType<typeof combine>) {
 describe('Jev decided, Claude read the label', () => {
   for (const j of VERDICTS) {
     for (const r of VERDICTS) {
-      const agree = j === r;
-      test(`Jev ${j} vs rules ${r}: Jev's ${j} shows${agree ? ' with the rules headline' : ', lists kept, rules headline and note dropped'}`, () => {
+      // Safety floor: the rules BAD reading has added sugar, so Jev's CLEAN can't stand.
+      const shown = j === 'CLEAN' && r === 'BAD' ? r : j;
+      const rulesWin = shown === r;
+      test(`Jev ${j} vs rules ${r}: ${shown} shows${rulesWin ? ' with the rules headline' : ', lists kept, rules headline and note dropped'}`, () => {
         const u = done(combine(decided(j), READINGS[r], false));
-        assert.equal(u.result.verdict, j);
+        assert.equal(u.result.verdict, shown);
         assert.equal(u.listsPending, false);
         assert.equal(u.listsRetry, undefined);
         assert.deepEqual(u.result.naturalSugars, READINGS[r].naturalSugars);
         assert.deepEqual(u.result.addedSugars, READINGS[r].addedSugars);
         assert.deepEqual(u.result.sweeteners, READINGS[r].sweeteners);
-        assert.equal(u.result.headline, agree ? READINGS[r].headline : quickHeadline[j]);
-        assert.equal(u.result.note, agree ? READINGS[r].note : undefined);
+        assert.equal(u.result.headline, rulesWin ? READINGS[r].headline : quickHeadline[shown]);
+        assert.equal(u.result.note, rulesWin ? READINGS[r].note : undefined);
       });
     }
   }
@@ -69,30 +71,27 @@ describe('Jev not deciding, Claude read the label: the rules verdict shows', () 
     }
   }
 
-  test('Jev has not answered yet: the reading shows on its own', () => {
-    assert.deepEqual(done(combine(null, READINGS.UGLY, false)).result, READINGS.UGLY);
+  test('Jev has not answered and its 6 s have passed: the reading shows on its own', () => {
+    assert.deepEqual(done(combine(null, READINGS.BAD, false, false, false, true)).result, READINGS.BAD);
   });
 });
 
 describe('Jev decided, Claude has not read the label (yet)', () => {
   for (const j of VERDICTS) {
-    test(`Jev ${j}, reading still running: verdict now, lists pending`, () => {
-      const u = done(combine(decided(j), null, false));
-      assert.equal(u.result.verdict, j);
-      assert.equal(u.result.headline, quickHeadline[j]);
-      assert.equal(u.listsPending, true);
-      assert.deepEqual([u.result.naturalSugars, u.result.addedSugars, u.result.sweeteners], [[], [], []]);
+    test(`Jev ${j}, reading still running: keep the loading state`, () => {
+      assert.equal(combine(decided(j), null, false), null);
     });
 
-    test(`Jev ${j}, reading timed out: verdict stays, Retry offered`, () => {
+    test(`Jev ${j}, reading timed out: Jev's verdict, Retry offered`, () => {
       const u = done(combine(decided(j), null, true, false, true));
       assert.equal(u.result.verdict, j);
+      assert.equal(u.result.headline, quickHeadline[j]);
       assert.equal(u.listsPending, false);
       assert.equal(u.listsRetry, true);
       assert.equal(u.result.note, undefined);
     });
 
-    test(`Jev ${j}, reading failed for good: verdict stays, no Retry`, () => {
+    test(`Jev ${j}, reading failed for good: Jev's verdict, no Retry`, () => {
       const u = done(combine(decided(j), null, true, false, false));
       assert.equal(u.result.verdict, j);
       assert.equal(u.listsRetry, undefined);
@@ -109,6 +108,7 @@ describe('neither side has a verdict', () => {
   test('Jev not deciding and the reading still running: keep waiting', () => {
     for (const { jev } of JEV_NOT_DECIDING) assert.equal(combine(jev, null, false), null);
     assert.equal(combine(null, null, false), null);
+    assert.equal(combine(null, null, false, false, false, true), null);
   });
 
   test('Jev says not a label and the reading failed: "not a food label"', () => {
@@ -130,23 +130,24 @@ describe('neither side has a verdict', () => {
     assert.equal(error(combine(null, null, true, true)), UNCLEAR);
   });
 
-  test('reading failed before Jev answered: keep waiting for Jev', () => {
+  test('reading failed before Jev answered: keep waiting for Jev, then fail once its 6 s pass', () => {
     assert.equal(combine(null, null, true, false, true), null);
+    assert.equal(error(combine(null, null, true, false, true, true)), READ_FAILED);
   });
 });
 
-describe('arrival order', () => {
-  test('Jev first, then a disagreeing reading: the verdict never changes', () => {
-    const first = done(combine(decided('CLEAN'), null, false));
-    const second = done(combine(decided('CLEAN'), READINGS.UGLY, false));
-    assert.equal(first.result.verdict, 'CLEAN');
-    assert.equal(second.result.verdict, 'CLEAN');
+describe('arrival order: one verdict, never changed', () => {
+  test('Jev first, then a disagreeing reading: nothing shows until both are in, then one verdict', () => {
+    assert.equal(combine(decided('OKAY'), null, false), null);
+    assert.equal(done(combine(decided('OKAY'), READINGS.BAD, false)).result.verdict, 'OKAY');
   });
 
-  // CLAUDE.md: the rules verdict is used only when Jev is unavailable or under MIN_CONFIDENCE. Today a reading
-  // that beats Jev shows the rules verdict, then flips to Jev's when it lands (scan.ts pushes both).
-  test('reading first, Jev still pending: no rules verdict is shown yet', { todo: 'combine() shows the rules verdict before Jev answers, so it can flip' }, () => {
-    assert.equal(combine(null, READINGS.UGLY, false), null);
+  test('reading first, Jev still pending: no rules verdict is shown yet', () => {
+    assert.equal(combine(null, READINGS.BAD, false), null);
+  });
+
+  test('Jev CLEAN + Cane Sugar in the reading: shows BAD, not CLEAN', () => {
+    assert.equal(done(combine(decided('CLEAN'), READINGS.BAD, false)).result.verdict, 'BAD');
   });
 });
 
@@ -157,19 +158,19 @@ describe('MIN_CONFIDENCE boundary (server reply -> combine)', () => {
   });
 
   test(`Jev at exactly ${MIN_CONFIDENCE} decides, even against the rules`, () => {
-    const jev = readJevResponse(reply('CLEAN', MIN_CONFIDENCE));
+    const jev = readJevResponse(reply('BAD', MIN_CONFIDENCE));
     assert.equal(jev.status, 'decided');
-    assert.equal(done(combine(jev, READINGS.UGLY, false)).result.verdict, 'CLEAN');
+    assert.equal(done(combine(jev, READINGS.CLEAN, false)).result.verdict, 'BAD');
   });
 
   test(`Jev just under ${MIN_CONFIDENCE} is unsure: the rules verdict wins`, () => {
     const jev = readJevResponse(reply('CLEAN', MIN_CONFIDENCE - 0.001));
     assert.equal(jev.status, 'unsure');
-    assert.equal(done(combine(jev, READINGS.UGLY, false)).result.verdict, 'UGLY');
+    assert.equal(done(combine(jev, READINGS.OKAY, false)).result.verdict, 'OKAY');
   });
 
   test('Jev with no confidence is unsure: the rules verdict wins', () => {
-    const jev = readJevResponse(reply('UGLY', undefined));
+    const jev = readJevResponse(reply('BAD', undefined));
     assert.equal(jev.status, 'unsure');
     assert.equal(done(combine(jev, READINGS.CLEAN, false)).result.verdict, 'CLEAN');
   });
@@ -177,18 +178,20 @@ describe('MIN_CONFIDENCE boundary (server reply -> combine)', () => {
   test('Jev says not a label but Claude read one: the reading shows', () => {
     const jev = readJevResponse({ ...reply('CLEAN', 0.9), answers: { ...reply('CLEAN', 0.9).answers, is_food_label: { noul: 0.1 } } });
     assert.equal(jev.status, 'not_a_label');
-    assert.equal(done(combine(jev, READINGS.BAD, false)).result.verdict, 'BAD');
+    assert.equal(done(combine(jev, READINGS.OKAY, false)).result.verdict, 'OKAY');
   });
 
   test('Jev says illegible but Claude read it: the reading shows', () => {
     const jev = readJevResponse({ ...reply('CLEAN', 0.9), answers: { ...reply('CLEAN', 0.9).answers, is_legible: { noul: 0.2 } } });
     assert.equal(jev.status, 'unreadable');
-    assert.equal(done(combine(jev, READINGS.UGLY, false)).result.verdict, 'UGLY');
+    assert.equal(done(combine(jev, READINGS.BAD, false)).result.verdict, 'BAD');
   });
 
-  test('a malformed Jev reply is unavailable: the rules verdict wins', () => {
-    const jev = readJevResponse({ answers: { verdict: { choice: 'GOOD', confidence: 0.99 } } });
-    assert.equal(jev.status, 'unavailable');
-    assert.equal(done(combine(jev, READINGS.BAD, false)).result.verdict, 'BAD');
+  test('a malformed Jev reply (old UGLY, or junk) is unavailable: the rules verdict wins', () => {
+    for (const choice of ['GOOD', 'UGLY']) {
+      const jev = readJevResponse({ answers: { verdict: { choice, confidence: 0.99 } } });
+      assert.equal(jev.status, 'unavailable');
+      assert.equal(done(combine(jev, READINGS.OKAY, false)).result.verdict, 'OKAY');
+    }
   });
 });

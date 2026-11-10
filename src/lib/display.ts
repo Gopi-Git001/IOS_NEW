@@ -1,5 +1,6 @@
 // Pure helpers for what the app shows. No React Native imports, so they run under Node tests.
 import type { ScanResult } from '../types';
+import { VERDICT_SCHEME } from './verdicts';
 
 // Plant-based sweeteners (OTHER_SWEETENERS in supabase/functions/_shared/rules.ts, minus allulose, which is a rare sugar).
 const PLANT_SWEETENERS = ['stevia', 'steviol', 'rebaudioside', 'monk fruit', 'luo han guo', 'mogroside', 'thaumatin', 'e960'];
@@ -7,12 +8,12 @@ const PLANT_SWEETENERS = ['stevia', 'steviol', 'rebaudioside', 'monk fruit', 'lu
 const isPlantSweetener = (item: string) => PLANT_SWEETENERS.some((w) => item.toLowerCase().includes(w));
 
 /**
- * The server rates plant sweeteners (stevia, monk fruit…) as BAD. That is strict mode.
+ * The server rates plant sweeteners (stevia, monk fruit…) as OKAY. That is strict mode.
  * With strict mode off, a product whose only issue is plant sweeteners is shown as CLEAN.
  */
 export function applyStrictMode(result: ScanResult, strict: boolean): ScanResult {
   const onlyPlantSweeteners =
-    result.verdict === 'BAD' &&
+    result.verdict === 'OKAY' &&
     result.addedSugars.length === 0 &&
     result.sweeteners.length > 0 &&
     result.sweeteners.every(isPlantSweetener);
@@ -29,11 +30,12 @@ export function maskPhone(phone: string | undefined) {
 
 export const HISTORY_LIMIT = 50;
 
-export type HistoryEntry = { id: string; date: string; result: ScanResult };
+/** scheme marks entries saved with the CLEAN / OKAY / BAD names (see verdicts.ts). */
+export type HistoryEntry = { id: string; date: string; result: ScanResult; scheme?: string };
 
 /** Newest first, at most 50. Stores the server's result, so the strict-mode setting applies when shown. */
 export function addToHistory(history: HistoryEntry[], result: ScanResult, now: Date): HistoryEntry[] {
-  const entry = { id: `${now.getTime()}-${history.length}`, date: now.toISOString(), result };
+  const entry = { id: `${now.getTime()}-${history.length}`, date: now.toISOString(), result, scheme: VERDICT_SCHEME };
   return [entry, ...history].slice(0, HISTORY_LIMIT);
 }
 

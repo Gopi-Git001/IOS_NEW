@@ -14,7 +14,7 @@ History: direction B ("paper panel") was chosen on 2026-11-06. The app then move
   ingredient names, their tags and the stats bar.
 - Rules, not boxes. Structure inside a sheet comes from thin white rules: a 2 pt strong rule under titles,
   1 pt between blocks, hairlines between rows, a 2 pt rule to close the list.
-- The cube stays. The glossy sugar cube character appears with every verdict (clean, bad, ugly, scanning, idle).
+- The cube stays. The glossy sugar cube character appears with every verdict (clean, okay, bad, scanning, idle).
 
 ## Tokens (brand/tokens.json)
 `brand/tokens.json` is the only place brand colors are defined. The app imports it in `src/theme.ts`;
@@ -31,8 +31,8 @@ CSS is out of date (`node scripts/sync-tokens.mjs --check`). Change a color ther
 | inkFaint | 60% ink | Footers, version line, captions |
 | rule / hairline | 34% / 12% white | Rules between blocks / rows |
 | onInk | #0A0D14 | Text on the bright primary button |
-| ugly | #FF7A66 | UGLY verdict, added-sugar names, danger |
-| bad | #FFC24D | BAD verdict, sweetener names |
+| ugly | #FF7A66 | BAD verdict, added-sugar names, danger (app: `colors.bad`) |
+| bad | #FFC24D | OKAY verdict, sweetener names (app: `colors.okay`) |
 | clean | #5BE49B | CLEAN verdict, natural-sugar names |
 | ambient.* | see file | Base gradient and the three glow colors |
 

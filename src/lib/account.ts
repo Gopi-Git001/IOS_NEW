@@ -5,11 +5,15 @@ import { type PrefsRow, resetPrefs, syncPrefs } from './prefs';
 import { stored } from './stored';
 import { isConfigured, supabase } from './supabase';
 
-export type Stats = { total: number; clean: number; bad: number; ugly: number };
+export type Stats = { total: number; clean: number; okay: number; bad: number };
 type Profile = { displayName: string | null; stats: Stats | null };
 
 const empty: Profile = { displayName: null, stats: null };
-const store = stored<Profile>('quickgob.profile', empty, (saved) => ({ ...empty, ...(saved as Partial<Profile>) }));
+// Stats saved before the OKAY rename have no okay count; drop them so syncStats() recounts from history.
+const store = stored<Profile>('quickgob.profile', empty, (saved) => {
+  const profile = { ...empty, ...(saved as Partial<Profile>) };
+  return profile.stats && typeof profile.stats.okay !== 'number' ? { ...profile, stats: null } : profile;
+});
 
 export const useProfile = store.use;
 
@@ -34,7 +38,7 @@ export async function saveDisplayName(name: string) {
 export async function syncStats() {
   const history = getHistory();
   const count = (v: string) => history.filter((h) => h.result.verdict === v).length;
-  store.set({ ...store.get(), stats: { total: history.length, clean: count('CLEAN'), bad: count('BAD'), ugly: count('UGLY') } });
+  store.set({ ...store.get(), stats: { total: history.length, clean: count('CLEAN'), okay: count('OKAY'), bad: count('BAD') } });
 }
 
 function clearLocalCache() {

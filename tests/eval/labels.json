@@ -1,6 +1,6 @@
 {
   "_about": "QuickGOB accuracy test set. Pre-filled from typical US labels: check each entry against YOUR photo, fix it, then set verified=true. Recipes change; the photo is the truth. expected_verdict null = decide after checking the label/policy.",
-  "_verdicts": "CLEAN / OKAY / BAD / RETRY as shown in the app. Current code names them CLEAN / BAD / UGLY (app OKAY = code BAD, app BAD = code UGLY). Pre-filled with the CURRENT code policy: any added sugar, sugar alcohol, artificial sweetener or alcohol = BAD; stevia/monk fruit only = OKAY; none = CLEAN.",
+  "_verdicts": "CLEAN / OKAY / BAD / RETRY, the same names in the app and the code (Rules v3, RULES.md). Pre-filled with the OLD v2 policy (any added sugar, sugar alcohol, artificial sweetener or alcohol = BAD; stevia/monk fruit only = OKAY; none = CLEAN); items that may change under v3 are listed in review.md under RE-CHECK AFTER RULE CHANGE.",
   "items": [
     {
       "id": "01-lacroix-pamplemousse",

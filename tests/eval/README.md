@@ -83,12 +83,13 @@ The answers are **pre-filled from typical US labels**. Recipes change, so **your
 | Label contains | Verdict |
 |---|---|
 | Nothing sweet added (natural sugars like milk, fruit or dates are fine) | CLEAN |
-| Only stevia or monk fruit | OKAY |
-| Any added sugar, sugar alcohol (erythritol, xylitol), artificial sweetener, or alcohol | BAD |
-| Unreadable, no ingredient list, or not a food | RETRY |
+| Up to 4 g added sugar per serving, a sugar alcohol (erythritol, xylitol…), allulose, stevia or monk fruit | OKAY |
+| Over 4 g added sugar per serving, added sugar with unreadable grams, an artificial sweetener, or alcohol over 0.5% ABV | BAD |
+| Unreadable, no ingredient list, a cut-off list, or not a food | RETRY |
 
-The app shows CLEAN / OKAY / BAD. The code currently calls them CLEAN / BAD / UGLY.
-If you change the rules (for example "1–4 g added sugar = OKAY"), update the affected verdicts here.
+The app and the code both say CLEAN / OKAY / BAD (Rules v3, [RULES.md](../../RULES.md)).
+Items whose verdict may have changed with v3 are listed in review.md under "RE-CHECK AFTER RULE CHANGE".
+To run the eval against local Supabase, see [README-local-testing.md](../README-local-testing.md).
 
 ## Example entry
 

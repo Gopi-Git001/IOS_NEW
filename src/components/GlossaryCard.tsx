@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type Kind, lookup } from '../lib/glossary';
 import { colors, fonts, frost } from '../theme';
 
-export const kindColor: Record<Kind, string> = { added: colors.ugly, sweetener: colors.bad, natural: colors.clean };
+export const kindColor: Record<Kind, string> = { added: colors.bad, sweetener: colors.okay, natural: colors.clean };
 export const kindTag: Record<Kind, string> = { added: 'Sugar', sweetener: 'Sweetener', natural: 'Natural' };
 const kindLabel: Record<Kind, string> = { added: 'Added sugar', sweetener: 'Sweetener', natural: 'Natural sugar' };
 

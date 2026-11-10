@@ -98,10 +98,32 @@ Deno.test('quickgob-scan-label', async (t) => {
       const r = await call(SLUG, { token: user.token, body: { image: JPEG, scan_id: 'fn-test' } });
       assertEquals(r.status, 200, r.text);
       const result = r.json?.result as Record<string, unknown>;
-      assertEquals(result.verdict, 'UGLY');
+      assertEquals(result.verdict, 'BAD');
+      assertEquals(r.json?.verdicts, 'v3', 'new verdict names are marked');
       assertEquals(result.addedSugars, ['Cane Sugar', '39 g added per serving']);
       assertEquals(result.sweeteners, []);
       assert(r.json?.timing, 'timing is echoed back');
+    });
+
+    await t.step('2 g added sugar per serving -> OKAY', async () => {
+      mode = { kind: 'reading', reading: reading({ ingredients_text: 'Oats, Cane Sugar, Salt', total_sugars_g: 3, added_sugars_g: 2 }) };
+      const r = await call(SLUG, { token: user.token, body: { image: JPEG } });
+      assertEquals(r.status, 200, r.text);
+      assertEquals((r.json?.result as Record<string, unknown>).verdict, 'OKAY');
+    });
+
+    await t.step('<0.5% ABV beer -> CLEAN', async () => {
+      mode = { kind: 'reading', reading: reading({ ingredients_text: 'Water, Barley, Hops, Yeast', total_sugars_g: 0, added_sugars_g: 0, abv_text: '<0.5% ABV' }) };
+      const r = await call(SLUG, { token: user.token, body: { image: JPEG } });
+      assertEquals(r.status, 200, r.text);
+      assertEquals((r.json?.result as Record<string, unknown>).verdict, 'CLEAN');
+    });
+
+    await t.step('unknown sweetener -> OKAY', async () => {
+      mode = { kind: 'reading', reading: reading({ ingredients_text: 'Water, Yacon Syrup', total_sugars_g: null, added_sugars_g: null }) };
+      const r = await call(SLUG, { token: user.token, body: { image: JPEG } });
+      assertEquals(r.status, 200, r.text);
+      assertEquals((r.json?.result as Record<string, unknown>).verdict, 'OKAY');
     });
 
     await t.step('not a food label -> 422', async () => {
@@ -118,11 +140,12 @@ Deno.test('quickgob-scan-label', async (t) => {
       assertEquals(r.json?.code, 'unreadable');
     });
 
-    await t.step('cut-off list with nothing sweet seen -> 422 "unreadable" (retake)', async () => {
+    await t.step('cut-off list with nothing sweet seen -> 422 RETRY "unreadable"', async () => {
       mode = { kind: 'reading', reading: reading({ ingredients_text: 'Water, Salt', ingredients_complete: false, added_sugars_g: null }) };
       const r = await call(SLUG, { token: user.token, body: { image: JPEG } });
       assertEquals(r.status, 422);
       assertEquals(r.json?.code, 'unreadable');
+      assertEquals(r.json?.verdict, 'RETRY');
     });
 
     await t.step('Claude refuses -> 422', async () => {

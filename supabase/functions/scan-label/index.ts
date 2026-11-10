@@ -1,12 +1,12 @@
 // POST { image: <base64 JPEG>, scan_id?: string }  ->  { result: ScanResult, timing } | { error: string, code?: string, timing }
 // Signed-in users only. Stage 1 (extraction): Claude vision copies the label literally, with no
 // sorting and no verdict. Stages 2-4 (normalize, classify, policy) run in _shared/rules.ts.
-// Runs alongside quick-verdict (Jev), which makes the actual CLEAN / BAD / UGLY call.
+// Runs alongside quick-verdict (Jev), which makes the actual CLEAN / OKAY / BAD call.
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0';
 import { env } from '../_shared/env.ts';
 import { allow, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
-import { decide, type LiteralLabel } from '../_shared/rules.ts';
+import { decide, type LiteralLabel, VERDICT_SCHEME } from '../_shared/rules.ts';
 import { clientFields, imageKb, requestTimer, timed } from '../_shared/timing.ts';
 
 // The app gives up on the lists after 12 s, so the whole reading (one retry included) must end by 10 s.
@@ -48,7 +48,7 @@ const SYSTEM = `You transcribe photos of food and drink labels for a sugar-check
 - added_sugars_g: the "Added Sugars" grams as printed (e.g. "Includes 6g Added Sugars" -> 6), or null if not visible. Never estimate it from total sugars. If the panel prints "0g", use 0.
 - quantity_basis: what those grams are per, as printed: per_serving, per_100g or per_100ml; unknown if unclear or no panel.
 - serving_size_text: the serving size as printed, or null.
-- abv_text: alcohol by volume as printed (e.g. "5% ABV", "12% alc./vol."), or null.
+- abv_text: the alcohol content or alcohol claim as printed anywhere on the label (e.g. "5% ABV", "12% alc./vol.", "<0.5% ABV", "0.0%", "Non-alcoholic", "Alcohol-free"), or null if none is printed.
 - is_readable: false if the ingredient text is blurry, out of focus, too dark, washed out by glare, or too small to read with confidence. Never guess words you cannot read.
 - is_food_label: false if the photo is not a food or drink label; then use nulls and false.`;
 
@@ -129,24 +129,27 @@ export default {
     }
 
     if (!reading.is_food_label) {
-      return json({ error: "That doesn't look like a food label. Fit the ingredient list in the box." }, 422);
+      return json({ error: "That doesn't look like a food label. Fit the ingredient list in the box.", verdict: 'RETRY', verdicts: VERDICT_SCHEME }, 422);
     }
 
     if (!reading.is_readable) {
       console.log('label unreadable');
-      return json({ error: UNREADABLE, code: 'unreadable' }, 422);
+      return json({ error: UNREADABLE, code: 'unreadable', verdict: 'RETRY', verdicts: VERDICT_SCHEME }, 422);
     }
 
     const decision = decide(reading);
     timer.mark('rules');
     const ev = decision.evaluation;
     timer.set({ rules_status: ev.status, rules_verdict: ev.verdict, rule: ev.ruleId, policy: ev.policyVersion, unresolved: ev.unresolved.length });
+    // Unknown words that may sweeten are rated OKAY for now; the log is how they get added to the registry.
+    if (ev.unknownSweeteners.length) {
+      console.warn(JSON.stringify({ event: 'unknown_sweetener', names: ev.unknownSweeteners, rule: ev.ruleId, registry: ev.registryVersion }));
+    }
 
-    if (decision.status === 'unresolved') {
-      // Retake when a better photo would help; otherwise report it plainly (Jev's call can still stand).
-      return json({ error: decision.retake ? UNREADABLE : decision.message, code: decision.retake ? 'unreadable' : 'unresolved', analysis: ev }, 422);
+    if (decision.status === 'retry') {
+      return json({ error: UNREADABLE, code: 'unreadable', verdict: 'RETRY', verdicts: VERDICT_SCHEME, analysis: ev }, 422);
     }
     const result = decision.result;
-    return json({ result });
+    return json({ result, verdicts: VERDICT_SCHEME });
   })),
 };
