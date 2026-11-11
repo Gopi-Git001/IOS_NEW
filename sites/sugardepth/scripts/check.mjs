@@ -38,7 +38,7 @@ for (const file of pages) {
   // One exact Google tag is allowed. replace() drops a single copy; a second copy or any other script still fails.
   const allowedGtm = [
     '<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K8262PBN"></script>',
-    "<script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date());</script>",
+    "<script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('set', { allow_google_signals: false, allow_ad_personalization_signals: false }); gtag('js', new Date());</script>",
   ];
   let scripts = html;
   for (const tag of allowedGtm) scripts = scripts.replace(tag, '');
