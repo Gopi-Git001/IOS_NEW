@@ -1,4 +1,4 @@
-/* Round 1: less text, more to touch. The home hero, icon steps, verdict disclosures, flip cards, the short guide
+/* Round 1: less text, more to touch. The home hero, icon steps, verdict disclosures, the short guide
    row, the /how-it-works expanders and the phone "Scan a label" bar. Loaded after crystal.css, so it reads the same
    paper, ink and glass tokens. Nothing here moves layout when it animates: only transform, opacity and colour. */
 
@@ -46,40 +46,8 @@
 @keyframes disclose { from { opacity: 0; transform: translateY(-6px); } }
 .verdicts-link { margin: 36px 0 0; }
 
-/* ---------- name the disguise: flip cards ---------- */
+/* ---------- name the disguise: the hint above the alias tiles (the tiles are in swarm.css) ---------- */
 .flip-hint { margin: 0 0 14px; font-family: var(--serif); font-style: italic; font-size: 1.25rem; }
-.disguise-grid .flips { grid-column: 2; grid-row: 1 / 3; }
-.flips { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.flip { position: relative; perspective: 1000px; }
-.flip-ink { --tint: #7b7f76; --deep: #1b1e1a; }
-.flip-ugly { --tint: var(--sd-ugly); --deep: var(--sd-ugly-ink); }
-.flip-bad { --tint: var(--sd-bad); --deep: var(--sd-bad-ink); }
-.flip-clean { --tint: var(--sd-clean); --deep: var(--sd-clean-ink); }
-.flip-card { display: block; width: 100%; height: clamp(136px, 13.5vw, 172px); margin: 0; padding: 0; border: 0; border-radius: 20px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.flip-card:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
-.flip-inner { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.65s var(--ease-out); }
-.flip-face { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 18px 20px 16px; border-radius: 20px; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.flip-front { background: linear-gradient(118deg, transparent 38%, #fff9 39% 45%, transparent 46%), linear-gradient(135deg, #fffe, #fff7); border: 1px solid #fff; box-shadow: inset 0 1px 0 #fff, 0 12px 30px rgba(31, 34, 24, 0.09); }
-/* Three hairlines of "fine print" under the name, like the rest of a label. */
-.flip-front::after { content: ''; position: absolute; left: 20px; bottom: 20px; width: 46%; height: 17px; background: linear-gradient(var(--rule), var(--rule)) 0 0 / 100% 1.5px no-repeat, linear-gradient(var(--rule), var(--rule)) 0 50% / 72% 1.5px no-repeat, linear-gradient(var(--rule), var(--rule)) 0 100% / 88% 1.5px no-repeat; opacity: 0.8; }
-.flip-alias { font-weight: 900; font-size: clamp(1.15rem, 1.9vw, 1.55rem); line-height: 1.08; letter-spacing: -0.025em; text-wrap: balance; }
-.flip-turn { align-self: flex-end; color: var(--muted); transition: transform 0.4s var(--ease-out); }
-.flip-back { transform: rotateY(180deg); justify-content: flex-start; color: #fff; border: 2px solid color-mix(in srgb, var(--deep), white 25%); background: linear-gradient(143deg, #fff3 0%, transparent 26%, #fff1 44%, transparent 52%), linear-gradient(165deg, color-mix(in srgb, var(--tint), var(--deep) 62%), var(--deep) 76%); box-shadow: inset 0 0 0 3px #fff3, inset -6px -5px 0 #0002, inset 0 1px 14px #fff5, 0 12px 30px rgba(31, 34, 24, 0.14); }
-.flip-reveal { font-family: var(--serif); font-style: italic; font-size: clamp(1.3rem, 2.1vw, 1.75rem); line-height: 1.12; text-shadow: 0 1px 6px #0007; text-wrap: balance; }
-.flip-more { position: absolute; right: 8px; bottom: 6px; z-index: 1; display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 12px; color: #fff; font-weight: 800; font-size: 0.9375rem; text-decoration: underline; text-decoration-color: #fff9; text-underline-offset: 4px; text-shadow: 0 1px 4px #0008; opacity: 0; visibility: hidden; transition: opacity 0.25s var(--ease-out), visibility 0s 0.25s; }
-.flip-more:focus-visible { outline: 2px solid #fff; outline-offset: -4px; border-radius: 12px; }
-/* Turned: by a tap or a key (aria-pressed, set by the script on the home page)... */
-.flip-card[aria-pressed='true'] .flip-inner { transform: rotateY(180deg); }
-.flip:has(.flip-card[aria-pressed='true']) .flip-more { opacity: 1; visibility: visible; transition: opacity 0.3s 0.3s var(--ease-out), visibility 0s; }
-/* ...by a pointer resting on it... */
-@media (hover: hover) and (pointer: fine) {
-  .flip:hover .flip-inner { transform: rotateY(180deg); }
-  .flip:hover .flip-more { opacity: 1; visibility: visible; transition: opacity 0.3s 0.3s var(--ease-out), visibility 0s; }
-  .flip-card:hover .flip-turn { transform: rotate(40deg); }
-}
-/* ...or, before the script has run, by focus. */
-.flips:not([data-ready]) .flip:focus-within .flip-inner { transform: rotateY(180deg); }
-.flips:not([data-ready]) .flip:focus-within .flip-more { opacity: 1; visibility: visible; }
 
 /* ---------- ingredient guides: four, then the rest ---------- */
 .cards-four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -123,7 +91,6 @@
 
 /* ---------- smaller screens ---------- */
 @media (max-width: 900px) {
-  .disguise-grid .flips { grid-column: 1; grid-row: 2; }
   .cards-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .steps-icons { gap: 0; }
   .steps-icons li { grid-template-columns: 60px minmax(0, 1fr) auto; gap: 0 16px; padding: 16px 0; border-top-width: 1px; border-top-color: var(--rule); }
@@ -153,13 +120,6 @@
   .crystal-compact .crystal-choice { display: none; }
   .hero .cta-row .btn { min-height: 52px; }
   .verdict-line { font-size: 1.05rem; }
-  .flips { gap: 12px; }
-  .flip-card, .flip-face { border-radius: 16px; }
-  .flip-card { height: 148px; }
-  .flip-face { padding: 14px 14px 12px; }
-  .flip-front::after { left: 14px; bottom: 16px; }
-  .flip-alias { font-size: 1.12rem; }
-  .flip-reveal { font-size: 1.22rem; }
   .verdict-keys li { grid-template-columns: 1fr; gap: 0; }
 }
 @media (max-width: 480px) {
@@ -170,6 +130,4 @@
 @media (max-width: 340px) {
   .hero-split { grid-template-columns: minmax(0, 1fr); }
   .crystal-compact { display: none; }
-  .flips { grid-template-columns: minmax(0, 1fr); }
-  .flip-card { height: 120px; }
 }

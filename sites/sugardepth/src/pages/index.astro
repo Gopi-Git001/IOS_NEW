@@ -4,10 +4,11 @@ import ScanCta from '../components/ScanCta.astro';
 import CrystalVerdict from '../components/CrystalVerdict.astro';
 import TryIt from '../components/TryIt.astro';
 import EditorialImage from '../components/EditorialImage.astro';
+import CrystalSwarm from '../components/CrystalSwarm.astro';
 import { APP_URL } from '../config';
 import { organization, website, webApplication } from '../data/schema';
 import { getFeaturedGuides } from '../data/guides';
-import { ADDED_SUGAR_ALIAS_COUNT, MAX_OKAY_ADDED_G as G, pillText, toneClass } from '../data/ingredients';
+import { ADDED_SUGAR_ALIAS_COUNT, MAX_OKAY_ADDED_G as G, PAGES, pillText, toneClass } from '../data/ingredients';
 
 // Four guides on the home page, one of each kind of verdict. The rest are on /ingredients.
 const HOME_GUIDES = ['evaporated-cane-juice', 'sucralose', 'stevia', 'maltodextrin'];
@@ -19,16 +20,14 @@ const guides = HOME_GUIDES.map((slug) => {
   return { ...guide, line: guide.summary.match(/^.*?[.?!](?=\s|$)/)?.[0] ?? guide.summary };
 });
 
-// Flip cards: a name as a label prints it on the front, what it is on the back. `tone` is the back's glass:
-// ink for added sugar (BAD or OKAY, by the grams), then the verdict colour of the others.
-const disguises = [
-  { alias: 'Evaporated cane juice', reveal: "That's sugar.", href: '/ingredients/evaporated-cane-juice', tone: 'ink' },
-  { alias: 'Brown rice syrup', reveal: "That's sugar.", href: '/ingredients/rice-syrup', tone: 'ink' },
-  { alias: 'Apple juice concentrate', reveal: "That's sugar.", href: '/ingredients/juice-concentrate', tone: 'ink' },
-  { alias: 'Sucralose', reveal: "That's an artificial sweetener.", href: '/ingredients/sucralose', tone: 'ugly' },
-  { alias: 'Erythritol', reveal: "That's a sugar alcohol.", href: '/ingredients/erythritol', tone: 'bad' },
-  { alias: 'Maltodextrin', reveal: 'Not sugar. Really.', href: '/ingredients/maltodextrin', tone: 'clean' },
-];
+// Alias tiles: a name as a label prints it on the front, "That's sugar." on the back. Every name is read from the
+// scanner's registry (src/data/ingredients.ts) and must be one it files under added sugar.
+const TILE_ALIASES = ['evaporated cane juice', 'brown rice syrup', 'agave nectar', 'dextrose', 'barley malt syrup', 'fruit juice concentrate', 'coconut sugar', 'invert sugar'];
+const addedSugarNames = new Set(PAGES.filter((p) => p.treatment === 'added_sugar').flatMap((p) => p.aliases));
+const tiles = TILE_ALIASES.map((alias) => {
+  if (!addedSugarNames.has(alias)) throw new Error(`index: "${alias}" is not an added-sugar name in the ingredient registry`);
+  return alias[0].toUpperCase() + alias.slice(1);
+});
 ---
 <Base
   title="Sugar Depth: the food-label scanner that names every hidden sugar"
@@ -36,9 +35,10 @@ const disguises = [
   path="/"
   jsonLd={[organization, website, webApplication]}
 >
-  <section class="hero">
+  <section class="hero swarm-band" data-swarm="hero">
+    <CrystalSwarm />
     <div class="wrap hero-split">
-      <div class="hero-copy">
+      <div class="hero-copy" data-swarm-copy>
         <span class="kicker">Food-label scanner</span>
         <h1>Sugar hides in the fine print. We read it.</h1>
         <p class="lead">
@@ -154,32 +154,31 @@ const disguises = [
     </div>
   </section>
 
-  <section aria-labelledby="names-h">
+  <section class="aliases swarm-band" aria-labelledby="names-h">
     <div class="wrap disguise-grid">
-      <div class="section-head">
+      <div class="section-head" data-burst-clear>
         <span class="kicker">Name the disguise</span>
         <h2 id="names-h">Sugar has a lot of aliases.</h2>
         <p class="flip-hint">Tap a card to unmask it.</p>
         <p><a href="/hidden-sugar-names">See all {ADDED_SUGAR_ALIAS_COUNT} added-sugar names →</a></p>
       </div>
-      <ul class="flips" data-flips>
-        {disguises.map((d) => (
-          <li class={`flip flip-${d.tone}`}>
-            <button class="flip-card" type="button" aria-pressed="false">
-              <span class="flip-inner">
-                <span class="flip-face flip-front">
-                  <span class="flip-alias">{d.alias}</span>
-                  <svg class="flip-turn" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9" /><path d="M20 4v5h-5" /></svg>
-                </span>
-                <span class="flip-face flip-back"><span class="flip-reveal">{d.reveal}</span></span>
-              </span>
-            </button>
-            <a class="flip-more" href={d.href} aria-label={`Why: the ${d.alias} guide`}>Why →</a>
-          </li>
-        ))}
-      </ul>
-      <p class="sr-only" role="status" data-flip-status></p>
-      <figure class="editorial-frame aliases-figure">
+      <!-- Each tile is a button: a click, a tap, Enter or Space turns it over and back (src/lib/swarm.ts). Without
+           the script nothing turns: every tile shows its name and the answer together. -->
+      <div class="tiles-stage" data-tiles>
+        <canvas class="tiles-fx" data-tiles-fx aria-hidden="true"></canvas>
+        <ul class="tiles">
+          {tiles.map((alias) => (
+            <li>
+              <button class="tile" type="button" aria-pressed="false">
+                <span class="tile-face tile-front"><span class="tile-alias">{alias}</span></span>
+                <span class="tile-face tile-back"><span class="tile-tag">Added sugar</span><span class="tile-reveal">That's sugar.</span></span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p class="sr-only" role="status" data-tiles-status></p>
+      <figure class="editorial-frame aliases-figure" data-burst-clear>
         <EditorialImage name="aliases" alt="Six clear glass trays containing sugar cubes, golden syrup, brown sugar, pale agave syrup, dark malt syrup and white powder." sizes="(max-width: 760px) calc(100vw - 40px), 560px" />
       </figure>
     </div>
@@ -207,24 +206,4 @@ const disguises = [
   <section class="cta-section">
     <div class="wrap"><ScanCta graphic text="One photo. One word." /></div>
   </section>
-
-  <!-- Flip cards: a click or tap turns one over; Enter and Space do the same because each card is a button. -->
-  <script is:inline data-motion>
-    (function () {
-      var list = document.querySelector('[data-flips]');
-      var status = document.querySelector('[data-flip-status]');
-      if (!list) return;
-      list.setAttribute('data-ready', '');
-      Array.prototype.forEach.call(list.querySelectorAll('.flip-card'), function (card) {
-        var back = card.querySelector('.flip-back');
-        // Until it is turned, the answer is kept from assistive tech too.
-        back.setAttribute('aria-hidden', 'true');
-        card.addEventListener('click', function () {
-          var on = card.getAttribute('aria-pressed') !== 'true';
-          card.setAttribute('aria-pressed', on ? 'true' : 'false');
-          if (status) status.textContent = on ? card.querySelector('.flip-alias').textContent + '. ' + back.textContent : '';
-        });
-      });
-    })();
-  </script>
 </Base>
