@@ -17,14 +17,6 @@
 .crystal-compact .crystal-caustic { bottom: 2px; }
 .crystal-compact .crystal-controls { position: static; }
 
-/* ---------- how it works: three icons, three short lines ---------- */
-.steps-icons li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 22px 16px; padding-top: 22px; }
-.steps-icons li:nth-child(n) { margin-top: 0; }
-.step-icon { display: grid; place-items: center; width: 76px; height: 76px; border-radius: 22px; color: var(--ink); background: linear-gradient(135deg, #fffd, #fff6); border: 1px solid #fff; box-shadow: var(--frost-shadow); }
-.step-icon svg { display: block; }
-.steps-icons .step-n { justify-self: end; margin: 0; padding-right: 0.08em; font-size: clamp(2.8rem, 4.6vw, 3.8rem); }
-.steps-icons h3 { grid-column: 1 / -1; margin: 0; font-size: clamp(1.3rem, 2.1vw, 1.7rem); letter-spacing: -0.02em; }
-
 /* ---------- verdict cards: one line, the rules behind a disclosure ---------- */
 .verdict-card h3.word { margin-top: 0; }
 .verdict-line { margin: 0 0 10px; font-size: 1.08rem; line-height: 1.4; }
@@ -92,14 +84,6 @@
 /* ---------- smaller screens ---------- */
 @media (max-width: 900px) {
   .cards-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .steps-icons { gap: 0; }
-  .steps-icons li { grid-template-columns: 60px minmax(0, 1fr) auto; gap: 0 16px; padding: 16px 0; border-top-width: 1px; border-top-color: var(--rule); }
-  .steps-icons li:first-child { border-top: 2px solid var(--rule-strong); }
-  .steps-icons li:last-child { border-bottom: 1px solid var(--rule); }
-  .step-icon { width: 60px; height: 60px; border-radius: 18px; }
-  .step-icon svg { width: 38px; height: 38px; }
-  .steps-icons h3 { grid-column: 2; grid-row: 1; font-size: 1.25rem; }
-  .steps-icons .step-n { grid-column: 3; grid-row: 1; font-size: 2.2rem; -webkit-text-stroke-width: 1.5px; }
 }
 @media (max-width: 760px) {
   /* Phone hero: the slab sits beside the headline, and the try-it widget is one thumb-scroll away. */

@@ -1,24 +1,17 @@
 ---
 import Base from '../layouts/Base.astro';
-import ScanCta from '../components/ScanCta.astro';
 import CrystalVerdict from '../components/CrystalVerdict.astro';
 import TryIt from '../components/TryIt.astro';
-import EditorialImage from '../components/EditorialImage.astro';
 import CrystalSwarm from '../components/CrystalSwarm.astro';
 import { APP_URL } from '../config';
 import { organization, website, webApplication } from '../data/schema';
-import { getFeaturedGuides } from '../data/guides';
-import { ADDED_SUGAR_ALIAS_COUNT, MAX_OKAY_ADDED_G as G, PAGES, pillText, toneClass } from '../data/ingredients';
+import { MISSION, MISSION_DETAIL } from '../data/mission';
+import { VERDICTS } from '../data/rules';
+import { ADDED_SUGAR_ALIAS_COUNT, PAGES, toneClass } from '../data/ingredients';
+// After Base and the components, so these rules come last in the page's CSS.
+import '../styles/brief-pages.css';
 
-// Four guides on the home page, one of each kind of verdict. The rest are on /ingredients.
-const HOME_GUIDES = ['evaporated-cane-juice', 'sucralose', 'stevia', 'maltodextrin'];
-const featured = await getFeaturedGuides();
-const guides = HOME_GUIDES.map((slug) => {
-  const guide = featured.find((g) => g.slug === slug);
-  if (!guide) throw new Error(`index: "${slug}" is not a featured guide`);
-  // The first sentence of the guide's summary is the card's one line.
-  return { ...guide, line: guide.summary.match(/^.*?[.?!](?=\s|$)/)?.[0] ?? guide.summary };
-});
+// Three sections: the mission, how it works, and everything else.
 
 // Alias tiles: a name as a label prints it on the front, "That's sugar." on the back. Every name is read from the
 // scanner's registry (src/data/ingredients.ts) and must be one it files under added sugar.
@@ -28,139 +21,94 @@ const tiles = TILE_ALIASES.map((alias) => {
   if (!addedSugarNames.has(alias)) throw new Error(`index: "${alias}" is not an added-sugar name in the ingredient registry`);
   return alias[0].toUpperCase() + alias.slice(1);
 });
+
+const explore = [
+  { href: '/hidden-sugar-names', label: `All ${ADDED_SUGAR_ALIAS_COUNT} added-sugar names` },
+  { href: '/ingredients', label: 'Ingredient guides' },
+  { href: '/how-it-works', label: 'The full rules' },
+  { href: '/faq', label: 'FAQ' },
+  { href: '/about', label: 'About' },
+];
 ---
 <Base
   title="Sugar Depth: the food-label scanner that names every hidden sugar"
-  description="Sugar Depth is a food-label scanner. Photograph a package's ingredient list and get one verdict, CLEAN, OKAY or BAD, based on added sugars and sweeteners. No barcodes, no product database."
+  description="Sugar Depth is a food-label scanner. Photograph an ingredient list and get one verdict: CLEAN, OKAY or BAD. No barcodes, no product database."
   path="/"
   jsonLd={[organization, website, webApplication]}
 >
-  <section class="hero swarm-band" data-swarm="hero">
+  <section class="hero swarm-band" data-swarm="hero" aria-labelledby="mission-h">
     <CrystalSwarm />
     <div class="wrap hero-split">
       <div class="hero-copy" data-swarm-copy>
-        <span class="kicker">Food-label scanner</span>
-        <h1>Sugar hides in the fine print. We read it.</h1>
-        <p class="lead">
-          Snap a food label's ingredient list and get one word, <strong class="clean">CLEAN</strong>,{" "}
-          <strong class="bad">OKAY</strong> or <strong class="ugly">BAD</strong>, with every added sugar named.
-        </p>
+        <span class="kicker">Our mission</span>
+        <h1 id="mission-h">{MISSION}</h1>
+        <p class="lead">{MISSION_DETAIL}</p>
         <div class="cta-row" data-sticky-hide>
           <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
         </div>
-        <p class="plain-note">Reads the real label, not a barcode. Not medical advice; no allergen checks.</p>
+        <p class="plain-note">A food-label scanner. Not medical advice; no allergen checks.</p>
       </div>
       <CrystalVerdict interactive compact />
     </div>
   </section>
 
-  <TryIt />
-
-  <section aria-labelledby="how-h">
+  <section class="how" aria-labelledby="how-h">
     <div class="wrap">
-      <div class="section-head reveal">
-        <span class="kicker">How it works</span>
-        <h2 id="how-h">Three steps. One word.</h2>
-      </div>
-      <ol class="steps steps-icons">
-        <li class="reveal">
-          <span class="step-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <h2 id="how-h">How it works</h2>
+      <ol class="how-steps">
+        <li>
+          <span class="how-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M8 16v-4a4 4 0 0 1 4-4h4M32 8h4a4 4 0 0 1 4 4v4M40 32v4a4 4 0 0 1-4 4h-4M16 40h-4a4 4 0 0 1-4-4v-4" />
               <path d="M16 19h16M16 24h11M16 29h14" />
             </svg>
           </span>
-          <span class="step-n" aria-hidden="true">01</span>
-          <h3>Snap the ingredient list.</h3>
+          <span>Snap the ingredient list.</span>
         </li>
-        <li class="reveal">
-          <span class="step-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <li>
+          <span class="how-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M8 12h22M8 20h11M8 28h8M8 36h12" />
               <circle cx="30" cy="27" r="8" />
               <path d="M36 33l6 6" />
             </svg>
           </span>
-          <span class="step-n" aria-hidden="true">02</span>
-          <h3>We check every name.</h3>
+          <span>We check every name.</span>
         </li>
-        <li class="reveal">
-          <span class="step-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <li>
+          <span class="how-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
               <rect x="10" y="6" width="28" height="36" rx="7" />
               <path d="M17 14h7" />
               <path d="M17.5 32h13" stroke-width="5.5" />
             </svg>
           </span>
-          <span class="step-n" aria-hidden="true">03</span>
-          <h3>Get one word back.</h3>
+          <span>Get one word: CLEAN, OKAY or BAD.</span>
         </li>
       </ol>
+
+      <ul class="how-verdicts">
+        {VERDICTS.map((v) => (
+          <li class={`how-verdict tone-${toneClass(v.word)}`}>
+            <h3><span class="how-chip" aria-hidden="true"></span>{v.word}</h3>
+            <p>{v.line}</p>
+            <details class="verdict-more">
+              <summary>The {v.word} rules</summary>
+              <ul>{v.rules.map((r) => <li>{r}</li>)}</ul>
+            </details>
+          </li>
+        ))}
+      </ul>
+
+      <TryIt />
     </div>
   </section>
 
-  <section class="film" aria-labelledby="verdicts-h">
-    <div class="wrap">
-      <figure class="editorial-frame verdict-banner">
-        <EditorialImage name="slabs" alt="" />
-      </figure>
-      <div class="section-head reveal">
-        <span class="kicker">The three verdicts</span>
-        <h2 id="verdicts-h">Three verdicts. The worst ingredient decides.</h2>
-      </div>
-      <div class="verdicts">
-        <div class="verdict-card tone-ugly reveal">
-          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>BAD</b></div>
-          <h3 class="word ugly">BAD</h3>
-          <p class="verdict-line">Over {G}&nbsp;g added sugar, any artificial sweetener, or alcohol.</p>
-          <details class="verdict-more">
-            <summary>The BAD rules</summary>
-            <ul>
-              <li>More than {G}&nbsp;g of added sugar per serving, under any name</li>
-              <li>Added sugar whose grams per serving can't be read</li>
-              <li>Any artificial sweetener: sucralose, aspartame, acesulfame K and others</li>
-              <li>Drinking alcohol above 0.5% ABV</li>
-            </ul>
-          </details>
-        </div>
-        <div class="verdict-card tone-bad reveal">
-          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>OKAY</b></div>
-          <h3 class="word bad">OKAY</h3>
-          <p class="verdict-line">A little added sugar, sugar alcohols or plant sweeteners.</p>
-          <details class="verdict-more">
-            <summary>The OKAY rules</summary>
-            <ul>
-              <li>No BAD trigger, but added sugar at {G}&nbsp;g or less per serving</li>
-              <li>A sugar alcohol such as erythritol or xylitol, or allulose</li>
-              <li>A plant sweetener: stevia, monk fruit or thaumatin</li>
-            </ul>
-          </details>
-        </div>
-        <div class="verdict-card tone-clean reveal">
-          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>CLEAN</b></div>
-          <h3 class="word clean">CLEAN</h3>
-          <p class="verdict-line">Nothing sweet added. Milk and fruit sugars don't count.</p>
-          <details class="verdict-more">
-            <summary>The CLEAN rules</summary>
-            <ul>
-              <li>A complete ingredient list with nothing sweet added</li>
-              <li>Sugar that comes with milk or fruit is fine</li>
-              <li>Maltodextrin and starches are fine</li>
-            </ul>
-          </details>
-        </div>
-      </div>
-      <p class="verdicts-link"><a href="/how-it-works">Read the full rule table →</a></p>
-    </div>
-  </section>
-
-  <section class="aliases swarm-band" aria-labelledby="names-h">
+  <section class="aliases explore swarm-band" aria-labelledby="explore-h">
     <div class="wrap disguise-grid">
       <div class="section-head" data-burst-clear>
-        <span class="kicker">Name the disguise</span>
-        <h2 id="names-h">Sugar has a lot of aliases.</h2>
-        <p class="flip-hint">Tap a card to unmask it.</p>
-        <p><a href="/hidden-sugar-names">See all {ADDED_SUGAR_ALIAS_COUNT} added-sugar names →</a></p>
+        <h2 id="explore-h">Explore</h2>
+        <p class="flip-hint">Eight of sugar's aliases. Tap a card to unmask it.</p>
       </div>
       <!-- Each tile is a button: a click, a tap, Enter or Space turns it over and back (src/lib/swarm.ts). Without
            the script nothing turns: every tile shows its name and the answer together. -->
@@ -178,32 +126,14 @@ const tiles = TILE_ALIASES.map((alias) => {
         </ul>
       </div>
       <p class="sr-only" role="status" data-tiles-status></p>
-      <figure class="editorial-frame aliases-figure" data-burst-clear>
-        <EditorialImage name="aliases" alt="Six clear glass trays containing sugar cubes, golden syrup, brown sugar, pale agave syrup, dark malt syrup and white powder." sizes="(max-width: 760px) calc(100vw - 40px), 560px" />
-      </figure>
-    </div>
-  </section>
-
-  <section aria-labelledby="guides-h">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="kicker">Ingredient guides</span>
-        <h2 id="guides-h">What's in the fine print</h2>
+      <div class="explore-more" data-burst-clear>
+        <ul class="explore-links">
+          {explore.map((l) => <li><a href={l.href}>{l.label}<span aria-hidden="true">→</span></a></li>)}
+        </ul>
+        <p class="explore-cta" data-sticky-hide>
+          <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
+        </p>
       </div>
-      <ul class="cards cards-four">
-        {guides.map((g) => (
-          <li><a class="card" href={`/ingredients/${g.slug}`}>
-            <span class={`pill ${toneClass(g.page.verdict.tone)}`}>{pillText(g.page)}</span>
-            <h3>{g.name}</h3>
-            <p>{g.line}</p>
-          </a></li>
-        ))}
-      </ul>
-      <p class="see-all"><a class="btn" href="/ingredients">See all guides</a></p>
     </div>
-  </section>
-
-  <section class="cta-section">
-    <div class="wrap"><ScanCta graphic text="One photo. One word." /></div>
   </section>
 </Base>

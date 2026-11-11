@@ -1,7 +1,12 @@
 import type { APIRoute } from 'astro';
 import { abs } from '../config';
 
-const agents = ['Googlebot', 'Bingbot', 'OAI-SearchBot', 'ChatGPT-User', 'PerplexityBot'];
+// Search crawlers, then AI answer and AI training crawlers. Every agent is allowed everywhere ("User-agent: *" below
+// already says so); naming them makes the choice explicit. To opt out of one, give it "Disallow: /" instead.
+const agents = [
+  'Googlebot', 'Bingbot', 'OAI-SearchBot', 'ChatGPT-User', 'PerplexityBot',
+  'GPTBot', 'ClaudeBot', 'Claude-SearchBot', 'Google-Extended', 'Applebot-Extended', 'Perplexity-User',
+];
 
 export const GET: APIRoute = () =>
   new Response(

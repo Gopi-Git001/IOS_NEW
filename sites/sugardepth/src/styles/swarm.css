@@ -38,8 +38,6 @@
 /* ---------- home hero ---------- */
 .hero.swarm-band { display: grid; align-items: center; min-height: clamp(560px, 80vh, 760px); min-height: clamp(560px, 80svh, 760px); touch-action: pan-y pinch-zoom; }
 .swarm-band .crystal-dot { background: var(--tint); }
-/* The try-it section used to sit on the same paper as the hero; under a dark band it needs its own top room. */
-.hero.swarm-band + .tryit { padding-top: clamp(40px, 6vw, 72px); }
 .swarm-band .crystal-stage:has(#preview-CLEAN:checked) label[for='preview-CLEAN'],
 .swarm-band .crystal-stage:has(#preview-OKAY:checked) label[for='preview-OKAY'],
 .swarm-band .crystal-stage:has(#preview-BAD:checked) label[for='preview-BAD'] { border-color: var(--rule); background: rgba(6, 8, 13, 0.55); color: var(--ink); }
