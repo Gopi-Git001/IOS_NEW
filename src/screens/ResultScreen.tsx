@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Character, type Mood, moodForVerdict } from '../components/Character';
+import { CrystalBurst } from '../components/CrystalSwarm';
 import { Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { Glass } from '../components/Glass';
 import { GlossaryCard, type Pick } from '../components/GlossaryCard';
@@ -41,6 +42,10 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
   const sheetMax = window.height - sheetBottom - headerBottom - CUBE + PERCH - 8;
   const doneMood = (verdict: keyof typeof moodForVerdict): Mood => (gentle && verdict === 'BAD' ? 'okay' : moodForVerdict[verdict]);
 
+  // Where the sheet rests, for the verdict burst (web): the crystals leave its edge and stay outside it.
+  const sheetWidth = Math.min(window.width * .96, 700);
+  const sheetRect = sheetHeight > 0 ? { x: (window.width - sheetWidth) / 2, y: window.height - sheetBottom - sheetHeight, width: sheetWidth, height: sheetHeight } : null;
+
   const action = { label: state.status === 'done' ? 'Scan another' : 'Try again', onPress: onScanAnother };
 
   return (
@@ -49,6 +54,8 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
       <LinearGradient pointerEvents="none" colors={['#F4F2EB00', '#F4F2EB70', '#F4F2EBE8']} locations={[0, .3, 1]} style={StyleSheet.absoluteFill} />
       <Scrims topHeight="22%" />
       {state.status === 'reading' && <Shimmer height={window.height} />}
+      {/* Only once a verdict is on screen: nothing is drawn while the label is being read, or for "No verdict". */}
+      {state.status === 'done' && <CrystalBurst verdict={state.result.verdict} sheet={sheetRect} skip={state.listsPending} />}
 
       <SafeAreaView style={styles.fill} edges={['top']} pointerEvents="box-none">
         <View onLayout={(e) => setHeaderBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}>
