@@ -1,10 +1,21 @@
 ---
 import { S, type SourceKey } from '../data/sources';
-const { keys, heading = 'Sources' } = Astro.props as { keys: SourceKey[]; heading?: string };
+// `collapsed` puts the list behind a native <details> ("Sources (3)"): still in the HTML, with its links.
+const { keys, heading = 'Sources', collapsed = false } = Astro.props as { keys: SourceKey[]; heading?: string; collapsed?: boolean };
 ---
-<section class="sources" style="padding:24px 0 0" aria-labelledby="sources-h">
-  <h2 id="sources-h" style="font-size:1.3rem">{heading}</h2>
-  <ol>
-    {keys.map((k) => <li><a href={S[k].url}>{S[k].title}, {S[k].publisher}.</a></li>)}
-  </ol>
-</section>
+{collapsed ? (
+  <details class="sources brief-more">
+    <summary>{heading} ({keys.length})</summary>
+    <ol>
+      {keys.map((k) => <li><a href={S[k].url}>{S[k].title}, {S[k].publisher}.</a></li>)}
+    </ol>
+    <slot />
+  </details>
+) : (
+  <section class="sources" style="padding:24px 0 0" aria-labelledby="sources-h">
+    <h2 id="sources-h" style="font-size:1.3rem">{heading}</h2>
+    <ol>
+      {keys.map((k) => <li><a href={S[k].url}>{S[k].title}, {S[k].publisher}.</a></li>)}
+    </ol>
+  </section>
+)}
