@@ -190,13 +190,16 @@ describe('the sample labels', () => {
 });
 
 describe('the result panel markup', () => {
-  test('shows the verdict word, the reason, the rule and each class tag', () => {
+  test('shows the verdict word, the reason and each class tag, and keeps the rule id out of sight', () => {
     const html = renderResult(scanText('Water, Sucralose'), 'Your list');
     assert.match(html, /data-verdict="BAD"/);
     assert.match(html, /<span class="sr-only">Verdict: <\/span>BAD/);
     assert.match(html, /Contains an artificial sweetener: Sucralose\./);
     assert.match(html, /<li class="hit ugly"><span class="name">Sucralose<\/span> <span class="tag">Artificial sweetener<\/span><\/li>/);
-    assert.match(html, /rule X3-artificial-sweetener · rules-v3 · registry-/);
+    // The rule id is internal: it rides on the panel as an attribute and is never printed for the reader.
+    assert.match(html, /data-verdict="BAD" data-rule="X3-artificial-sweetener"/);
+    const shown = html.replace(/<[^>]*>/g, ' ');
+    assert.doesNotMatch(shown, /X3-artificial-sweetener|rules-v\d|registry-\d/);
     assert.match(html, /added sugar grams not given/);
   });
 

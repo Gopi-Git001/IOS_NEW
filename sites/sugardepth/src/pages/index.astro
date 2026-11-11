@@ -4,23 +4,31 @@ import ScanCta from '../components/ScanCta.astro';
 import CrystalVerdict from '../components/CrystalVerdict.astro';
 import TryIt from '../components/TryIt.astro';
 import EditorialImage from '../components/EditorialImage.astro';
-import Film from '../components/Film.astro';
-import FilmMotion from '../components/FilmMotion.astro';
 import { APP_URL } from '../config';
 import { organization, website, webApplication } from '../data/schema';
 import { getFeaturedGuides } from '../data/guides';
 import { ADDED_SUGAR_ALIAS_COUNT, MAX_OKAY_ADDED_G as G, pillText, toneClass } from '../data/ingredients';
-import { PRE_V3_MEDIA_NOTE } from '../data/media';
-const guides = await getFeaturedGuides();
+
+// Four guides on the home page, one of each kind of verdict. The rest are on /ingredients.
+const HOME_GUIDES = ['evaporated-cane-juice', 'sucralose', 'stevia', 'maltodextrin'];
+const featured = await getFeaturedGuides();
+const guides = HOME_GUIDES.map((slug) => {
+  const guide = featured.find((g) => g.slug === slug);
+  if (!guide) throw new Error(`index: "${slug}" is not a featured guide`);
+  // The first sentence of the guide's summary is the card's one line.
+  return { ...guide, line: guide.summary.match(/^.*?[.?!](?=\s|$)/)?.[0] ?? guide.summary };
+});
+
+// Flip cards: a name as a label prints it on the front, what it is on the back. `tone` is the back's glass:
+// ink for added sugar (BAD or OKAY, by the grams), then the verdict colour of the others.
 const disguises = [
-  { alias: 'Evaporated cane juice', reveal: "That's sugar.", href: '/ingredients/evaporated-cane-juice' },
-  { alias: 'Brown rice syrup', reveal: "That's sugar.", href: '/ingredients/rice-syrup' },
-  { alias: 'Apple juice concentrate', reveal: "That's sugar.", href: '/ingredients/juice-concentrate' },
-  { alias: 'Sucralose', reveal: "That's an artificial sweetener.", href: '/ingredients/sucralose' },
-  { alias: 'Erythritol', reveal: "That's a sugar alcohol.", href: '/ingredients/erythritol' },
-  { alias: 'Maltodextrin', reveal: "Not sugar. Really.", href: '/ingredients/maltodextrin' },
+  { alias: 'Evaporated cane juice', reveal: "That's sugar.", href: '/ingredients/evaporated-cane-juice', tone: 'ink' },
+  { alias: 'Brown rice syrup', reveal: "That's sugar.", href: '/ingredients/rice-syrup', tone: 'ink' },
+  { alias: 'Apple juice concentrate', reveal: "That's sugar.", href: '/ingredients/juice-concentrate', tone: 'ink' },
+  { alias: 'Sucralose', reveal: "That's an artificial sweetener.", href: '/ingredients/sucralose', tone: 'ugly' },
+  { alias: 'Erythritol', reveal: "That's a sugar alcohol.", href: '/ingredients/erythritol', tone: 'bad' },
+  { alias: 'Maltodextrin', reveal: 'Not sugar. Really.', href: '/ingredients/maltodextrin', tone: 'clean' },
 ];
-const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'Dextrose', 'Fruit juice concentrate', 'Barley malt', 'Coconut sugar', 'Invert sugar', 'Maltose', 'Cane crystals'];
 ---
 <Base
   title="Sugar Depth: the food-label scanner that names every hidden sugar"
@@ -29,37 +37,24 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
   jsonLd={[organization, website, webApplication]}
 >
   <section class="hero">
-    <div class="wrap">
-      <CrystalVerdict interactive />
-    </div>
-    <div class="wrap hero-grid">
-      <div>
+    <div class="wrap hero-split">
+      <div class="hero-copy">
         <span class="kicker">Food-label scanner</span>
-        <h1>Sugar Depth reads the fine print, so sugar <span class="strike">can't hide</span> in it.</h1>
+        <h1>Sugar hides in the fine print. We read it.</h1>
         <p class="lead">
-          Sugar Depth is a food-label scanner for your phone. Point the camera at a package's ingredient list and it
-          tells you, in one word, whether the food has added sugar or sweeteners:{" "}
-          <strong class="clean">CLEAN</strong>, <strong class="bad">OKAY</strong> or <strong class="ugly">BAD</strong>.
+          Snap a food label's ingredient list and get one word, <strong class="clean">CLEAN</strong>,{" "}
+          <strong class="bad">OKAY</strong> or <strong class="ugly">BAD</strong>, with every added sugar named.
         </p>
-        <p class="voice">Evaporated cane juice? That's sugar. Brown rice syrup? Also sugar. "Naturally sweetened"? Let's read the label.</p>
-        <div class="cta-row">
+        <div class="cta-row" data-sticky-hide>
           <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
-          <a class="btn" href="/how-it-works">How verdicts work</a>
         </div>
-        <p class="plain-note">No barcodes and no product database: it reads the actual label in front of you. Verdicts are Sugar Depth's preferences about sweeteners, not medical advice, and it does not check allergens.</p>
+        <p class="plain-note">Reads the real label, not a barcode. Not medical advice; no allergen checks.</p>
       </div>
+      <CrystalVerdict interactive compact />
     </div>
   </section>
 
   <TryIt />
-
-  <div class="marquee" aria-hidden="true">
-    <div class="marquee-track">
-      {[0, 1].map(() => (
-        <ul>{marquee.map((m) => <li>{m} <em>that's sugar</em></li>)}</ul>
-      ))}
-    </div>
-  </div>
 
   <section aria-labelledby="how-h">
     <div class="wrap">
@@ -67,29 +62,40 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
         <span class="kicker">How it works</span>
         <h2 id="how-h">Three steps. One word.</h2>
       </div>
-      <ol class="steps">
+      <ol class="steps steps-icons">
         <li class="reveal">
+          <span class="step-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 16v-4a4 4 0 0 1 4-4h4M32 8h4a4 4 0 0 1 4 4v4M40 32v4a4 4 0 0 1-4 4h-4M16 40h-4a4 4 0 0 1-4-4v-4" />
+              <path d="M16 19h16M16 24h11M16 29h14" />
+            </svg>
+          </span>
           <span class="step-n" aria-hidden="true">01</span>
-          <h3>Photograph the ingredient list</h3>
-          <p class="muted">Open the scanner, sign in with Google and point the camera at the ingredients on the package. No barcode needed.</p>
+          <h3>Snap the ingredient list.</h3>
         </li>
         <li class="reveal">
+          <span class="step-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 12h22M8 20h11M8 28h8M8 36h12" />
+              <circle cx="30" cy="27" r="8" />
+              <path d="M36 33l6 6" />
+            </svg>
+          </span>
           <span class="step-n" aria-hidden="true">02</span>
-          <h3>It reads every word</h3>
-          <p class="muted">The ingredient list and printed sugar numbers are copied exactly as they appear, and each name is checked against a registry of sugars and sweeteners, including {ADDED_SUGAR_ALIAS_COUNT} names for added sugar.</p>
+          <h3>We check every name.</h3>
         </li>
         <li class="reveal">
+          <span class="step-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="10" y="6" width="28" height="36" rx="7" />
+              <path d="M17 14h7" />
+              <path d="M17.5 32h13" stroke-width="5.5" />
+            </svg>
+          </span>
           <span class="step-n" aria-hidden="true">03</span>
-          <h3>You get one verdict</h3>
-          <p class="muted">CLEAN, OKAY or BAD, with each sugar named in plain words. If the list is cut off or unreadable, it asks you to retake the photo instead of guessing.</p>
+          <h3>Get one word back.</h3>
         </li>
       </ol>
-      <figure class="editorial-frame steps-film">
-        <Film name="three-steps" label="A label is photographed, its ingredient names are read, and a glossy verdict appears." width={1280} height={720}>
-          <EditorialImage name="label" alt="A clear glass slab magnifies fine print on a cream package beside a sugar cube." sizes="(max-width: 760px) calc(100vw - 40px), 960px" />
-        </Film>
-        <figcaption>A scan of a made-up ingredient list. Not a real product. {PRE_V3_MEDIA_NOTE}</figcaption>
-      </figure>
     </div>
   </section>
 
@@ -101,39 +107,50 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
       <div class="section-head reveal">
         <span class="kicker">The three verdicts</span>
         <h2 id="verdicts-h">Three verdicts. The worst ingredient decides.</h2>
-        <p class="lead">Rules are checked in order and the first one that matches wins. These are Sugar Depth's preferences, not medical findings.</p>
       </div>
       <div class="verdicts">
         <div class="verdict-card tone-ugly reveal">
           <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>BAD</b></div>
-          <span class="word ugly">BAD</span>
-          <ul>
-            <li>More than {G}&nbsp;g of added sugar per serving, under any name</li>
-            <li>Added sugar whose grams per serving can't be read</li>
-            <li>Any artificial sweetener: sucralose, aspartame, acesulfame K and others</li>
-            <li>Drinking alcohol above 0.5% ABV</li>
-          </ul>
+          <h3 class="word ugly">BAD</h3>
+          <p class="verdict-line">Over {G}&nbsp;g added sugar, any artificial sweetener, or alcohol.</p>
+          <details class="verdict-more">
+            <summary>The BAD rules</summary>
+            <ul>
+              <li>More than {G}&nbsp;g of added sugar per serving, under any name</li>
+              <li>Added sugar whose grams per serving can't be read</li>
+              <li>Any artificial sweetener: sucralose, aspartame, acesulfame K and others</li>
+              <li>Drinking alcohol above 0.5% ABV</li>
+            </ul>
+          </details>
         </div>
         <div class="verdict-card tone-bad reveal">
           <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>OKAY</b></div>
-          <span class="word bad">OKAY</span>
-          <ul>
-            <li>No BAD trigger, but added sugar at {G}&nbsp;g or less per serving</li>
-            <li>A sugar alcohol such as erythritol or xylitol, or allulose</li>
-            <li>A plant sweetener: stevia, monk fruit or thaumatin</li>
-          </ul>
+          <h3 class="word bad">OKAY</h3>
+          <p class="verdict-line">A little added sugar, sugar alcohols or plant sweeteners.</p>
+          <details class="verdict-more">
+            <summary>The OKAY rules</summary>
+            <ul>
+              <li>No BAD trigger, but added sugar at {G}&nbsp;g or less per serving</li>
+              <li>A sugar alcohol such as erythritol or xylitol, or allulose</li>
+              <li>A plant sweetener: stevia, monk fruit or thaumatin</li>
+            </ul>
+          </details>
         </div>
         <div class="verdict-card tone-clean reveal">
           <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>CLEAN</b></div>
-          <span class="word clean">CLEAN</span>
-          <ul>
-            <li>A complete ingredient list with nothing sweet added</li>
-            <li>Sugar that comes with milk or fruit is fine</li>
-            <li>Maltodextrin and starches are fine</li>
-          </ul>
+          <h3 class="word clean">CLEAN</h3>
+          <p class="verdict-line">Nothing sweet added. Milk and fruit sugars don't count.</p>
+          <details class="verdict-more">
+            <summary>The CLEAN rules</summary>
+            <ul>
+              <li>A complete ingredient list with nothing sweet added</li>
+              <li>Sugar that comes with milk or fruit is fine</li>
+              <li>Maltodextrin and starches are fine</li>
+            </ul>
+          </details>
         </div>
       </div>
-      <p style="margin-top:32px"><a href="/how-it-works">Read the full rule table →</a></p>
+      <p class="verdicts-link"><a href="/how-it-works">Read the full rule table →</a></p>
     </div>
   </section>
 
@@ -142,31 +159,28 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
       <div class="section-head">
         <span class="kicker">Name the disguise</span>
         <h2 id="names-h">Sugar has a lot of aliases.</h2>
-        <p class="lead">US labels list ingredients by name, and sugar has many. Sugar Depth knows them, and tells you what each one really is.</p>
+        <p class="flip-hint">Tap a card to unmask it.</p>
         <p><a href="/hidden-sugar-names">See all {ADDED_SUGAR_ALIAS_COUNT} added-sugar names →</a></p>
       </div>
-      <ul class="disguises">
-        {disguises.map((d) => <li class="reveal"><a href={d.href}><span class="alias">{d.alias}</span><span class="reveal-word">{d.reveal}</span></a></li>)}
+      <ul class="flips" data-flips>
+        {disguises.map((d) => (
+          <li class={`flip flip-${d.tone}`}>
+            <button class="flip-card" type="button" aria-pressed="false">
+              <span class="flip-inner">
+                <span class="flip-face flip-front">
+                  <span class="flip-alias">{d.alias}</span>
+                  <svg class="flip-turn" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9" /><path d="M20 4v5h-5" /></svg>
+                </span>
+                <span class="flip-face flip-back"><span class="flip-reveal">{d.reveal}</span></span>
+              </span>
+            </button>
+            <a class="flip-more" href={d.href} aria-label={`Why: the ${d.alias} guide`}>Why →</a>
+          </li>
+        ))}
       </ul>
+      <p class="sr-only" role="status" data-flip-status></p>
       <figure class="editorial-frame aliases-figure">
         <EditorialImage name="aliases" alt="Six clear glass trays containing sugar cubes, golden syrup, brown sugar, pale agave syrup, dark malt syrup and white powder." sizes="(max-width: 760px) calc(100vw - 40px), 560px" />
-      </figure>
-    </div>
-  </section>
-
-  <section class="result" aria-labelledby="result-h">
-    <div class="wrap hero-grid">
-      <div class="reveal">
-        <span class="kicker">What you see</span>
-        <h2 id="result-h">A verdict you can read in a second.</h2>
-        <p class="lead">The result is set like a Nutrition Facts panel: one word on top, the reason in a sentence, and every ingredient tagged underneath so you can see which one decided it.</p>
-        <p><a href="/how-it-works">How the rules decide →</a></p>
-      </div>
-      <figure class="screens">
-        <img class="phone p1" src="/app/camera.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The Sugar Depth camera screen framing a cereal box's ingredient list, with the hint Fit the ingredient list in the panel." />
-        <img class="phone p2" src="/app/result-ugly.webp" width="780" height="1688" loading="lazy" decoding="async" alt="A Sugar Depth result from before the current rules: Verdict Facts with the red verdict and the reason, added sugar. Sucrose, glucose syrup and fruit juice concentrate are tagged sugar; aspartame is tagged sweetener." />
-        <img class="phone p3" src="/app/glossary.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The ingredient card for sucrose: That's sugar. The chemical name for table sugar. Its last line states the earlier rule for added sugar." />
-        <figcaption>Real Sugar Depth screens: scan, verdict, and tap any ingredient for why it counts. Demo label, not a real product. {PRE_V3_MEDIA_NOTE}</figcaption>
       </figure>
     </div>
   </section>
@@ -177,21 +191,40 @@ const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'D
         <span class="kicker">Ingredient guides</span>
         <h2 id="guides-h">What's in the fine print</h2>
       </div>
-      <ul class="cards">
+      <ul class="cards cards-four">
         {guides.map((g) => (
           <li><a class="card" href={`/ingredients/${g.slug}`}>
             <span class={`pill ${toneClass(g.page.verdict.tone)}`}>{pillText(g.page)}</span>
             <h3>{g.name}</h3>
-            <p>{g.summary}</p>
+            <p>{g.line}</p>
           </a></li>
         ))}
       </ul>
-      <p style="margin-top:24px"><a href="/ingredients">All ingredient guides →</a></p>
+      <p class="see-all"><a class="btn" href="/ingredients">See all guides</a></p>
     </div>
   </section>
 
-  <section style="padding-top:0">
-    <div class="wrap"><ScanCta graphic /></div>
+  <section class="cta-section">
+    <div class="wrap"><ScanCta graphic text="One photo. One word." /></div>
   </section>
-  <FilmMotion />
+
+  <!-- Flip cards: a click or tap turns one over; Enter and Space do the same because each card is a button. -->
+  <script is:inline data-motion>
+    (function () {
+      var list = document.querySelector('[data-flips]');
+      var status = document.querySelector('[data-flip-status]');
+      if (!list) return;
+      list.setAttribute('data-ready', '');
+      Array.prototype.forEach.call(list.querySelectorAll('.flip-card'), function (card) {
+        var back = card.querySelector('.flip-back');
+        // Until it is turned, the answer is kept from assistive tech too.
+        back.setAttribute('aria-hidden', 'true');
+        card.addEventListener('click', function () {
+          var on = card.getAttribute('aria-pressed') !== 'true';
+          card.setAttribute('aria-pressed', on ? 'true' : 'false');
+          if (status) status.textContent = on ? card.querySelector('.flip-alias').textContent + '. ' + back.textContent : '';
+        });
+      });
+    })();
+  </script>
 </Base>

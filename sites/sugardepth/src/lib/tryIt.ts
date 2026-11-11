@@ -212,14 +212,14 @@ export function renderResult(result: TryResult, label: string): string {
     .join('');
   const notes = result.notes.map((note) => `<p class="facts-foot">${esc(note)}</p>`).join('');
   return (
-    `<div class="sheet facts tryit-facts tone-${tone}" data-verdict="${result.verdict}">` +
+    // The rule id stays in the markup for tests and support, as an attribute. It is not shown to the reader.
+    `<div class="sheet facts tryit-facts tone-${tone}" data-verdict="${result.verdict}" data-rule="${esc(result.ruleId)}">` +
     `<p class="facts-title" aria-hidden="true">Verdict Facts</p><hr class="rule-10" />` +
     `<div class="facts-sub"><span>${esc(label)}</span><span>${result.addedSugarsG === null ? 'added sugar grams not given' : grams(result.addedSugarsG)}</span></div><hr class="rule-5" />` +
     `<div class="facts-verdict"><p class="facts-word ${tone}"><span class="sr-only">Verdict: </span>${result.verdict}</p>` +
     `<div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>${result.verdict}</b></div></div>` +
     `<p class="facts-why">${esc(result.why)}</p>${notes}<hr class="rule-5" />` +
     `<p class="tryit-count">${result.items.length} ${result.items.length === 1 ? 'ingredient' : 'ingredients'} read, in label order</p>` +
-    `<ul class="tryit-items">${rows}</ul><hr class="rule-4" />` +
-    `<p class="facts-foot mono">rule ${esc(result.ruleId)} · ${esc(result.policyVersion)} · ${esc(result.registryVersion)}</p></div>`
+    `<ul class="tryit-items">${rows}</ul><hr class="rule-4" /></div>`
   );
 }
