@@ -73,7 +73,28 @@ for (const file of pages) {
   const panels = (home.match(/class="sheet facts tryit-facts tone-[a-z]+" data-verdict="(?:CLEAN|OKAY|BAD)"/g) || []).length;
   if (panels === 0) errors.push(`/index.html: expected the try-it sample verdicts in the static HTML, found ${panels}`);
 }
-for (const f of ['robots.txt', 'sitemap-index.xml', 'og/default.png', 'favicon.svg', 'how-it-works/index.html', 'privacy/index.html', 'terms/index.html']) if (!existsSync(join(dist, f))) errors.push(`missing ${f}`);
+for (const f of ['robots.txt', 'llms.txt', 'sitemap-index.xml', 'og/default.png', 'favicon.svg', 'how-it-works/index.html', 'faq/index.html', 'about/index.html', 'privacy/index.html', 'terms/index.html']) if (!existsSync(join(dist, f))) errors.push(`missing ${f}`);
+{
+  // The short pages keep an answer-sized meta description, and the home page stays three sections with the
+  // mission as its one heading.
+  for (const rel of ['index.html', 'how-it-works/index.html', 'faq/index.html', 'about/index.html', 'contact/index.html']) {
+    const file = join(dist, rel);
+    if (!existsSync(file)) continue;
+    const desc = readFileSync(file, 'utf8').match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '';
+    if (desc.length > 155) errors.push(`/${rel}: meta description is ${desc.length} characters (155 at most)`);
+  }
+  const main = readFileSync(join(dist, 'index.html'), 'utf8').match(/<main[\s\S]*<\/main>/)?.[0] ?? '';
+  const sections = (main.match(/<section[\s>]/g) || []).length;
+  if (sections !== 3) errors.push(`/index.html: expected three sections (mission, how it works, explore), found ${sections}`);
+  // llms.txt: starts with the site name, and every link in it is a page this build made.
+  const llmsFile = join(dist, 'llms.txt');
+  const llms = existsSync(llmsFile) ? readFileSync(llmsFile, 'utf8') : '';
+  if (llms && !llms.startsWith('# Sugar Depth\n')) errors.push('/llms.txt: must start with "# Sugar Depth"');
+  for (const m of llms.matchAll(/\]\(https:\/\/[^/)]+(\/[^)#?]*)\)/g)) {
+    const ok = [join(dist, m[1]), join(dist, m[1], 'index.html')].some((t) => existsSync(t) && statSync(t).isFile());
+    if (!ok) errors.push(`/llms.txt: link to a page that was not built: ${m[1]}`);
+  }
+}
 
 if (errors.length) {
   console.error(errors.join('\n'));

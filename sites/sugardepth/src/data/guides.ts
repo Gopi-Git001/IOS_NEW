@@ -2,14 +2,23 @@
 // guide for that entry laid over it where one exists, plus guides about a single alias (evaporated cane juice).
 // Facts always come from the registry; a guide that disagrees with it fails the build here.
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { PAGES, pageById, pageBySlug, type IngredientPage } from './ingredients';
+import { answerFor, PAGES, pageById, pageBySlug, tagFor, type IngredientPage } from './ingredients';
 import { S, type SourceKey } from './sources';
 
 export type Guide = {
   slug: string;
   name: string;
   title: string;
+  /**
+   * The one sentence under the H1: is it sugar, and what verdict it gets. It names the ingredient, so it can be
+   * quoted alone. The meta description and the JSON-LD description are this same sentence.
+   */
+  answer: string;
+  /** Meta description. Always the answer. */
   description: string;
+  /** The line on a card (/ingredients, home page): six words at most. */
+  tag: string;
+  /** Same as `tag`; kept for the pages that read `summary`. */
   summary: string;
   /** The registry entry this page is about. */
   page: IngredientPage;
@@ -31,6 +40,19 @@ const fail = (file: string, msg: string): never => {
 function sourceKeys(keys: string[], where: string): SourceKey[] {
   for (const k of keys) if (!(k in S)) throw new Error(`${where}: unknown source "${k}" (see src/data/sources.ts)`);
   return [...new Set(keys)] as SourceKey[];
+}
+
+/** Longest answer sentence (it is also the meta description) and longest card tag. */
+export const MAX_ANSWER_CHARS = 155;
+export const MAX_TAG_WORDS = 6;
+
+/** A hand-written guide's `description` is its answer sentence and its `summary` is its card tag. */
+function copyOf(doc: CollectionEntry<'ingredients'>) {
+  const answer = doc.data.description.trim();
+  const tag = doc.data.summary.trim();
+  if (answer.length > MAX_ANSWER_CHARS) fail(doc.id, `description is the one-sentence answer and the meta description: ${answer.length} characters, the limit is ${MAX_ANSWER_CHARS}`);
+  if (tag.split(/\s+/).length > MAX_TAG_WORDS) fail(doc.id, `summary is the card tag: at most ${MAX_TAG_WORDS} words`);
+  return { answer, description: answer, tag, summary: tag };
 }
 
 let cache: Promise<Guide[]> | undefined;
@@ -67,13 +89,13 @@ async function build(): Promise<Guide[]> {
     const doc = primary.get(page.id);
     if (!doc) {
       return {
-        slug: page.slug, name: page.name, title: page.title, description: page.description, summary: page.summary, page,
+        slug: page.slug, name: page.name, title: page.title, answer: answerFor(page), description: answerFor(page), tag: tagFor(page), summary: tagFor(page), page,
         aliases: page.aliases, codes: page.codes, related: page.related, sources: sourceKeys(page.sources, page.id), aliasGuide: false,
       };
     }
     const print = cased(doc, page);
     return {
-      slug: page.slug, name: page.name, title: doc.data.title, description: doc.data.description, summary: doc.data.summary, page,
+      slug: page.slug, name: page.name, title: doc.data.title, ...copyOf(doc), page,
       aliases: page.aliases.map(print), codes: page.codes.map(print),
       related: [...new Set([...doc.data.related, ...page.related])].slice(0, 6),
       sources: sourceKeys([...doc.data.sources, ...page.sources], doc.id), doc, aliasGuide: false,
@@ -87,7 +109,7 @@ async function build(): Promise<Guide[]> {
       if (!page.aliases.includes(a.toLowerCase())) fail(doc.id, `"${a}" is not a registry alias of ${page.id}`);
     }
     guides.push({
-      slug: doc.id, name: doc.data.name!, title: doc.data.title, description: doc.data.description, summary: doc.data.summary, page,
+      slug: doc.id, name: doc.data.name!, title: doc.data.title, ...copyOf(doc), page,
       aliases: doc.data.aliases!.map((a) => print(a.toLowerCase())), codes: [],
       related: [...new Set([page.slug, ...doc.data.related])],
       sources: sourceKeys([...doc.data.sources, ...page.sources], doc.id), doc, aliasGuide: true,

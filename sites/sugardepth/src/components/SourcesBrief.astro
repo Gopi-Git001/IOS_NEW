@@ -1,0 +1,24 @@
+---
+// Sources behind a disclosure, with short link names: "Sources (8)". Native <details>, so no script. The full
+// titles stay in src/data/sources.ts (the ingredient pages print them); each link carries its full title too.
+import { S, type SourceKey } from '../data/sources';
+const { keys } = Astro.props as { keys: SourceKey[] };
+const SHORT: Record<SourceKey, string> = {
+  addedSugarsRule: 'FDA: Changes to the Nutrition Facts Label',
+  addedSugarsQA: 'FDA: Added sugars questions and answers',
+  allulose: 'FDA: Allulose labeling guidance',
+  rareSugars: 'Federal Register: Sugars metabolized differently (2020)',
+  maltodextrin: 'eCFR: 21 CFR 184.1444 Maltodextrin',
+  fiber: 'FDA: Questions and answers on dietary fiber',
+  sweeteners: 'FDA: Aspartame and other sweeteners in food',
+  ecj: 'FDA: Evaporated cane juice guidance (2016)',
+  nutritionLabel: 'eCFR: 21 CFR 101.9 Nutrition labeling of food',
+  euAdditives: 'EUR-Lex: Regulation (EC) No 1333/2008 on food additives',
+};
+---
+<details class="disclosure sources-brief">
+  <summary>Sources ({keys.length})</summary>
+  <ol>
+    {keys.map((k) => <li><a href={S[k].url} title={`${S[k].title}, ${S[k].publisher}`}>{SHORT[k]}</a></li>)}
+  </ol>
+</details>

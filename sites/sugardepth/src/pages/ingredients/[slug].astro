@@ -7,10 +7,13 @@ import ScanCta from '../../components/ScanCta.astro';
 import { breadcrumbs, ORG_ID, SITE_ID } from '../../data/schema';
 import { abs, CONTENT_UPDATED, SITE_NAME } from '../../config';
 import { getGuides, type Guide } from '../../data/guides';
-import { pillText, POLICY_VERSION, REGISTRY_VERSION, toneClass } from '../../data/ingredients';
+import { POLICY_VERSION, REGISTRY_VERSION, shortWhen, toneClass } from '../../data/ingredients';
 import { ruleHref } from '../../data/rules';
+import '../../styles/brief.css';
 
 // One page per registry entry (see src/data/guides.ts), plus the hand-written guides about a single alias.
+// Answer first: the H1, one sentence and the facts panel. Names past the first few and the sources sit in
+// native <details>, so they stay in the HTML and need no script.
 export async function getStaticPaths() {
   const all = await getGuides();
   return all.map((guide) => ({ params: { slug: guide.slug }, props: { guide, all } }));
@@ -24,15 +27,32 @@ const crumbs = [
   { name: 'Ingredients', href: '/ingredients' },
   { name: guide.name, href: path },
 ];
-const related = guide.related.map((slug) => all.find((g) => g.slug === slug)!);
 // Hand-written guides about one name on this entry's list, and the entry page a name guide belongs to.
 const nameGuides = guide.aliasGuide ? [] : all.filter((g) => g.aliasGuide && g.page.id === page.id);
 const parent = guide.aliasGuide ? all.find((g) => !g.aliasGuide && g.page.id === page.id)! : null;
+
+// Names first, then codes. The first few show; the rest wait in a <details>.
+const SHOWN = 8;
+const names = [...guide.aliases.map((text) => ({ text, code: false })), ...guide.codes.map((text) => ({ text, code: true }))];
+const shown = names.slice(0, SHOWN);
+const rest = names.slice(SHOWN);
+const count = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
+const allNames = `All ${count(guide.aliases.length, guide.aliasGuide ? 'related name' : 'name')}${guide.codes.length ? ` and ${count(guide.codes.length, 'code')}` : ''}`;
+const patterns = guide.aliasGuide ? [] : page.patterns;
+
+// Four links at most: name guides and neighbours, then one way back up.
+const hub = page.treatment === 'added_sugar' ? { href: '/hidden-sugar-names', name: 'All hidden sugar names' } : { href: '/ingredients', name: 'All ingredients' };
+const related = [
+  ...[...nameGuides, ...guide.related.map((slug) => all.find((g) => g.slug === slug)!)].slice(0, 3).map((g) => ({ href: `/ingredients/${g.slug}`, name: g.name })),
+  hub,
+];
+
 const article = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: guide.title,
-  description: guide.description,
+  // The sentence shown under the H1.
+  description: guide.answer,
   url: abs(path),
   mainEntityOfPage: abs(path),
   inLanguage: 'en-US',
@@ -46,94 +66,83 @@ const article = {
 };
 ---
 <Base title={guide.title} description={guide.description} path={path} ogType="article" jsonLd={[article, breadcrumbs(crumbs)]}>
-  <div class="wrap page-head">
-    <Breadcrumbs items={crumbs} />
-    <span class="kicker">Ingredient guide</span>
-    <h1>{guide.name}</h1>
-    <p class="lead">{guide.summary}</p>
-  </div>
-  <div class="wrap page-body two-col">
-    <article class="prose">
-      {Content ? <Content /> : (
-        <>
-          <h2>What it is</h2>
-          <p>{page.classSentence}{page.note && ` ${page.note}`}</p>
-          <h2>How US labels count it</h2>
-          <p>{page.labelingSentence}</p>
-        </>
-      )}
+  <div class="wrap brief">
+    <header class="brief-head">
+      <Breadcrumbs items={crumbs} />
+      <h1>{guide.name}</h1>
+      <p class="lead brief-answer">{guide.answer}</p>
+    </header>
 
-      <h2 id="rules">{Content ? 'The rules that apply' : `How ${SITE_NAME} treats it`}</h2>
-      <p>
-        {parent ? <>{guide.name} is one of the names for <a href={`/ingredients/${parent.slug}`}>{parent.name.toLowerCase()}</a> in {SITE_NAME}'s registry. </> : null}
-        {SITE_NAME} runs every scanned label through the same ordered rules. For this ingredient:
-      </p>
-      <div class="table-wrap">
-        <table class="facts-table outcomes" role="table">
-          <caption>{guide.name} under {SITE_NAME}'s rules. The worst ingredient on a label decides.</caption>
-          <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">When</th><th scope="col" role="columnheader">Verdict</th><th scope="col" role="columnheader">Rule table</th></tr></thead>
-          <tbody role="rowgroup">
-            {page.outcomes.map((o) => (
-              <tr role="row">
-                <td role="cell">{o.when.replace(/(\d) (g|ml)\b/g, '$1\u00a0$2')}.</td>
-                <td class={`out ${toneClass(o.verdict)}`} role="cell">{o.verdict}</td>
-                <td role="cell"><a href={ruleHref(o.rule)} aria-label={`See the rule: ${o.verdict}, ${o.when}`}>See the rule</a></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {Content && page.note && <p class="small muted" style="margin-top:12px">Registry note: {page.note}</p>}
+    <aside class="sheet brief-facts" aria-label={`${SITE_NAME} verdict`}>
+      <span class="kicker">{SITE_NAME} verdict</span>
+      <p class:list={['facts-word', toneClass(page.verdict.tone), { long: page.verdict.word.length > 5 }]}>{page.verdict.word}</p>
+      {page.verdict.label !== page.verdict.word && <p class="brief-facts-label">{page.verdict.label}</p>}
+      <hr class="rule-5" />
+      <dl>
+        <div><dt>What it is</dt><dd>{page.classLabel}</dd></div>
+        <div><dt>US label treatment</dt><dd>{page.labelingLabel}</dd></div>
+      </dl>
+    </aside>
 
-      <h2 id="names">Names and codes on labels</h2>
-      {guide.aliases.length > 0 && (
-        <>
-          <p>{SITE_NAME} recognizes {guide.aliasGuide ? 'these related names' : guide.aliases.length === 1 ? 'this exact name' : `these ${guide.aliases.length} exact names`} (case doesn't matter){guide.codes.length ? ' and codes' : ''}:</p>
+    <article class="brief-body">
+      {Content && <div class="prose brief-guide"><Content /></div>}
+      {!Content && page.note && <p class="brief-note">{page.note}</p>}
+
+      <section aria-labelledby="names">
+        <h2 id="names">On labels</h2>
+        {parent && <p class="brief-line">One of the {parent.aliases.length} names for <a href={`/ingredients/${parent.slug}`}>{parent.name.toLowerCase()}</a>.</p>}
+        {shown.length > 0 && (
           <ul class="alias-list">
-            {guide.aliases.map((a) => <li>{a}</li>)}
-            {guide.codes.map((c) => <li class="mono">{c}</li>)}
+            {shown.map((n) => <li class:list={{ mono: n.code }}>{n.text}</li>)}
           </ul>
-        </>
-      )}
-      {page.patterns.length > 0 && !guide.aliasGuide && (
-        <>
-          <p style="margin-top:16px">{guide.aliases.length ? 'It also matches' : `${SITE_NAME} matches`} this wording for any fruit or vegetable:</p>
-          <ul>
-            {page.patterns.map((p) => <li>"{p.pattern}", such as {p.example}</li>)}
+        )}
+        {rest.length > 0 && (
+          <details class="brief-more">
+            <summary>{allNames}</summary>
+            <ul class="alias-list">
+              {rest.map((n) => <li class:list={{ mono: n.code }}>{n.text}</li>)}
+            </ul>
+          </details>
+        )}
+        {patterns.length > 0 && (
+          <ul class="brief-patterns">
+            {patterns.map((p) => <li>Any "{p.pattern}", such as {p.example}</li>)}
           </ul>
-        </>
-      )}
-      {guide.codes.length > 0 && <p class="small muted" style="margin-top:12px">E numbers are EU codes; INS codes use the same numbers. US labels usually print the name instead.</p>}
-      {parent && <p style="margin-top:16px"><a href={`/ingredients/${parent.slug}`}>All {parent.aliases.length} names for {parent.name.toLowerCase()}</a></p>}
-      {nameGuides.length > 0 && (
-        <p style="margin-top:16px">Guides to names on this list: {nameGuides.map((g, i) => <>{i > 0 && ', '}<a href={`/ingredients/${g.slug}`}>{g.name}</a></>)}.</p>
-      )}
-      <p class="callout">{SITE_NAME}'s verdicts are product preferences about sweeteners, not medical findings. {SITE_NAME} is not medical advice and does not check allergens.</p>
-      <Sources keys={guide.sources} />
-      <p class="small muted">Names, class and rules from the {SITE_NAME} ingredient registry {REGISTRY_VERSION} and {POLICY_VERSION}.</p>
-    </article>
-    <aside class="aside">
-      <div class="sheet">
-        <span class="kicker" style="margin-bottom:8px">{SITE_NAME} verdict</span>
-        <p class={`facts-word ${toneClass(page.verdict.tone)}`} style={`margin:0 0 6px;font-size:${page.verdict.word.length > 5 ? '2rem;line-height:1.05;letter-spacing:-0.03em' : '3.2rem'}`}>{page.verdict.word}</p>
-        {page.verdict.label !== page.verdict.word && <p class="small" style="margin:0 0 8px">{page.verdict.label}</p>}
-        <hr class="rule-5" />
-        <dl class="small" style="margin:0">
-          <dt class="muted">What it is</dt><dd style="margin:0 0 10px">{page.classLabel}</dd>
-          <dt class="muted">US label treatment</dt><dd style="margin:0">{page.labelingLabel}</dd>
-        </dl>
-        <hr class="rule-4" />
-      </div>
-      <nav class="sheet" style="margin-top:16px" aria-label="Related guides">
-        <span class="kicker" style="margin-bottom:6px">Related</span>
-        <ul style="list-style:none;padding:0;margin:0">
-          {related.map((r) => <li style="margin:6px 0"><a href={`/ingredients/${r.slug}`}>{r.name}</a> <span class={`small ${toneClass(r.page.verdict.tone)}`}>· {pillText(r.page)}</span></li>)}
-          <li style="margin:6px 0"><a href="/ingredients">All ingredients</a></li>
-          <li style="margin:6px 0"><a href="/hidden-sugar-names">All hidden sugar names</a></li>
-          <li style="margin:6px 0"><a href="/how-it-works">How verdicts work</a></li>
+        )}
+        {guide.codes.length > 0 && <p class="brief-line">E numbers are EU codes. US labels usually print the name.</p>}
+      </section>
+
+      <section aria-labelledby="rules">
+        <h2 id="rules">Verdict rules</h2>
+        <div class="table-wrap">
+          <table class="facts-table outcomes" role="table" aria-labelledby="rules">
+            <caption>The worst ingredient on a label decides.</caption>
+            <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">When</th><th scope="col" role="columnheader">Verdict</th><th scope="col" role="columnheader">Rule</th></tr></thead>
+            <tbody role="rowgroup">
+              {page.outcomes.map((o) => (
+                <tr role="row">
+                  <td role="cell">{shortWhen(o.when).replace(/(\d) (g|ml)\b/g, '$1\u00a0$2')}.</td>
+                  <td class={`out ${toneClass(o.verdict)}`} role="cell">{o.verdict}</td>
+                  <td role="cell"><a href={ruleHref(o.rule)} aria-label={`See the rule: ${o.verdict}, ${o.when}`}>See the rule</a></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <nav class="brief-related" aria-labelledby="related">
+        <h2 id="related">Related</h2>
+        <ul>
+          {related.map((r) => <li><a href={r.href}>{r.name}</a></li>)}
         </ul>
       </nav>
-    </aside>
+
+      <Sources keys={guide.sources} collapsed>
+        <p class="brief-line">Names, class and rules from the {SITE_NAME} ingredient registry {REGISTRY_VERSION} and {POLICY_VERSION}.</p>
+      </Sources>
+      <p class="brief-line brief-disclaimer">Verdicts are product preferences, not medical advice. {SITE_NAME} does not check allergens.</p>
+    </article>
   </div>
-  <div class="wrap" style="padding-bottom:72px"><ScanCta /></div>
+  <div class="wrap brief-cta"><ScanCta /></div>
 </Base>

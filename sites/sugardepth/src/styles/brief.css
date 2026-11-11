@@ -1,0 +1,424 @@
+/* Answer-first ingredient pages, the ingredient directory and the hidden-names list.
+   Same paper, sheets, rules and chips as the rest of the site (global.css, crystal.css); this file only sets
+   the denser layout. Everything that opens is a native <details>: no script. */
+
+/* ---------- a quiet disclosure ("All 78 names", "Sources (3)") ---------- */
+.brief-more > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding-inline: 10px;
+  margin-left: -10px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 800;
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+  -webkit-tap-highlight-color: transparent;
+}
+.brief-more > summary::-webkit-details-marker {
+  display: none;
+}
+.brief-more > summary:hover {
+  text-decoration-color: currentColor;
+}
+.brief-more > summary::after {
+  content: '';
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-3px) rotate(45deg);
+  transition: transform 0.3s var(--ease-out);
+}
+.brief-more[open] > summary::after {
+  transform: translateY(2px) rotate(-135deg);
+}
+.brief-more > summary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 0;
+  border-radius: 6px;
+}
+.brief-more > .alias-list {
+  margin-top: 4px;
+}
+.brief-more.sources {
+  font-size: 0.92rem;
+}
+.brief-more.sources ol {
+  margin: 4px 0 0;
+  padding-left: 1.3em;
+}
+
+/* Small grey lines: notes under a block, provenance, the disclaimer. */
+.brief-line {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ---------- chips ---------- */
+.brief .alias-list,
+.brief-names .alias-list,
+.brief-jump .alias-list {
+  margin-top: 0;
+}
+/* A chip that is a link is all link, and big enough to tap. */
+.brief-jump .alias-list li,
+.brief-related li,
+.brief-names .alias-list li:has(> a) {
+  padding: 0;
+  min-height: 0;
+}
+.brief-jump .alias-list a,
+.brief-related a,
+.brief-names .alias-list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 14px;
+  text-decoration: none;
+  border-radius: inherit;
+}
+.brief-jump .alias-list a:hover,
+.brief-related a:hover,
+.brief-names .alias-list a:hover {
+  text-decoration: underline;
+}
+.brief-names .alias-list li:has(> a) {
+  font-weight: 800;
+}
+
+/* ---------- ingredient page ---------- */
+.brief {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  padding-block: clamp(28px, 5vw, 64px) 56px;
+}
+.brief-head {
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--rule-strong);
+}
+.brief-head h1 {
+  font-size: clamp(2.4rem, 5.6vw, 4.4rem);
+  overflow-wrap: anywhere;
+}
+.brief-answer {
+  max-width: 30em;
+  font-size: clamp(1.15rem, 1.7vw, 1.4rem);
+  line-height: 1.4;
+  color: var(--ink);
+}
+.brief-facts {
+  padding: 20px 22px;
+}
+.brief-facts .kicker {
+  margin-bottom: 8px;
+}
+.brief-facts .facts-word {
+  margin: 0 0 6px;
+  font-size: 3.2rem;
+}
+.brief-facts .facts-word.long {
+  font-size: 2rem;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+.brief-facts-label {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+}
+.brief-facts dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.brief-facts dt {
+  color: var(--muted);
+}
+.brief-facts dd {
+  margin: 0;
+}
+.brief-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+  max-width: 44em;
+}
+.brief-body section {
+  padding: 0;
+}
+.brief-body h2 {
+  margin: 0 0 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  scroll-margin-top: 84px;
+}
+.brief-body h2 + .brief-line {
+  margin: 0 0 10px;
+}
+.brief-guide ul {
+  margin: 0;
+}
+.brief-guide li {
+  margin: 0 0 0.6em;
+}
+.brief-guide li:last-child,
+.brief-guide p:last-child {
+  margin-bottom: 0;
+}
+.brief-note {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.2rem;
+  line-height: 1.4;
+}
+.brief-patterns {
+  margin: 10px 0 0;
+  padding-left: 1.2em;
+}
+.brief-patterns li {
+  margin: 0.2em 0;
+}
+.brief .facts-table caption {
+  padding-bottom: 10px;
+}
+.brief .facts-table td:last-child {
+  white-space: nowrap;
+  padding-right: 0;
+}
+.brief .facts-table td.out {
+  min-width: 5em;
+}
+.brief-related ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.brief-related li {
+  border: 1px solid var(--glass-border);
+  background: var(--paper-raised);
+  border-radius: 4px;
+  font-size: 0.92rem;
+}
+.brief-disclaimer {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+.brief-cta {
+  padding-bottom: 72px;
+}
+@media (min-width: 901px) {
+  .brief {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    column-gap: 56px;
+    row-gap: 32px;
+  }
+  .brief-head,
+  .brief-body {
+    grid-column: 1;
+  }
+  /* The head's rule already sits right above the first block. */
+  .brief-body > section:first-child h2 {
+    padding-top: 0;
+    border-top: 0;
+  }
+  .brief-facts {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+    position: sticky;
+    top: 96px;
+    margin-top: 62px;
+  }
+}
+@media (max-width: 640px) {
+  .brief {
+    gap: 20px;
+  }
+  .brief-body {
+    gap: 24px;
+  }
+  .brief-line,
+  .brief-facts dl,
+  .brief-facts-label,
+  .brief-related li,
+  .brief-more > summary,
+  .brief-more.sources {
+    font-size: 16px;
+  }
+  /* Names are for reading, not tapping: keep them tight. Link chips stay 44px (above). */
+  .brief .alias-list li,
+  .brief-names .alias-list li {
+    min-height: 36px;
+    padding: 4px 12px;
+  }
+}
+@media (max-width: 600px) {
+  /* One rule per block: the condition, then the verdict and its link on one line. */
+  .brief .facts-table tbody tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2px 16px;
+    padding-block: 12px;
+  }
+  .brief .facts-table tbody tr:first-child {
+    padding-top: 4px;
+  }
+  .brief .facts-table td:first-child {
+    grid-column: 1 / -1;
+  }
+  .brief .facts-table td.out {
+    min-width: 0;
+  }
+}
+
+/* ---------- /ingredients: a directory to scan ---------- */
+.brief-jump {
+  margin: 16px 0 10px;
+}
+.brief-group {
+  padding: 8px 0 30px;
+}
+.brief-group h2 {
+  margin-bottom: 6px;
+  font-size: 1.4rem;
+  scroll-margin-top: 84px;
+}
+.brief-group > p {
+  margin: 0 0 14px;
+  font-size: 0.95rem;
+}
+.brief-dir {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0 40px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+.brief-dir li {
+  border-bottom: 1px solid var(--rule);
+}
+.brief-dir a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  align-content: center;
+  gap: 0 12px;
+  min-height: 64px;
+  height: 100%;
+  padding: 10px 0;
+  text-decoration: none;
+  transition: transform 0.3s var(--ease-out);
+}
+.brief-dir a:hover {
+  transform: translateX(6px);
+}
+.brief-dir a:hover h3 {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.brief-dir h3 {
+  grid-column: 1;
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+.brief-dir .pill {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  white-space: nowrap;
+}
+.brief-tag {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+@media (max-width: 640px) {
+  .brief-tag,
+  .brief-group > p {
+    font-size: 16px;
+  }
+}
+
+/* ---------- /hidden-sugar-names ---------- */
+.brief-rule {
+  max-width: 38em;
+  margin: 0 0 14px;
+}
+.brief-hero .brief-jump {
+  margin: 0;
+}
+.brief-hero .aliases-film {
+  margin: 28px 0 0;
+}
+@media (min-width: 901px) {
+  /* The film sits beside the answer instead of pushing the names down. */
+  .brief-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 48px;
+    align-items: end;
+  }
+  .brief-hero .aliases-film {
+    width: 100%;
+    margin: 0;
+  }
+}
+.brief-names {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 26px;
+}
+.brief-names section {
+  padding: 12px 0 0;
+  border-top: 1px solid var(--rule);
+  scroll-margin-top: 84px;
+}
+.brief-names h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: -0.015em;
+}
+.brief-names h2 a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.brief-blurb {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.15rem;
+  line-height: 1.35;
+}
+.brief-not {
+  margin-top: 40px;
+}
+.brief-not .sources {
+  margin-top: 12px;
+}

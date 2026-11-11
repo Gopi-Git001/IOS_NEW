@@ -9,7 +9,8 @@ import { fileURLToPath } from 'node:url';
 import { REGISTRY } from '../../supabase/functions/_shared/ingredients.ts';
 import { MAX_NON_ALCOHOLIC_ABV, MAX_OKAY_ADDED_G, MAX_UNKNOWN_FOR_CLEAN, POLICY_VERSION } from '../../supabase/functions/_shared/policy.ts';
 import { buildIngredientData } from '../../sites/sugardepth/scripts/ingredient-pages.ts';
-import { RULES, ruleHref, TREATMENT_ROWS } from '../../sites/sugardepth/src/data/rules.ts';
+import { FAQ } from '../../sites/sugardepth/src/data/faq.ts';
+import { RULES, ruleHref, TREATMENT_ROWS, VERDICTS } from '../../sites/sugardepth/src/data/rules.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const site = join(root, 'sites/sugardepth');
@@ -55,6 +56,40 @@ describe("the site's rule table", () => {
     assert.ok(rule('X4').condition.includes(`more than ${MAX_NON_ALCOHOLIC_ABV}% ABV`));
     assert.equal(MAX_UNKNOWN_FOR_CLEAN, 2, 'O5 says "Two or more": update its condition and this line');
     assert.ok(rule('O5').condition.startsWith('Two or more'));
+  });
+
+  // The short verdict lines printed on the home page, at the top of /how-it-works and in /llms.txt.
+  test('the three verdict summaries are BAD, OKAY, CLEAN and carry the limits in policy.ts', () => {
+    assert.deepEqual(VERDICTS.map((v) => v.word), ['BAD', 'OKAY', 'CLEAN']);
+    const text = (word: string) => {
+      const v = VERDICTS.find((x) => x.word === word)!;
+      return [v.line, ...v.rules].join(' | ').replace(/\u00a0/g, ' ');
+    };
+    assert.ok(text('BAD').includes(`Over ${MAX_OKAY_ADDED_G} g added sugar`));
+    assert.ok(text('BAD').includes(`More than ${MAX_OKAY_ADDED_G} g of added sugar per serving`));
+    assert.ok(text('BAD').includes("grams per serving can't be read"));
+    assert.ok(text('BAD').includes('artificial sweetener'));
+    assert.ok(text('BAD').includes(`above ${MAX_NON_ALCOHOLIC_ABV}% ABV`));
+    assert.ok(text('OKAY').includes(`${MAX_OKAY_ADDED_G} g or less per serving`));
+    for (const name of ['sugar alcohol', 'allulose', 'stevia', 'monk fruit', 'thaumatin']) assert.ok(text('OKAY').includes(name), name);
+    assert.ok(text('CLEAN').includes('complete ingredient list with nothing sweet added'));
+    for (const v of VERDICTS) assert.doesNotMatch(v.line + v.rules.join(' '), /\u2014/, 'no em dashes in copy');
+  });
+
+  // /faq prints these and nothing else: the direct answer first, two sentences at most, about 35 words.
+  test('every FAQ answer is short and the searched questions are all there', () => {
+    assert.equal(new Set(FAQ.map((f) => f.id)).size, FAQ.length);
+    for (const id of ['what', 'barcode', 'zero-grams', 'stevia', 'fruit', 'maltodextrin', 'medical', 'allergens', 'photos', 'wrong']) {
+      assert.ok(FAQ.some((f) => f.id === id), `the FAQ lost its "${id}" question`);
+    }
+    for (const f of FAQ) {
+      const plain = f.a.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ');
+      assert.ok(plain.split(/\s+/).length <= 36, `${f.id}: ${plain.split(/\s+/).length} words`);
+      assert.ok((plain.match(/[.?!](\s|$)/g) || []).length <= 2, `${f.id}: more than two sentences`);
+      assert.doesNotMatch(f.q + f.a, /\u2014/, 'no em dashes in copy');
+    }
+    const little = FAQ.find((f) => f.id === 'little')!.a.replace(/&nbsp;/g, ' ');
+    assert.ok(little.startsWith(`${MAX_OKAY_ADDED_G} g or less per serving`));
   });
 
   test('X3, O2 and O3 name every registry entry that fires them, and nothing else from those classes', () => {
