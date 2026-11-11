@@ -2,16 +2,20 @@
 import Base from '../layouts/Base.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Sources from '../components/Sources.astro';
+import CrystalSwarm from '../components/CrystalSwarm.astro';
 import { ORG } from '../config';
 import { breadcrumbs, organization } from '../data/schema';
 const crumbs = [{ name: 'Home', href: '/' }, { name: 'About', href: '/about' }];
 ---
 <Base title="About Sugar Depth and Martian Dynamics" description="Sugar Depth is made by Martian Dynamics LLC in Leander, Texas. Why it exists, how its rules are sourced, and what it does not claim." path="/about" jsonLd={[organization, breadcrumbs(crumbs)]}>
-  <div class="wrap page-head">
-    <Breadcrumbs items={crumbs} />
-    <span class="kicker">About</span>
-    <h1>Label transparency, with a sense of humor.</h1>
-    <p class="lead">Sugar Depth is a food-label scanner made by {ORG.name}, a small company in {ORG.locality}, Texas. It reads the ingredient list on a package and calls out added sugars and sweeteners by their real names.</p>
+  <div class="page-band swarm-band" data-swarm="accent">
+    <CrystalSwarm />
+    <div class="wrap page-head" data-swarm-copy>
+      <Breadcrumbs items={crumbs} />
+      <span class="kicker">About</span>
+      <h1>Label transparency, with a sense of humor.</h1>
+      <p class="lead">Sugar Depth is a food-label scanner made by {ORG.name}, a small company in {ORG.locality}, Texas. It reads the ingredient list on a package and calls out added sugars and sweeteners by their real names.</p>
+    </div>
   </div>
   <div class="wrap page-body prose">
     <section class="mission-block" aria-labelledby="mission">

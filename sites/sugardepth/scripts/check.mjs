@@ -9,6 +9,8 @@ const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirect
 const pages = walk(dist).filter((f) => f.endsWith('.html'));
 const errors = [];
 const seen = { title: new Map(), desc: new Map() };
+// The only pages that carry the crystal swarm canvas and its script.
+const SWARM_PAGES = ['/index.html', '/how-it-works/index.html', '/about/index.html'];
 
 for (const file of pages) {
   const rel = `/${file.slice(dist.length).split(sep).join('/')}`;
@@ -44,7 +46,26 @@ for (const file of pages) {
   for (const tag of allowedGtm) scripts = scripts.replace(tag, '');
   // The home page may load one bundled module: the "try it" widget (components/TryIt.astro).
   if (rel === '/index.html') scripts = scripts.replace(/<script type="module" src="\/_astro\/TryIt\.[^"]+\.js"><\/script>/, '');
-  if (/<script(?![^>]*(?:application\/ld\+json|data-motion))[^>]*>/.test(scripts)) errors.push(`${rel}: ships a non-JSON-LD <script> (only the data-motion helper, the two approved Google tag scripts and the home page's try-it module are allowed)`);
+  // Three pages may load one more bundled module: the crystal swarm (components/CrystalSwarm.astro, lib/swarm.ts).
+  // replace() drops a single copy, and only on these pages; the file itself is checked below.
+  if (SWARM_PAGES.includes(rel)) scripts = scripts.replace(/<script type="module" src="\/_astro\/CrystalSwarm\.[^"]+\.js"><\/script>/, '');
+  if (/<script(?![^>]*(?:application\/ld\+json|data-motion))[^>]*>/.test(scripts)) errors.push(`${rel}: ships a non-JSON-LD <script> (only the data-motion helper, the two approved Google tag scripts, the home page's try-it module and the crystal swarm module on the home page, /how-it-works and /about are allowed)`);
+}
+{
+  // The swarm is a self-contained canvas script: it must not import another chunk or reach the network.
+  for (const f of readdirSync(join(dist, '_astro')).filter((n) => /^CrystalSwarm\..+\.js$/.test(n))) {
+    const js = readFileSync(join(dist, '_astro', f), 'utf8');
+    if (/\bimport\s*[("'{*]|\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon|EventSource|https?:\/\//.test(js)) errors.push(`/_astro/${f}: the crystal swarm module must not import other modules or make network requests`);
+  }
+  // The alias tiles must read without the script: every name and its answer are in the home page's HTML.
+  const home = readFileSync(join(dist, 'index.html'), 'utf8');
+  const tiles = (home.match(/<button class="tile" type="button" aria-pressed="false"><span class="tile-face tile-front"><span class="tile-alias">[^<]+<\/span><\/span><span class="tile-face tile-back"><span class="tile-tag">Added sugar<\/span><span class="tile-reveal">That's sugar\.<\/span><\/span><\/button>/g) || []).length;
+  if (tiles === 0) errors.push(`/index.html: expected the alias tiles (name and "That's sugar.") in the static HTML, found ${tiles}`);
+  // Every swarm canvas is decoration.
+  for (const rel of SWARM_PAGES) {
+    const html = readFileSync(join(dist, rel), 'utf8');
+    for (const m of html.matchAll(/<canvas\b[^>]*>/g)) if (!/aria-hidden="true"/.test(m[0])) errors.push(`${rel}: a <canvas> without aria-hidden="true"`);
+  }
 }
 {
   // The try-it widget must be useful before its script runs: the sample verdicts are in the HTML.

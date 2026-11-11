@@ -4,6 +4,7 @@ import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Sources from '../components/Sources.astro';
 import ScanCta from '../components/ScanCta.astro';
 import EditorialImage from '../components/EditorialImage.astro';
+import CrystalSwarm from '../components/CrystalSwarm.astro';
 import { RULES, TREATMENT_ROWS } from '../data/rules';
 import { MAX_OKAY_ADDED_G, pageById, POLICY_VERSION, toneClass, type IngredientPage } from '../data/ingredients';
 import { S } from '../data/sources';
@@ -52,16 +53,22 @@ const article = {
   path="/how-it-works"
   jsonLd={[article, breadcrumbs(crumbs)]}
 >
-  <div class="wrap page-head editorial-article">
-    <Breadcrumbs items={crumbs} />
-    <span class="kicker">The rulebook</span>
-    <h1>How verdicts work</h1>
-    <p class="voice">Three verdicts. The worst ingredient decides.</p>
-    <ul class="verdict-keys">
-      <li><strong class="ugly">BAD</strong> <span>Over {G}&nbsp;g added sugar, any artificial sweetener, or alcohol.</span></li>
-      <li><strong class="bad">OKAY</strong> <span>A little added sugar, sugar alcohols or plant sweeteners.</span></li>
-      <li><strong class="clean">CLEAN</strong> <span>Nothing sweet added. Milk and fruit sugars don't count.</span></li>
-    </ul>
+  <div class="page-band swarm-band" data-swarm="accent">
+    <CrystalSwarm />
+    <div class="wrap page-head editorial-article" data-swarm-copy>
+      <Breadcrumbs items={crumbs} />
+      <span class="kicker">The rulebook</span>
+      <h1>How verdicts work</h1>
+      <p class="voice">Three verdicts. The worst ingredient decides.</p>
+      <ul class="verdict-keys">
+        <li><strong class="ugly">BAD</strong> <span>Over {G}&nbsp;g added sugar, any artificial sweetener, or alcohol.</span></li>
+        <li><strong class="bad">OKAY</strong> <span>A little added sugar, sugar alcohols or plant sweeteners.</span></li>
+        <li><strong class="clean">CLEAN</strong> <span>Nothing sweet added. Milk and fruit sugars don't count.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="wrap editorial-article">
     <figure class="editorial-frame label-figure">
       <EditorialImage name="label" alt="A thick clear glass slab rests over fine print on a cream food package, with a sugar cube beside it." />
     </figure>
