@@ -4,16 +4,15 @@
 .tryit-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
-  grid-template-areas: 'samples out' 'form out' 'next out';
-  grid-template-rows: auto auto 1fr;
+  grid-template-areas: 'samples out' 'form out';
+  grid-template-rows: auto 1fr;
   gap: 28px clamp(32px, 5vw, 72px);
   align-items: start;
 }
 .tryit-samples { grid-area: samples; min-width: 0; margin: 0; padding: 0; border: 0; }
-.tryit-out { grid-area: out; min-width: 0; scroll-margin-top: 84px; }
+.tryit-out { grid-area: out; position: relative; min-width: 0; scroll-margin-top: 84px; }
 .tryit-form { grid-area: form; min-width: 0; display: grid; gap: 12px; }
-.tryit-next { grid-area: next; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; padding-top: 20px; border-top: 1px solid var(--rule); }
-.tryit-next .tryit-fine { flex: 1 1 14em; }
+.tryit-submit { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
 
 .tryit-samples legend,
 .tryit-form > label { padding: 0; margin-bottom: 12px; font-weight: 800; font-size: 1rem; }
@@ -54,12 +53,12 @@
   border-radius: var(--radius);
   padding: 12px 14px;
 }
-.tryit-form textarea { display: block; min-height: 7.5em; resize: vertical; }
+.tryit-form textarea { display: block; min-height: 6em; resize: vertical; }
 .tryit-form textarea::placeholder { color: var(--faint); opacity: 1; }
 .tryit-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .tryit-row label { font-size: 0.9375rem; color: var(--muted); }
 .tryit-row input { flex: 0 0 6.5em; width: 6.5em; min-height: 48px; }
-.tryit-form .btn { justify-self: start; cursor: pointer; font-family: var(--sans); }
+.tryit-form .btn { cursor: pointer; font-family: var(--sans); }
 .tryit-form .btn:disabled { opacity: 0.55; cursor: default; transform: none; }
 .tryit-error { margin: 0; font-weight: 700; color: var(--ugly); }
 .tryit-error:empty { display: none; }
@@ -108,13 +107,48 @@
 .tryit-items .hit.ugly { color: var(--ugly); }
 .tryit-items .unknown { border-style: dashed; border-color: var(--rule); }
 
+/* ---- The reveal, played by the script in TryIt.astro: each ingredient lights up with its tag, then the verdict
+   word lands. Chips, tags and the verdict keep their size and place throughout; only colour, opacity and transform
+   change, so nothing on the page moves. With reduced motion the script never adds these classes. ---- */
+.tryit-items li { transition: opacity 0.3s var(--ease-out), color 0.3s var(--ease-out), background-color 0.3s var(--ease-out), border-color 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out); }
+.tryit-items .tag { transition: opacity 0.3s var(--ease-out); }
+.tryit-out.is-playing .tryit-items li:not(.is-lit) { opacity: 0.4; color: var(--muted); border-color: var(--hair); background-color: transparent; box-shadow: none; }
+.tryit-out.is-playing .tryit-items li:not(.is-lit) .tag { opacity: 0; }
+.tryit-out.is-playing .tryit-items li.is-lit { animation: tryit-pop 0.45s var(--ease-out); }
+.tryit-out.is-playing .facts-verdict { position: relative; }
+.tryit-out.is-playing:not(.is-landed) .facts-word,
+.tryit-out.is-playing:not(.is-landed) .facts-verdict .mini-slab,
+.tryit-out.is-playing:not(.is-landed) .facts-why,
+.tryit-out.is-playing:not(.is-landed) .facts-foot { opacity: 0; }
+/* While the list is read, a pane of glass holds the verdict's place. */
+.tryit-out.is-playing:not(.is-landed) .facts-verdict::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 8px;
+  width: min(64%, 230px);
+  height: 3.2rem;
+  border-radius: 12px;
+  border: 1px solid #fff;
+  background: linear-gradient(100deg, rgba(20, 22, 19, 0.07) 30%, rgba(255, 255, 255, 0.95) 50%, rgba(20, 22, 19, 0.07) 70%) 0 0 / 240% 100%;
+  animation: tryit-read 1.15s linear infinite;
+}
+.tryit-out.is-landed .facts-word { transform-origin: left bottom; animation: tryit-land 0.6s var(--ease-out) both; }
+.tryit-out.is-landed .facts-verdict .mini-slab { animation: tryit-slab 0.7s 0.06s var(--ease-out) both; }
+.tryit-out.is-landed .facts-why,
+.tryit-out.is-landed .facts-foot { animation: tryit-fade 0.5s 0.25s var(--ease-out) both; }
+@keyframes tryit-pop { 0% { transform: scale(0.94); } 55% { transform: scale(1.06); } 100% { transform: none; } }
+@keyframes tryit-read { from { background-position: 100% 0; } to { background-position: -40% 0; } }
+@keyframes tryit-land { 0% { opacity: 0; transform: translateY(-26px) scale(1.22); } 62% { opacity: 1; transform: translateY(3px) scale(0.98); } 100% { opacity: 1; transform: none; } }
+@keyframes tryit-slab { from { opacity: 0; transform: perspective(600px) rotateY(-80deg) rotateZ(3deg) scale(0.85); } to { opacity: 1; transform: perspective(600px) rotateY(-12deg) rotateZ(3deg); } }
+@keyframes tryit-fade { from { opacity: 0; } to { opacity: 1; } }
+
 @media (max-width: 900px) {
-  .tryit-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'samples' 'out' 'form' 'next'; grid-template-rows: none; }
+  .tryit-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'samples' 'out' 'form'; grid-template-rows: none; }
   .tryit-facts { max-width: 520px; }
 }
 @media (max-width: 480px) {
   .tryit-samples ul { grid-template-columns: minmax(0, 1fr); }
   .tryit-samples label { min-height: 56px; }
-  .tryit-form .btn,
-  .tryit-next .btn { width: 100%; }
+  .tryit-form .btn { width: 100%; }
 }

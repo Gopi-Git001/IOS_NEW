@@ -28,7 +28,6 @@ const related = guide.related.map((slug) => all.find((g) => g.slug === slug)!);
 // Hand-written guides about one name on this entry's list, and the entry page a name guide belongs to.
 const nameGuides = guide.aliasGuide ? [] : all.filter((g) => g.aliasGuide && g.page.id === page.id);
 const parent = guide.aliasGuide ? all.find((g) => !g.aliasGuide && g.page.id === page.id)! : null;
-const rules = [...new Set(page.outcomes.map((o) => o.rule))];
 const article = {
   '@context': 'https://schema.org',
   '@type': 'Article',
@@ -64,21 +63,21 @@ const article = {
         </>
       )}
 
-      <h2 id="rules">{Content ? `The rules that apply (${POLICY_VERSION})` : `How ${SITE_NAME} treats it`}</h2>
+      <h2 id="rules">{Content ? 'The rules that apply' : `How ${SITE_NAME} treats it`}</h2>
       <p>
         {parent ? <>{guide.name} is one of the names for <a href={`/ingredients/${parent.slug}`}>{parent.name.toLowerCase()}</a> in {SITE_NAME}'s registry. </> : null}
-        {SITE_NAME} runs every scanned label through the same ordered rules ({POLICY_VERSION}). For this ingredient:
+        {SITE_NAME} runs every scanned label through the same ordered rules. For this ingredient:
       </p>
       <div class="table-wrap">
         <table class="facts-table outcomes" role="table">
-          <caption>{guide.name} under {POLICY_VERSION}. The worst ingredient on a label decides.</caption>
-          <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">When</th><th scope="col" role="columnheader">Verdict</th><th scope="col" role="columnheader">Rule</th></tr></thead>
+          <caption>{guide.name} under {SITE_NAME}'s rules. The worst ingredient on a label decides.</caption>
+          <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">When</th><th scope="col" role="columnheader">Verdict</th><th scope="col" role="columnheader">Rule table</th></tr></thead>
           <tbody role="rowgroup">
             {page.outcomes.map((o) => (
               <tr role="row">
                 <td role="cell">{o.when.replace(/(\d) (g|ml)\b/g, '$1\u00a0$2')}.</td>
                 <td class={`out ${toneClass(o.verdict)}`} role="cell">{o.verdict}</td>
-                <td class="mono" role="cell"><a href={ruleHref(o.rule)}>{o.rule}</a></td>
+                <td role="cell"><a href={ruleHref(o.rule)} aria-label={`See the rule: ${o.verdict}, ${o.when}`}>See the rule</a></td>
               </tr>
             ))}
           </tbody>
@@ -120,7 +119,6 @@ const article = {
         {page.verdict.label !== page.verdict.word && <p class="small" style="margin:0 0 8px">{page.verdict.label}</p>}
         <hr class="rule-5" />
         <dl class="small" style="margin:0">
-          <dt class="muted">{rules.length > 1 ? 'Rules' : 'Rule'}</dt><dd style="margin:0 0 10px">{rules.map((r, i) => <>{i > 0 && ', '}<a class="mono" href="#rules">{r.split('-')[0]}</a></>)} in {POLICY_VERSION}</dd>
           <dt class="muted">What it is</dt><dd style="margin:0 0 10px">{page.classLabel}</dd>
           <dt class="muted">US label treatment</dt><dd style="margin:0">{page.labelingLabel}</dd>
         </dl>

@@ -4,7 +4,7 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import ScanCta from '../../components/ScanCta.astro';
 import { breadcrumbs } from '../../data/schema';
 import { getGuides, type Guide } from '../../data/guides';
-import { GROUPS, pillText, POLICY_VERSION, REGISTRY_VERSION, toneClass } from '../../data/ingredients';
+import { GROUPS, pillText, POLICY_VERSION, toneClass } from '../../data/ingredients';
 const guides = await getGuides();
 const crumbs = [{ name: 'Home', href: '/' }, { name: 'Ingredients', href: '/ingredients' }];
 const SHOWN = 5;
@@ -25,7 +25,7 @@ const alsoListed = (g: Guide) => {
     <Breadcrumbs items={crumbs} />
     <span class="kicker">Ingredient guides</span>
     <h1>Every sweetener has a stage name.</h1>
-    <p class="lead">One page for every ingredient in Sugar Depth's registry: what it is, the names it uses on labels, how US labels count it, and the verdict it gets. The facts on each page come straight from the registry ({REGISTRY_VERSION}) and rules ({POLICY_VERSION}) the scanner runs on.</p>
+    <p class="lead">One page for every ingredient in Sugar Depth's registry: what it is, the names it uses on labels, how US labels count it, and the verdict it gets. The facts on each page come straight from the registry and rules the scanner runs on.</p>
     <nav aria-label="Jump to a group">
       <ul class="alias-list">
         {GROUPS.map((g) => <li><a href={`#g-${g.id}`} style="text-decoration:none">{g.nav}</a></li>)}

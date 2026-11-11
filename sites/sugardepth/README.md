@@ -1,6 +1,6 @@
 # Sugar Depth marketing site
 
-Static Astro site for **sugardepth.com**: home, the verdict rules page, ingredient guides, hidden sugar names, about, FAQ, privacy and terms drafts, contact and a 404. Every page is plain HTML and CSS with self-hosted fonts (Libre Franklin, Newsreader via `@fontsource`). The only bundled client JavaScript is the home page's "try it" widget.
+Static Astro site for **sugardepth.com**: home, the verdict rules page, ingredient guides, hidden sugar names, about, FAQ, privacy and terms drafts, contact and a 404. Every page is plain HTML and CSS with self-hosted fonts (Libre Franklin, Newsreader via `@fontsource`). The only bundled client JavaScript is the home page's "try it" widget; the flip cards, the phone scan bar and the `/how-it-works` expanders use a few lines of inline script each (`<script is:inline data-motion>`) and still work without it.
 
 ## Run it
 
@@ -23,10 +23,10 @@ npm run preview
 | Site URL, scanner URL (`APP_URL`), company details, content date | `src/config.ts`. Keep it free of imports: `astro.config.mjs` loads it with plain Node. The rules and registry versions come from the generated data (`src/data/ingredients.ts`) |
 | Rule table on `/how-it-works` | `src/data/rules.ts`: plain-word conditions written by hand from `RULES.md`; ids, order and outcomes are checked against `policy.ts` by `tests/unit/site-rules.test.ts` |
 | Identity-vs-treatment table | `TREATMENT_ROWS` in `src/data/rules.ts` lists registry ids; the cells come from the generated data |
-| Note under films and screenshots recorded before rules-v3 | `src/data/media.ts` (delete it and its uses once the media is re-recorded) |
 | Ingredient pages, added-sugar names, registry and rules versions | `src/data/ingredients.generated.json`, generated from `supabase/functions/_shared/ingredients.ts` and `policy.ts` by `scripts/sync-ingredients.ts`. Read through `src/data/ingredients.ts`. Never edit the JSON by hand |
 | One-line blurbs on `/hidden-sugar-names` | `src/data/sugars.ts` (keyed by registry id) |
 | Home page "try it" widget | `src/components/TryIt.astro`, `src/lib/tryIt.ts`, `src/styles/tryit.css`; tests in `tests/unit/try-it.test.ts` at the repo root |
+| Home page layout, flip cards, icon steps, verdict disclosures, `/how-it-works` expanders, phone scan bar | `src/styles/interactive.css`; markup in `src/pages/index.astro`, `src/pages/how-it-works.astro` and `src/layouts/Base.astro` (the scan bar) |
 | Government sources | `src/data/sources.ts` |
 | Hand-written ingredient guides | `src/content/ingredients/*.mdx`, merged with the generated page in `src/data/guides.ts` |
 | JSON-LD (Organization, WebSite, WebApplication, BreadcrumbList; Article on guides) | `src/data/schema.ts`, pages |
@@ -45,7 +45,19 @@ Every entry in the scanner's ingredient registry gets `/ingredients/<slug>`, plu
 - A guide about one name of an entry (`evaporated-cane-juice.mdx`, `entry: sugar`) uses its own file name as the slug and sets `name` and `aliases`, which must be aliases of that entry.
 - The build fails if a guide points at an entry, alias, code, source or related page that does not exist.
 
-The try-it widget is the exception: `src/lib/tryIt.ts` imports the scanner's rules directly from `supabase/functions/_shared/` (`normalize.ts`, `ingredients.ts`, `policy.ts`), so it needs the whole repository at build time and picks up rule changes on the next site build. The sample verdicts are rendered at build time and switch with CSS, so they work without JavaScript; the paste box runs the same rules in the browser and sends nothing anywhere.
+The try-it widget is the exception: `src/lib/tryIt.ts` imports the scanner's rules directly from `supabase/functions/_shared/` (`normalize.ts`, `ingredients.ts`, `policy.ts`), so it needs the whole repository at build time and picks up rule changes on the next site build. The sample verdicts are rendered at build time and switch with CSS, so they work without JavaScript; the paste box runs the same rules in the browser and sends nothing anywhere. With JavaScript, a tap on a sample (or a pasted list) plays the result: each ingredient lights up in label order, then the verdict word lands. Only classes change, so nothing moves, and `prefers-reduced-motion` skips straight to the finished panel.
+
+### What visitors don't see
+
+Rule ids and version strings are for maintainers, not readers. The try-it result carries its rule id as a `data-rule` attribute, the rule table on `/how-it-works` shows the order number (each row keeps its `id="rule-…"` anchor for the ingredient pages' "See the rule" links), and the hand-written guides name their rule ids in MDX comments (`{/* rule … */}`), which `tests/unit/ingredient-pages.test.ts` reads. The rules and registry versions appear only in small provenance lines (footer, table captions).
+
+### Phone scan bar
+
+`Base.astro` renders a fixed "Scan a label" bar below 760px on every page except `/privacy` and `/terms`. It steps aside while anything marked `data-sticky-hide` (another scan button, the try-it paste form, the closing call to action) or the footer is on screen, so it never covers them, and it pads itself by `env(safe-area-inset-bottom)`. Mark any new bottom-of-screen control with `data-sticky-hide`.
+
+### Media
+
+Never ship a film or screenshot that shows old verdict words. The pre-rules-change three-steps film and app screenshots were removed in round 1; the live try-it widget stands in for them. Re-record before adding any back.
 
 `public/og/default.png` (1200×630) is the default share image. The scanner app links to `https://sugardepth.com/og/default.png`, so keep that path. To regenerate it, convert the `@fontsource` `.woff` files to TTF (see the comment in `scripts/og.mjs`), then run `OG_FONT_DIR=/path/to/ttf npm run og` and commit the output.
 
