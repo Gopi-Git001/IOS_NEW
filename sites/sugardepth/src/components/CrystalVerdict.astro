@@ -24,7 +24,7 @@ const { verdict = 'BAD', interactive = false, compact = false } = Astro.props;
       <span class="crystal-glint"></span>
     </div>
   </div>
-  {interactive && <div class="crystal-controls">
+  {interactive && <div class="crystal-controls" aria-hidden="true">
     {WORDS.map(word => <label for={`preview-${word}`}><span class={`crystal-dot tone-${toneClass(word)}`}></span>{word}</label>)}
   </div>}
 </div>
