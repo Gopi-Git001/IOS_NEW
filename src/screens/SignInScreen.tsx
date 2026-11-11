@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { CharacterView } from '../components/Character';
 import { Ambient, Footer, Header } from '../components/Chrome';
+import { CrystalSwarm } from '../components/CrystalSwarm';
 import { signInWithGoogle, takeAuthRedirectError } from '../lib/api';
 import { colors, fonts, frost } from '../theme';
 
@@ -11,6 +12,10 @@ import { colors, fonts, frost } from '../theme';
 export function SignInScreen({ onBack }: { onBack?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The crystal swarm (web) circles the content and keeps its sharp crystals off the words and the footer.
+  const content = useRef<ComponentRef<typeof View>>(null);
+  const copy = useRef<ComponentRef<typeof View>>(null);
+  const footer = useRef<ComponentRef<typeof View>>(null);
 
   // Coming back from Google with an error (for example, the person pressed Cancel).
   useEffect(() => setError(takeAuthRedirectError()), []);
@@ -27,21 +32,28 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
   return (
     <View style={styles.root}>
       <Ambient />
+      <CrystalSwarm around={content} quiet={[copy, footer]} />
       <SafeAreaView style={styles.fill}>
         <Header ink />
         <View style={styles.body}>
-          <View style={styles.character}>
-            <CharacterView mood="idle" size={170} />
+          <View ref={content} style={styles.content}>
+            <View style={styles.character}>
+              <CharacterView mood="idle" size={170} />
+            </View>
+            <View ref={copy} style={styles.copy}>
+              <Text style={styles.title}>Sign in to start scanning</Text>
+              <View style={styles.titleRule} />
+              <Text style={styles.subtitle}>Use your Google account. No password, no texts.</Text>
+              <GoogleButton onPress={start} busy={busy} />
+              <Text style={styles.fineprint}>We only get your name and email from Google.</Text>
+              {error && <Text style={styles.error}>{error}</Text>}
+              {onBack && <Pressable onPress={onBack} accessibilityRole="button"><Text style={styles.link}>Back to camera</Text></Pressable>}
+            </View>
           </View>
-          <Text style={styles.title}>Sign in to start scanning</Text>
-          <View style={styles.titleRule} />
-          <Text style={styles.subtitle}>Use your Google account. No password, no texts.</Text>
-          <GoogleButton onPress={start} busy={busy} />
-          <Text style={styles.fineprint}>We only get your name and email from Google.</Text>
-          {error && <Text style={styles.error}>{error}</Text>}
-          {onBack && <Pressable onPress={onBack} accessibilityRole="button"><Text style={styles.link}>Back to camera</Text></Pressable>}
         </View>
-        <Footer ink />
+        <View ref={footer} style={styles.footer}>
+          <Footer ink />
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -82,7 +94,11 @@ export function GoogleButton({ onPress, busy }: { onPress: () => void; busy: boo
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.paper, overflow: 'hidden' },
   fill: { flex: 1 },
-  body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 12 },
+  body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
+  // One column, so the swarm has room to circle it on wide screens. Phones are narrower than the cap.
+  content: { width: '100%', maxWidth: 440, alignSelf: 'center', gap: 12 },
+  copy: { gap: 12 },
+  footer: { alignSelf: 'center' },
   character: { alignSelf: 'center', marginBottom: 4 },
   title: { fontFamily: fonts.black, fontSize: 30, lineHeight: 33, letterSpacing: -1.1, color: colors.ink },
   titleRule: { height: 2, borderRadius: 1, backgroundColor: colors.rule, marginTop: -4 },

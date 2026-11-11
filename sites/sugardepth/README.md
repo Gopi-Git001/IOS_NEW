@@ -1,6 +1,6 @@
 # Sugar Depth marketing site
 
-Static Astro site for **sugardepth.com**: home, the verdict rules page, ingredient guides, hidden sugar names, about, FAQ, privacy and terms drafts, contact and a 404. Every page is plain HTML and CSS with self-hosted fonts (Libre Franklin, Newsreader via `@fontsource`). The only bundled client JavaScript is the home page's "try it" widget; the flip cards, the phone scan bar and the `/how-it-works` expanders use a few lines of inline script each (`<script is:inline data-motion>`) and still work without it.
+Static Astro site for **sugardepth.com**: home, the verdict rules page, ingredient guides, hidden sugar names, about, FAQ, privacy and terms drafts, contact and a 404. Every page is plain HTML and CSS with self-hosted fonts (Libre Franklin, Newsreader via `@fontsource`). The only bundled client JavaScript is the home page's "try it" widget and the crystal swarm (home, `/how-it-works`, `/about`); the phone scan bar and the `/how-it-works` expanders use a few lines of inline script each (`<script is:inline data-motion>`). Every page reads and works without JavaScript.
 
 ## Run it
 
@@ -14,7 +14,7 @@ npm run build      # builds dist/ and runs scripts/check.mjs
 npm run preview
 ```
 
-`scripts/check.mjs` fails the build if a page is missing a title, description or canonical, has duplicate titles or descriptions, has more than one `<h1>`, has invalid JSON-LD, links to a missing internal page, or ships a `<script>` other than JSON-LD, the approved Google tag scripts and the home page's try-it module. It also fails if the try-it sample verdicts are missing from the home page's static HTML.
+`scripts/check.mjs` fails the build if a page is missing a title, description or canonical, has duplicate titles or descriptions, has more than one `<h1>`, has invalid JSON-LD, links to a missing internal page, or ships a `<script>` other than JSON-LD, the `data-motion` helpers, the approved Google tag scripts, the home page's try-it module and the crystal swarm module (one copy, only on the home page, `/how-it-works` and `/about`). It also fails if the try-it sample verdicts or the alias tiles are missing from the home page's static HTML, if the swarm module imports another chunk or reaches the network, or if a canvas on those pages is not `aria-hidden`.
 
 ## Where things live
 
@@ -26,7 +26,8 @@ npm run preview
 | Ingredient pages, added-sugar names, registry and rules versions | `src/data/ingredients.generated.json`, generated from `supabase/functions/_shared/ingredients.ts` and `policy.ts` by `scripts/sync-ingredients.ts`. Read through `src/data/ingredients.ts`. Never edit the JSON by hand |
 | One-line blurbs on `/hidden-sugar-names` | `src/data/sugars.ts` (keyed by registry id) |
 | Home page "try it" widget | `src/components/TryIt.astro`, `src/lib/tryIt.ts`, `src/styles/tryit.css`; tests in `tests/unit/try-it.test.ts` at the repo root |
-| Home page layout, flip cards, icon steps, verdict disclosures, `/how-it-works` expanders, phone scan bar | `src/styles/interactive.css`; markup in `src/pages/index.astro`, `src/pages/how-it-works.astro` and `src/layouts/Base.astro` (the scan bar) |
+| Crystal swarm: the dark bands, the canvas and the home page's alias tiles | `src/components/CrystalSwarm.astro`, `src/lib/swarm.ts`, `src/styles/swarm.css`; bands are marked `class="swarm-band" data-swarm="hero"` or `"accent"` in `src/pages/index.astro`, `how-it-works.astro` and `about.astro`. Rules in `DESIGN.md` ("Crystal swarm") |
+| Home page layout, icon steps, verdict disclosures, `/how-it-works` expanders, phone scan bar | `src/styles/interactive.css`; markup in `src/pages/index.astro`, `src/pages/how-it-works.astro` and `src/layouts/Base.astro` (the scan bar) |
 | Government sources | `src/data/sources.ts` |
 | Hand-written ingredient guides | `src/content/ingredients/*.mdx`, merged with the generated page in `src/data/guides.ts` |
 | JSON-LD (Organization, WebSite, WebApplication, BreadcrumbList; Article on guides) | `src/data/schema.ts`, pages |
