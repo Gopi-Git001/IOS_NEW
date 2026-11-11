@@ -115,3 +115,10 @@
   .hero-split { grid-template-columns: minmax(0, 1fr); }
   .crystal-compact { display: none; }
 }
+
+/* Home hero verdict carousel (CrystalVerdict rotate): each verdict word eases in as the slab changes. */
+@media (prefers-reduced-motion: no-preference) {
+  .crystal-rotate .crystal-slab-word { animation: crystal-swap 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .crystal-rotate .crystal-slab, .crystal-rotate .crystal-caustic { transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease; }
+}
+@keyframes crystal-swap { from { opacity: 0; transform: translateY(0.35em); } to { opacity: 1; transform: none; } }

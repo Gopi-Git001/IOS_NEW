@@ -3,10 +3,11 @@ import { toneClass } from '../data/ingredients';
 // rules-v3 verdict words. The colour classes keep their older names: amber is `tone-bad`, red is `tone-ugly`.
 const WORDS = ['CLEAN', 'OKAY', 'BAD'] as const;
 // `compact` is the glass slab on its own, with no display type beside it (the home hero).
-interface Props { verdict?: (typeof WORDS)[number]; interactive?: boolean; compact?: boolean; }
-const { verdict = 'BAD', interactive = false, compact = false } = Astro.props;
+// `rotate` cycles the interactive slab through the three verdicts like a carousel (the home hero).
+interface Props { verdict?: (typeof WORDS)[number]; interactive?: boolean; compact?: boolean; rotate?: boolean; }
+const { verdict = 'BAD', interactive = false, compact = false, rotate = false } = Astro.props;
 ---
-<div class:list={['crystal-stage', `tone-${toneClass(verdict)}`, { 'crystal-compact': compact }]} data-crystal>
+<div class:list={['crystal-stage', `tone-${toneClass(verdict)}`, { 'crystal-compact': compact, 'crystal-rotate': interactive && rotate }]} data-crystal>
   {interactive && WORDS.map(word => <input class="crystal-choice" type="radio" name="preview-verdict" id={`preview-${word}`} value={word} checked={word === verdict} aria-label={`Show the ${word} slab`} />)}
   {!compact && <div class="crystal-type">
     <span class="crystal-eyebrow">Sugar Depth · Verdicts</span>
@@ -28,3 +29,24 @@ const { verdict = 'BAD', interactive = false, compact = false } = Astro.props;
     {WORDS.map(word => <label for={`preview-${word}`}><span class={`crystal-dot tone-${toneClass(word)}`}></span>{word}</label>)}
   </div>}
 </div>
+{interactive && rotate && <script is:inline data-motion>
+(() => {
+  // Verdict carousel: CLEAN, OKAY, BAD in turn. A tap on a badge holds that verdict for a while, then the
+  // carousel carries on. It rests while the tab is hidden and stays still under prefers-reduced-motion.
+  const stage = document.querySelector('.crystal-rotate');
+  if (!stage || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const radios = [...stage.querySelectorAll('.crystal-choice')];
+  if (radios.length < 2) return;
+  const STEP = 2600, HOLD = 9000;
+  let timer;
+  const next = () => {
+    const i = radios.findIndex((r) => r.checked);
+    radios[(i + 1) % radios.length].checked = true;
+    schedule(STEP);
+  };
+  const schedule = (ms) => { clearTimeout(timer); if (!document.hidden) timer = setTimeout(next, ms); };
+  for (const type of ['change', 'click']) stage.addEventListener(type, () => schedule(HOLD));
+  document.addEventListener('visibilitychange', () => schedule(STEP));
+  schedule(STEP);
+})();
+</script>}
