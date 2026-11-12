@@ -1,13 +1,10 @@
-// The crystal swarm and the verdict burst are drawn on a browser canvas (CrystalSwarm.web.tsx).
-// Phones get nothing here: no canvas, no animation loop, so the native build and the camera stay untouched.
-import type { CrystalBurstProps, CrystalSwarmProps } from '../lib/swarm';
+// Phones (Expo Go and native builds). Browsers use CrystalSwarm.web.tsx, which draws on an HTML canvas.
+import type { CrystalBurstProps } from '../lib/swarm';
 
-/** Sugar cubes and shards drifting behind the sign-in screen. Web only. */
-export function CrystalSwarm(_props: CrystalSwarmProps) {
-  return null;
-}
+/** Sugar cubes and shards drifting behind the sign-in screen, drawn with React Native Skia. */
+export { CrystalSwarmSkia as CrystalSwarm } from './CrystalSwarmSkia';
 
-/** A one-second spray of verdict-coloured crystals from the result sheet's edge. Web only. */
+/** A one-second spray of verdict-coloured crystals from the result sheet's edge. Web only; phones get nothing. */
 export function CrystalBurst(_props: CrystalBurstProps) {
   return null;
 }
