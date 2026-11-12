@@ -141,11 +141,14 @@ export function Wordmark({ size = 44, state = 'idle' }: { ink?: boolean; size?: 
   );
 }
 
-/** `brand={false}` hides the cube mark (camera and result screens); the tagline and right controls stay. */
-export function Header({ right, tagline, ink, mark, brand = true }: { right?: ReactNode; tagline?: string; ink?: boolean; mark?: MarkState; brand?: boolean }) {
+/**
+ * `brand={false}` hides the cube mark (camera and result screens); the tagline and right controls stay.
+ * `start` moves the left-hand side right, to clear the small mascot drawn in that corner.
+ */
+export function Header({ right, tagline, ink, mark, brand = true, start = 0 }: { right?: ReactNode; tagline?: string; ink?: boolean; mark?: MarkState; brand?: boolean; start?: number }) {
   return (
     <View style={styles.header}>
-      <View style={styles.brandRow}>
+      <View style={[styles.brandRow, start > 0 && { marginLeft: start }]}>
         {brand ? <Wordmark ink={ink} state={mark} /> : null}
         {tagline ? <Text style={[styles.tagline, ink && styles.taglineInk]}>{tagline}</Text> : null}
       </View>

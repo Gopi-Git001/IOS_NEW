@@ -7,6 +7,7 @@ import { CrystalBurst } from '../components/CrystalSwarm';
 import { Header, ProfileButton, Scrims, type Sheet } from '../components/Chrome';
 import { Glass } from '../components/Glass';
 import { GlossaryCard, type Pick } from '../components/GlossaryCard';
+import { SmallMascot, useSmallMascotClearance } from '../components/SmallMascot';
 import { ResultSheet, VerdictContent } from '../components/VerdictPanel';
 import { colors, crystal, fonts } from '../theme';
 import { CrystalSlab, useCrystalReducedMotion } from '../components/CrystalVerdict';
@@ -37,6 +38,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
   const [headerBottom, setHeaderBottom] = useState(insets.top + 60);
   const [sheetHeight, setSheetHeight] = useState(0);
   const [pick, setPick] = useState<Pick>(null);
+  const mascotClearance = useSmallMascotClearance();
   const sheetBottom = Math.max(insets.bottom, 8);
   // Leave room above the sheet for the header and the perched cube.
   const sheetMax = window.height - sheetBottom - headerBottom - CUBE + PERCH - 8;
@@ -62,6 +64,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
           <Header
             tagline={tagline}
             brand={false}
+            start={mascotClearance}
             right={<ProfileButton onOpen={onOpenSheet} />}
           />
         </View>
@@ -106,6 +109,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
         </>
       )}
 
+      <SmallMascot still />
       <GlossaryCard pick={pick} onClose={() => setPick(null)} />
     </View>
   );

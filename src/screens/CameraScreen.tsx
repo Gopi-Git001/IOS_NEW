@@ -13,6 +13,7 @@ import { Footer, Header, ProfileButton, Scrims, type Sheet } from '../components
 import { Glass } from '../components/Glass';
 import { FlashIcon } from '../components/Icons';
 import { LabelCamera } from '../components/LabelCamera';
+import { SmallMascot, useSmallMascotClearance } from '../components/SmallMascot';
 import { brand, colors, fonts } from '../theme';
 import { freeScansLabel } from '../lib/guestTrial';
 
@@ -34,6 +35,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
   const [box, setBox] = useState<ViewBox | null>(null);
   const [torch, setTorch] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
+  const mascotClearance = useSmallMascotClearance();
   const [noFlash, setNoFlash] = useState(false);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -118,6 +120,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
         <Header
           tagline={tagline}
           brand={false}
+          start={mascotClearance}
           right={
             <ProfileButton
               onOpen={onOpenSheet}
@@ -161,6 +164,8 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
           <Footer />
         </View>
       </SafeAreaView>
+      {/* A still frame, so nothing animates over the live camera. */}
+      <SmallMascot still />
     </View>
   );
 }

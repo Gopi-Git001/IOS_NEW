@@ -1,17 +1,15 @@
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { CharacterView, MASCOT_FEET_RATIO } from '../components/Character';
 import { Ambient, Footer, useReducedMotion } from '../components/Chrome';
+import { SmallMascot, smallMascotBox, WIDE_FROM } from '../components/SmallMascot';
 import { CrystalSwarm } from '../components/CrystalSwarm';
-import { links } from '../config';
 import { signInWithGoogle, takeAuthRedirectError } from '../lib/api';
-import { notify } from '../lib/confirm';
 import { colors, fonts, frost } from '../theme';
 
 // Option A layout (docs/design/signin-option-a-*.png). Wide = laptop, narrow = phones and tablets.
-const WIDE_FROM = 900;
 // Where the big name sits (unchanged from the first Option A build): its letters end NAME_GAP above
 // where a cube at HEAD_RATIO would start, with DESCENDER per px of font size for the "p".
 const HEAD_RATIO = 0.023;
@@ -32,7 +30,7 @@ function layout(width: number, height: number, topInset: number) {
   const side = wide ? 30 : 20;
   const buttonHeight = wide ? 72 : 60;
   const buttonTop = topInset + height * (wide ? 560 / 900 : 470 / 844);
-  const small = wide ? { left: 20, top: 12, width: 84, height: 64 } : { left: 12, top: 12, width: 68, height: 52 };
+  const small = smallMascotBox(width);
 
   const fontSize = wide ? Math.min(width * 0.145, 210) : Math.min(width * 0.246, 96);
   const lineHeight = wide ? 1 : 0.92;
@@ -54,7 +52,6 @@ function layout(width: number, height: number, topInset: number) {
     wide,
     side,
     buttonHeight,
-    small,
     maxCube: cubeSize,
     lines,
     pitch,
@@ -129,7 +126,7 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
         Sugar Depth sign in
       </Text>
 
-      <SmallMascot box={{ ...L.small, top: insets.top + L.small.top, left: insets.left + L.small.left }} still={reduced} />
+      <SmallMascot still={reduced} />
 
       <View
         ref={nameRef}
@@ -181,25 +178,6 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
   );
 }
 
-/** The small mascot at the top-left: a link to sugardepth.com (new tab on the web, the browser on phones). */
-function SmallMascot({ box, still }: { box: { left: number; top: number; width: number; height: number }; still: boolean }) {
-  const web = Platform.OS === 'web';
-  const open = () => Linking.openURL(links.website).catch(() => notify("Couldn't open link", links.website));
-  // react-native-web renders href/hrefAttrs as an anchor; they aren't in React Native's types.
-  const anchor = web ? ({ href: links.website, hrefAttrs: { target: '_blank', rel: 'noopener' } } as object) : {};
-  return (
-    <Pressable
-      {...anchor}
-      onPress={web ? undefined : open}
-      accessibilityRole="link"
-      accessibilityLabel="Sugar Depth website"
-      style={({ pressed }) => [styles.smallMascot, box, pressed && styles.smallPressed]}
-    >
-      <CharacterView mood="idle" size={box.height} motion={still ? 'still' : 'full'} shadow={false} />
-    </Pressable>
-  );
-}
-
 function GoogleMark() {
   return (
     <Svg width={20} height={20} viewBox="0 0 48 48" accessibilityElementsHidden importantForAccessibility="no">
@@ -238,8 +216,6 @@ const styles = StyleSheet.create({
   // Clip the ambient glows (they hang past the edges) so the page never scrolls.
   root: { flex: 1, backgroundColor: colors.paper, overflow: 'hidden' },
   srOnly: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
-  smallMascot: { position: 'absolute', zIndex: 3, alignItems: 'center', justifyContent: 'center', minWidth: 44, minHeight: 44 },
-  smallPressed: { opacity: 0.8 },
   // See-through wordmark: the app's heavy Libre Franklin at 800, 20% of the paper white.
   nameGroup: { position: 'absolute', left: 0, right: 0 },
   name: {
