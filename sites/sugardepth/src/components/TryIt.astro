@@ -1,0 +1,163 @@
+---
+// "Try it" inside the home page's "How it works" section (no section or wrap of its own): sample labels and a paste box, judged by the scanner's own rules (src/lib/tryIt.ts
+// imports supabase/functions/_shared). The sample verdicts are worked out at build time and switch with plain
+// radio buttons, so they work before any script loads; the script adds the paste box and plays each result in:
+// the ingredients light up one by one, then the verdict word lands.
+import '../styles/tryit.css';
+import { MAX_PASTE_CHARS, SAMPLES, renderResult, scanText } from '../lib/tryIt';
+---
+<div class="tryit" role="group" aria-labelledby="tryit-h" data-tryit>
+    <h3 class="tryit-title" id="tryit-h">Try it: tap a sample label</h3>
+    <div class="tryit-grid">
+      <fieldset class="tryit-samples">
+        <legend>Sample labels</legend>
+        <ul>
+          {SAMPLES.map((s, i) => (
+            <li>
+              <input type="radio" name="tryit-sample" id={`tryit-${s.id}`} value={s.id} checked={i === 0} />
+              <label for={`tryit-${s.id}`}><b>{s.name}</b><span>{s.claim}</span></label>
+            </li>
+          ))}
+        </ul>
+        <p class="tryit-fine">Made-up labels, not real products.</p>
+      </fieldset>
+
+      <div class="tryit-out" data-tryit-out>
+        {SAMPLES.map((s) => <div class="tryit-static" set:html={renderResult(scanText(s.ingredients, s.addedSugarsG), s.name)} />)}
+        <div class="tryit-live" role="status" data-tryit-live></div>
+        <p class="sr-only" role="status" data-tryit-status></p>
+      </div>
+
+      <form class="tryit-form" data-tryit-form data-sticky-hide novalidate>
+        <label for="tryit-text">Or paste an ingredient list</label>
+        <textarea id="tryit-text" rows="3" maxlength={MAX_PASTE_CHARS} placeholder="Water, cane sugar, natural flavors, citric acid" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="tryit-private"></textarea>
+        <div class="tryit-row">
+          <label for="tryit-grams">Added sugars per serving, in grams (optional)</label>
+          <input id="tryit-grams" type="number" inputmode="decimal" min="0" max="500" step="any" autocomplete="off" />
+        </div>
+        <p class="tryit-error" data-tryit-error role="alert"></p>
+        <div class="tryit-submit">
+          <button class="btn" type="submit" disabled>Check this list</button>
+          <p class="tryit-fine" id="tryit-private">Stays in your browser.</p>
+        </div>
+        <noscript><p class="tryit-fine">Checking your own list needs JavaScript. The sample labels work without it.</p></noscript>
+      </form>
+    </div>
+</div>
+
+<script>
+  import { parseGrams, renderResult, scanText } from '../lib/tryIt';
+
+  const root = document.querySelector<HTMLElement>('[data-tryit]');
+  const form = root?.querySelector<HTMLFormElement>('[data-tryit-form]');
+  const out = root?.querySelector<HTMLElement>('[data-tryit-out]');
+  const live = root?.querySelector<HTMLElement>('[data-tryit-live]');
+  const status = root?.querySelector<HTMLElement>('[data-tryit-status]');
+  const text = form?.querySelector<HTMLTextAreaElement>('textarea');
+  const grams = form?.querySelector<HTMLInputElement>('input[type="number"]');
+  const error = form?.querySelector<HTMLElement>('[data-tryit-error]');
+  const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+  if (root && form && out && live && status && text && grams && error && button) {
+    const samples = Array.from(root.querySelectorAll<HTMLInputElement>('input[name="tryit-sample"]'));
+    const statics = Array.from(out.querySelectorAll<HTMLElement>('.tryit-static'));
+    const still = matchMedia('(prefers-reduced-motion: reduce)');
+    const fail = (message: string) => {
+      error.textContent = message;
+      text.setAttribute('aria-invalid', message ? 'true' : 'false');
+    };
+
+    // ---- The reveal. Only classes change, so nothing moves: every chip and the verdict keep their place. ----
+    let timers: number[] = [];
+    const later = (ms: number, run: () => void) => timers.push(window.setTimeout(run, ms));
+    const settle = () => {
+      for (const t of timers) window.clearTimeout(t);
+      timers = [];
+      out.classList.remove('is-playing', 'is-landed');
+      for (const lit of out.querySelectorAll('.is-lit')) lit.classList.remove('is-lit');
+      out.dataset.state = 'done';
+    };
+    /** The panel on show: your own list if there is one, otherwise the checked sample's. */
+    const shown = () => live.querySelector<HTMLElement>('.tryit-facts') ?? statics[samples.findIndex((s) => s.checked)]?.querySelector<HTMLElement>('.tryit-facts') ?? null;
+    /** Bring the result into view when it is below the screen (phones stack it under the samples). */
+    const reveal = () => out.scrollIntoView({ block: 'nearest', behavior: still.matches ? 'auto' : 'smooth' });
+    const play = () => {
+      settle();
+      const panel = shown();
+      // No motion wanted, or nothing to reveal ("No verdict"): the finished panel is already there.
+      if (!panel || !panel.dataset.verdict || still.matches) return;
+      const chips = Array.from(panel.querySelectorAll<HTMLElement>('.tryit-items li'));
+      // A long pasted list still finishes in about a second and a half.
+      const step = Math.max(40, Math.min(140, 1500 / Math.max(chips.length, 1)));
+      out.classList.add('is-playing');
+      out.dataset.state = 'playing';
+      chips.forEach((chip, i) => later(140 + i * step, () => chip.classList.add('is-lit')));
+      const landing = 140 + chips.length * step + 180;
+      later(landing, () => {
+        out.classList.add('is-landed');
+        out.dataset.state = 'landed';
+      });
+      later(landing + 900, settle);
+    };
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const result = scanText(text.value, parseGrams(grams.value));
+      if (result.kind === 'empty') {
+        fail('Paste an ingredient list first.');
+        text.focus();
+        return;
+      }
+      fail('');
+      // No sample is selected while your own list is showing.
+      for (const sample of samples) sample.checked = false;
+      status.textContent = '';
+      live.innerHTML = renderResult(result, 'Your list');
+      play();
+      reveal();
+    });
+
+    // Back to a sample: its panel is already in the page. A tap on the sample that is already showing replays it.
+    // A tap or mouse click also brings the result into view. Arrow keys do not, so the focused sample stays put.
+    let byPointer = false;
+    root.addEventListener('pointerdown', () => (byPointer = true));
+    root.addEventListener('keydown', () => (byPointer = false));
+    for (const sample of samples) {
+      sample.addEventListener('click', () => {
+        fail('');
+        live.innerHTML = '';
+        const panel = shown();
+        const name = sample.labels?.[0]?.querySelector('b')?.textContent ?? '';
+        const why = panel?.querySelector('.facts-why')?.textContent ?? '';
+        status.textContent = panel?.dataset.verdict ? `${name}: ${panel.dataset.verdict}. ${why}` : '';
+        play();
+        if (byPointer) reveal();
+      });
+    }
+    still.addEventListener('change', settle);
+
+    // Scrolled into view for the first time: play the sample that is showing, once. While it is still below the
+    // screen the panel waits unlit, so the result is not seen before it plays. A panel already on screen at load is
+    // left finished: replaying it would only make a result flicker.
+    if ('IntersectionObserver' in window) {
+      const watcher = new IntersectionObserver((entries) => {
+        if (out.dataset.state && out.dataset.state !== 'waiting') return watcher.disconnect();
+        if (entries.some((entry) => entry.isIntersecting)) {
+          watcher.disconnect();
+          if (out.dataset.state === 'waiting') play();
+        } else if (!still.matches && !out.dataset.state) {
+          out.classList.add('is-playing');
+          out.dataset.state = 'waiting';
+        }
+      }, { threshold: 0.35 });
+      watcher.observe(out);
+    }
+
+    text.addEventListener('input', () => fail(''));
+    // Ctrl+Enter or Cmd+Enter checks the list from inside the text box.
+    text.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) form.requestSubmit();
+    });
+    button.disabled = false;
+  }
+</script>

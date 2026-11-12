@@ -2,7 +2,8 @@
 // Signed-in users only. Stage 1 (extraction): Claude vision copies the label literally, with no
 // sorting and no verdict. Stages 2-4 (normalize, classify, policy) run in _shared/rules.ts.
 // Runs alongside quick-verdict (Jev), which makes the actual CLEAN / OKAY / BAD call.
-import { allow, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
+import { isJpegBase64 } from '../_shared/guard.ts';
+import { reserveScan } from '../_shared/guest.ts';
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
 import { readLabel, UNREADABLE } from '../_shared/reader.ts';
 import { clientFields, imageKb, requestTimer, timed } from '../_shared/timing.ts';
@@ -35,9 +36,9 @@ export default {
     // Each scan calls a paid model, so cap scans per account per day (SCAN_DAILY_LIMIT secret).
     const userId = ctx.userClaims?.id;
     if (!userId) return json({ error: 'Not signed in' }, 401);
-    const allowed = await allow(ctx.supabaseAdmin, `label:${userId}`, 86_400, intSetting('SCAN_DAILY_LIMIT', 100));
+    const denied = await reserveScan(ctx.supabaseAdmin, ctx.userClaims!, 'label');
     timer.mark('checks');
-    if (!allowed) return tooMany();
+    if (denied) return denied;
 
     const outcome = await readLabel(image, timer);
     return json(outcome.body, outcome.status);

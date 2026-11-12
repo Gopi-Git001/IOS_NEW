@@ -1,193 +1,139 @@
 ---
 import Base from '../layouts/Base.astro';
-import ScanCta from '../components/ScanCta.astro';
 import CrystalVerdict from '../components/CrystalVerdict.astro';
-import EditorialImage from '../components/EditorialImage.astro';
-import Film from '../components/Film.astro';
-import FilmMotion from '../components/FilmMotion.astro';
+import TryIt from '../components/TryIt.astro';
+import CrystalSwarm from '../components/CrystalSwarm.astro';
 import { APP_URL } from '../config';
 import { organization, website, webApplication } from '../data/schema';
-import { getFeaturedGuides } from '../data/guides';
-import { ADDED_SUGAR_ALIAS_COUNT, pillText, toneClass } from '../data/ingredients';
-const guides = await getFeaturedGuides();
-const disguises = [
-  { alias: 'Evaporated cane juice', reveal: "That's sugar.", href: '/ingredients/evaporated-cane-juice' },
-  { alias: 'Brown rice syrup', reveal: "That's sugar.", href: '/ingredients/rice-syrup' },
-  { alias: 'Apple juice concentrate', reveal: "That's sugar.", href: '/ingredients/juice-concentrate' },
-  { alias: 'Sucralose', reveal: "That's an artificial sweetener.", href: '/ingredients/sucralose' },
-  { alias: 'Erythritol', reveal: "That's a sugar alcohol.", href: '/ingredients/erythritol' },
-  { alias: 'Maltodextrin', reveal: "Not sugar. Really.", href: '/ingredients/maltodextrin' },
+import { MISSION, MISSION_DETAIL } from '../data/mission';
+import { VERDICTS } from '../data/rules';
+import { ADDED_SUGAR_ALIAS_COUNT, PAGES, toneClass } from '../data/ingredients';
+// After Base and the components, so these rules come last in the page's CSS.
+import '../styles/brief-pages.css';
+
+// Three sections: the mission, how it works, and everything else.
+
+// Alias tiles: a name as a label prints it on the front, "That's sugar." on the back. Every name is read from the
+// scanner's registry (src/data/ingredients.ts) and must be one it files under added sugar.
+const TILE_ALIASES = ['evaporated cane juice', 'brown rice syrup', 'agave nectar', 'dextrose', 'barley malt syrup', 'fruit juice concentrate', 'coconut sugar', 'invert sugar'];
+const addedSugarNames = new Set(PAGES.filter((p) => p.treatment === 'added_sugar').flatMap((p) => p.aliases));
+const tiles = TILE_ALIASES.map((alias) => {
+  if (!addedSugarNames.has(alias)) throw new Error(`index: "${alias}" is not an added-sugar name in the ingredient registry`);
+  return alias[0].toUpperCase() + alias.slice(1);
+});
+
+const explore = [
+  { href: '/hidden-sugar-names', label: `All ${ADDED_SUGAR_ALIAS_COUNT} added-sugar names` },
+  { href: '/ingredients', label: 'Ingredient guides' },
+  { href: '/how-it-works', label: 'The full rules' },
+  { href: '/faq', label: 'FAQ' },
+  { href: '/about', label: 'About' },
 ];
-const marquee = ['Evaporated cane juice', 'Brown rice syrup', 'Agave nectar', 'Dextrose', 'Fruit juice concentrate', 'Barley malt', 'Coconut sugar', 'Invert sugar', 'Maltose', 'Cane crystals'];
 ---
 <Base
   title="Sugar Depth: the food-label scanner that names every hidden sugar"
-  description="Sugar Depth is a food-label scanner. Photograph a package's ingredient list and get one verdict, CLEAN, BAD or UGLY, based on added sugars and sweeteners. No barcodes, no product database."
+  description="Sugar Depth is a food-label scanner. Photograph an ingredient list and get one verdict: CLEAN, OKAY or BAD. No barcodes, no product database."
   path="/"
   jsonLd={[organization, website, webApplication]}
 >
-  <section class="hero">
-    <div class="wrap">
-      <CrystalVerdict interactive />
-    </div>
-    <div class="wrap hero-grid">
-      <div>
-        <span class="kicker">Food-label scanner</span>
-        <h1>Sugar Depth reads the fine print, so sugar <span class="strike">can't hide</span> in it.</h1>
-        <p class="lead">
-          Sugar Depth is a food-label scanner for your phone. Point the camera at a package's ingredient list and it
-          tells you, in one word, whether the food has added sugar or sweeteners:{" "}
-          <strong class="clean">CLEAN</strong>, <strong class="bad">BAD</strong> or <strong class="ugly">UGLY</strong>.
-        </p>
-        <p class="voice">Evaporated cane juice? That's sugar. Brown rice syrup? Also sugar. "Naturally sweetened"? Let's read the label.</p>
-        <div class="cta-row">
+  <section class="hero swarm-band" data-swarm="hero" aria-labelledby="mission-h">
+    <CrystalSwarm />
+    <div class="wrap hero-split">
+      <div class="hero-copy" data-swarm-copy>
+        <span class="kicker">Our mission</span>
+        <h1 id="mission-h">{MISSION}</h1>
+        <p class="lead">{MISSION_DETAIL}</p>
+        <div class="cta-row" data-sticky-hide>
           <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
-          <a class="btn" href="/how-it-works">How verdicts work</a>
         </div>
-        <p class="plain-note">No barcodes and no product database: it reads the actual label in front of you. Verdicts are Sugar Depth's preferences about sweeteners, not medical advice, and it does not check allergens.</p>
+        <p class="plain-note">A food-label scanner. Not medical advice; no allergen checks.</p>
       </div>
+      <CrystalVerdict interactive compact rotate verdict="CLEAN" />
     </div>
   </section>
 
-  <div class="marquee" aria-hidden="true">
-    <div class="marquee-track">
-      {[0, 1].map(() => (
-        <ul>{marquee.map((m) => <li>{m} <em>that's sugar</em></li>)}</ul>
-      ))}
-    </div>
-  </div>
-
-  <section aria-labelledby="how-h">
+  <section class="how" aria-labelledby="how-h">
     <div class="wrap">
-      <div class="section-head reveal">
-        <span class="kicker">How it works</span>
-        <h2 id="how-h">Three steps. One word.</h2>
-      </div>
-      <ol class="steps">
-        <li class="reveal">
-          <span class="step-n" aria-hidden="true">01</span>
-          <h3>Photograph the ingredient list</h3>
-          <p class="muted">Open the scanner, sign in with Google and point the camera at the ingredients on the package. No barcode needed.</p>
+      <h2 id="how-h">How it works</h2>
+      <ol class="how-steps">
+        <li>
+          <span class="how-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 16v-4a4 4 0 0 1 4-4h4M32 8h4a4 4 0 0 1 4 4v4M40 32v4a4 4 0 0 1-4 4h-4M16 40h-4a4 4 0 0 1-4-4v-4" />
+              <path d="M16 19h16M16 24h11M16 29h14" />
+            </svg>
+          </span>
+          <span>Snap the ingredient list.</span>
         </li>
-        <li class="reveal">
-          <span class="step-n" aria-hidden="true">02</span>
-          <h3>It reads every word</h3>
-          <p class="muted">The ingredient list and printed sugar numbers are copied exactly as they appear, and each name is checked against a registry of sugars and sweeteners, including {ADDED_SUGAR_ALIAS_COUNT} names for added sugar.</p>
+        <li>
+          <span class="how-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 12h22M8 20h11M8 28h8M8 36h12" />
+              <circle cx="30" cy="27" r="8" />
+              <path d="M36 33l6 6" />
+            </svg>
+          </span>
+          <span>We check every name.</span>
         </li>
-        <li class="reveal">
-          <span class="step-n" aria-hidden="true">03</span>
-          <h3>You get one verdict</h3>
-          <p class="muted">CLEAN, BAD or UGLY, with each sugar named in plain words. If the list is cut off or unreadable, it asks you to retake the photo instead of guessing.</p>
+        <li>
+          <span class="how-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="10" y="6" width="28" height="36" rx="7" />
+              <path d="M17 14h7" />
+              <path d="M17.5 32h13" stroke-width="5.5" />
+            </svg>
+          </span>
+          <span>Get one word: CLEAN, OKAY or BAD.</span>
         </li>
       </ol>
-      <figure class="editorial-frame steps-film">
-        <Film name="three-steps" label="A label is photographed, its ingredient names are read, and a glossy verdict appears." width={1280} height={720}>
-          <EditorialImage name="label" alt="A clear glass slab magnifies fine print on a cream package beside a sugar cube." sizes="(max-width: 760px) calc(100vw - 40px), 960px" />
-        </Film>
-        <figcaption>A scan of a made-up ingredient list. Not a real product.</figcaption>
-      </figure>
-    </div>
-  </section>
 
-  <section class="film" aria-labelledby="verdicts-h">
-    <div class="wrap">
-      <figure class="editorial-frame verdict-banner">
-        <EditorialImage name="slabs" alt="" />
-      </figure>
-      <div class="section-head reveal">
-        <span class="kicker">The three verdicts</span>
-        <h2 id="verdicts-h">No GOOD tier. No gram cutoff.</h2>
-        <p class="lead">The first rule that matches wins, and the worst ingredient decides. These are Sugar Depth's preferences, not medical findings.</p>
-      </div>
-      <div class="verdicts">
-        <div class="verdict-card tone-ugly reveal">
-          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>UGLY</b></div>
-          <span class="word ugly">UGLY</span>
-          <ul>
-            <li>Any added sugar, in any amount, under any name</li>
-            <li>Any artificial sweetener: sucralose, aspartame, acesulfame K and others</li>
-            <li>Erythritol or xylitol</li>
-            <li>Drinking alcohol</li>
-          </ul>
-        </div>
-        <div class="verdict-card tone-bad reveal">
-          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>BAD</b></div>
-          <span class="word bad">BAD</span>
-          <ul>
-            <li>No UGLY trigger, but a plant sweetener: stevia, monk fruit or thaumatin</li>
-            <li>Allulose</li>
-            <li>Another sugar alcohol: sorbitol, maltitol, mannitol, isomalt, lactitol</li>
-          </ul>
-        </div>
-        <div class="verdict-card tone-clean reveal">
-          <div class="mini-slab" aria-hidden="true"><span>Verdict</span><b>CLEAN</b></div>
-          <span class="word clean">CLEAN</span>
-          <ul>
-            <li>A complete ingredient list with nothing sweet added</li>
-            <li>Sugar that comes with milk or fruit is fine</li>
-            <li>Maltodextrin and starches are fine</li>
-          </ul>
-        </div>
-      </div>
-      <p style="margin-top:32px"><a href="/how-it-works">Read the full rule table →</a></p>
-    </div>
-  </section>
-
-  <section aria-labelledby="names-h">
-    <div class="wrap disguise-grid">
-      <div class="section-head">
-        <span class="kicker">Name the disguise</span>
-        <h2 id="names-h">Sugar has a lot of aliases.</h2>
-        <p class="lead">US labels list ingredients by name, and sugar has many. Sugar Depth knows them, and tells you what each one really is.</p>
-        <p><a href="/hidden-sugar-names">See all {ADDED_SUGAR_ALIAS_COUNT} added-sugar names →</a></p>
-      </div>
-      <ul class="disguises">
-        {disguises.map((d) => <li class="reveal"><a href={d.href}><span class="alias">{d.alias}</span><span class="reveal-word">{d.reveal}</span></a></li>)}
-      </ul>
-      <figure class="editorial-frame aliases-figure">
-        <EditorialImage name="aliases" alt="Six clear glass trays containing sugar cubes, golden syrup, brown sugar, pale agave syrup, dark malt syrup and white powder." sizes="(max-width: 760px) calc(100vw - 40px), 560px" />
-      </figure>
-    </div>
-  </section>
-
-  <section class="result" aria-labelledby="result-h">
-    <div class="wrap hero-grid">
-      <div class="reveal">
-        <span class="kicker">What you see</span>
-        <h2 id="result-h">A verdict you can read in a second.</h2>
-        <p class="lead">The result is set like a Nutrition Facts panel: one word on top, the reason in a sentence, and every ingredient tagged underneath so you can see which one decided it.</p>
-        <p><a href="/how-it-works">How the rules decide →</a></p>
-      </div>
-      <figure class="screens">
-        <img class="phone p1" src="/app/camera.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The Sugar Depth camera screen framing a cereal box's ingredient list, with the hint Fit the ingredient list in the panel." />
-        <img class="phone p2" src="/app/result-ugly.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The Sugar Depth result: Verdict Facts, Ugly, added sugar. Sucrose, glucose syrup and fruit juice concentrate are tagged sugar; aspartame is tagged sweetener." />
-        <img class="phone p3" src="/app/glossary.webp" width="780" height="1688" loading="lazy" decoding="async" alt="The ingredient card for sucrose: That's sugar. The chemical name for table sugar. Any added sugar makes it UGLY." />
-        <figcaption>Real Sugar Depth screens: scan, verdict, and tap any ingredient for why it counts. Demo label, not a real product.</figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <section aria-labelledby="guides-h">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="kicker">Ingredient guides</span>
-        <h2 id="guides-h">What's in the fine print</h2>
-      </div>
-      <ul class="cards">
-        {guides.map((g) => (
-          <li><a class="card" href={`/ingredients/${g.slug}`}>
-            <span class={`pill ${toneClass(g.page.verdict.tone)}`}>{pillText(g.page)}</span>
-            <h3>{g.name}</h3>
-            <p>{g.summary}</p>
-          </a></li>
+      <ul class="how-verdicts">
+        {VERDICTS.map((v) => (
+          <li class={`how-verdict tone-${toneClass(v.word)}`}>
+            <h3><span class="how-chip" aria-hidden="true"></span>{v.word}</h3>
+            <p>{v.line}</p>
+            <details class="verdict-more">
+              <summary>The {v.word} rules</summary>
+              <ul>{v.rules.map((r) => <li>{r}</li>)}</ul>
+            </details>
+          </li>
         ))}
       </ul>
-      <p style="margin-top:24px"><a href="/ingredients">All ingredient guides →</a></p>
+
+      <TryIt />
     </div>
   </section>
 
-  <section style="padding-top:0">
-    <div class="wrap"><ScanCta graphic /></div>
+  <section class="aliases explore swarm-band" aria-labelledby="explore-h">
+    <div class="wrap disguise-grid">
+      <div class="section-head" data-burst-clear>
+        <h2 id="explore-h">Explore</h2>
+        <p class="flip-hint">Eight of sugar's aliases. Tap a card to unmask it.</p>
+      </div>
+      <!-- Each tile is a button: a click, a tap, Enter or Space turns it over and back (src/lib/swarm.ts). Without
+           the script nothing turns: every tile shows its name and the answer together. -->
+      <div class="tiles-stage" data-tiles>
+        <canvas class="tiles-fx" data-tiles-fx aria-hidden="true"></canvas>
+        <ul class="tiles">
+          {tiles.map((alias) => (
+            <li>
+              <button class="tile" type="button" aria-pressed="false">
+                <span class="tile-face tile-front"><span class="tile-alias">{alias}</span></span>
+                <span class="tile-face tile-back"><span class="tile-tag">Added sugar</span><span class="tile-reveal">That's sugar.</span></span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p class="sr-only" role="status" data-tiles-status></p>
+      <div class="explore-more" data-burst-clear>
+        <ul class="explore-links">
+          {explore.map((l) => <li><a href={l.href}>{l.label}<span aria-hidden="true">→</span></a></li>)}
+        </ul>
+        <p class="explore-cta" data-sticky-hide>
+          <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
+        </p>
+      </div>
+    </div>
   </section>
-  <FilmMotion />
 </Base>

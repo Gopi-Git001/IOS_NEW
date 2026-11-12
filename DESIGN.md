@@ -18,7 +18,31 @@ The sections below document the retained dark-glass foundation, not the current 
 Below-hero editorial media pairs Higgsfield stills generated on 2026-11-09 with `gpt_image_2_6`
 (label magnifier, sugar aliases, three tinted slabs and a sugar specimen) with HyperFrames loops.
 Responsive AVIF/WebP stills are lazy-loaded in rounded paper-toned frames; loops play only while
-visible, pause when the page is hidden and respect reduced motion. The homepage hero stays unchanged.
+visible, pause when the page is hidden and respect reduced motion. The homepage hero now carries the
+crystal swarm (next section); its copy and layout are unchanged.
+
+## Crystal swarm (site)
+
+On 2026-11-10 the owner approved the "sugar swarm" reference: glossy sugar cubes and long crystal shards
+on night glass. On the site it lives in **swarm bands**, dark bands on the otherwise paper pages
+(`.swarm-band` in `sites/sugardepth/src/styles/swarm.css`): the home hero, the home "Sugar has a lot of
+aliases" tiles, and the heads of `/how-it-works` and `/about`. Inside a band the paper tokens are
+re-pointed at the dark-glass tokens below (`--sd-paper`, `--sd-ink`, `--sd-ambient-0`, `--sd-glow-*`),
+so no new colours are introduced; everything outside a band stays warm paper.
+
+- Shapes are sugar cubes and shards only. Never faceted gems or diamonds.
+- Home hero: up to 380 crystals (110 to 180 on a phone) circle the headline with depth blur, scatter from
+  the pointer, gather while it is held and pop on release. `/how-it-works` and `/about`: 14 to 44
+  crystals, slower, pointer scatter only.
+- Alias tiles flip to "That's sugar." with a short crystal burst. Burst crystals are never drawn over a
+  tile's words, the heading beside the tiles or the photo.
+- Text wins: every line of copy is cut out of the crystals (12% left), and in-focus crystals are kept
+  out of the copy block.
+- One 2D canvas per band, no libraries. It is `aria-hidden`, never takes a click, stops when the band is
+  off screen or the tab is hidden, caps the pixel ratio, drops quality on slow devices, and draws one
+  still frame under `prefers-reduced-motion` (tiles cross-fade, no burst). Without JavaScript a band is
+  its dark backdrop and each tile shows the name and the answer together.
+- Code: `sites/sugardepth/src/lib/swarm.ts`, `src/components/CrystalSwarm.astro`, `src/styles/swarm.css`.
 
 History: direction B ("paper panel") was chosen on 2026-11-06, followed by dark glass.
 On 2026-11-09 the owner approved the editorial glossy-crystal verdict reference, retaining its exact

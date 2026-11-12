@@ -3,21 +3,16 @@ import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import ScanCta from '../../components/ScanCta.astro';
 import { breadcrumbs } from '../../data/schema';
-import { getGuides, type Guide } from '../../data/guides';
-import { GROUPS, pillText, POLICY_VERSION, REGISTRY_VERSION, toneClass } from '../../data/ingredients';
+import { getGuides } from '../../data/guides';
+import { GROUPS, toneClass } from '../../data/ingredients';
+import '../../styles/brief.css';
+// A directory to scan, not to read: each card is a name, its verdict and a few words.
 const guides = await getGuides();
 const crumbs = [{ name: 'Home', href: '/' }, { name: 'Ingredients', href: '/ingredients' }];
-const SHOWN = 5;
-// A few of the other names on each card, so a name like brown rice syrup can be found from this page.
-const alsoListed = (g: Guide) => {
-  const others = g.aliases.filter((a) => a.toLowerCase() !== g.name.toLowerCase());
-  const shown = others.slice(0, SHOWN).join(', ');
-  return others.length > SHOWN ? `${shown} and ${others.length - SHOWN} more` : shown;
-};
 ---
 <Base
   title="Ingredient guides: every sugar, sweetener and label name Sugar Depth knows"
-  description={`A page for each of the ${guides.length} ingredients in Sugar Depth's registry: added sugars, artificial and plant sweeteners, sugar alcohols and common non-sweet ingredients, with their label names, US labeling and verdict under ${POLICY_VERSION}.`}
+  description={`All ${guides.length} ingredients Sugar Depth knows, from added sugars to artificial sweeteners and sugar alcohols, each with its label names and verdict.`}
   path="/ingredients"
   jsonLd={[breadcrumbs(crumbs)]}
 >
@@ -25,10 +20,10 @@ const alsoListed = (g: Guide) => {
     <Breadcrumbs items={crumbs} />
     <span class="kicker">Ingredient guides</span>
     <h1>Every sweetener has a stage name.</h1>
-    <p class="lead">One page for every ingredient in Sugar Depth's registry: what it is, the names it uses on labels, how US labels count it, and the verdict it gets. The facts on each page come straight from the registry ({REGISTRY_VERSION}) and rules ({POLICY_VERSION}) the scanner runs on.</p>
-    <nav aria-label="Jump to a group">
+    <p class="lead">{guides.length} ingredients, each with its label names and its verdict.</p>
+    <nav class="brief-jump" aria-label="Jump to a group">
       <ul class="alias-list">
-        {GROUPS.map((g) => <li><a href={`#g-${g.id}`} style="text-decoration:none">{g.nav}</a></li>)}
+        {GROUPS.map((g) => <li><a href={`#g-${g.id}`}>{g.nav}</a></li>)}
       </ul>
     </nav>
   </div>
@@ -37,23 +32,22 @@ const alsoListed = (g: Guide) => {
       const [head, ...rest] = g.title.split(':');
       const items = guides.filter((x) => x.page.group === g.id);
       return (
-        <section style="padding:12px 0 36px" aria-labelledby={`g-${g.id}`}>
-          <h2 id={`g-${g.id}`} style="font-size:1.4rem"><span class={toneClass(g.tone)}>{head}</span>{rest.length > 0 && `:${rest.join(':')}`}</h2>
-          <p class="muted" style="margin:0 0 16px">{g.blurb}</p>
-          <ul class="cards">
+        <section class="brief-group" aria-labelledby={`g-${g.id}`}>
+          <h2 id={`g-${g.id}`}><span class={toneClass(g.tone)}>{head}</span>{rest.length > 0 && `:${rest.join(':')}`}</h2>
+          <p class="muted">{g.blurb}</p>
+          <ul class="brief-dir">
             {items.map((x) => (
-              <li><a class="sheet card" href={`/ingredients/${x.slug}`}>
-                <span class={`pill ${toneClass(x.page.verdict.tone)}`}>{pillText(x.page)}</span>
+              <li><a href={`/ingredients/${x.slug}`}>
                 <h3>{x.name}</h3>
-                <p>{x.summary}</p>
-                {alsoListed(x) && <p class="also">Also listed as: {alsoListed(x)}</p>}
+                <span class={`pill ${toneClass(x.page.verdict.tone)}`}>{x.page.verdict.word}</span>
+                <span class="brief-tag">{x.tag}</span>
               </a></li>
             ))}
           </ul>
         </section>
       );
     })}
-    <p class="muted">Every added-sugar name on one page: <a href="/hidden-sugar-names">hidden sugar names</a>. The complete rules are on <a href="/how-it-works">how it works</a>.</p>
+    <p class="muted">Every added-sugar name on one page: <a href="/hidden-sugar-names">hidden sugar names</a>. The rules: <a href="/how-it-works">how it works</a>.</p>
     <div style="margin-top:40px"><ScanCta /></div>
   </div>
 </Base>

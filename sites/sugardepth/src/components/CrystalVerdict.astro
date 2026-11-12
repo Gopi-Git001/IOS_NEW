@@ -1,26 +1,52 @@
 ---
-interface Props { verdict?: 'CLEAN' | 'BAD' | 'UGLY'; interactive?: boolean; }
-const { verdict = 'UGLY', interactive = false } = Astro.props;
+import { toneClass } from '../data/ingredients';
+// rules-v3 verdict words. The colour classes keep their older names: amber is `tone-bad`, red is `tone-ugly`.
+const WORDS = ['CLEAN', 'OKAY', 'BAD'] as const;
+// `compact` is the glass slab on its own, with no display type beside it (the home hero).
+// `rotate` cycles the interactive slab through the three verdicts like a carousel (the home hero).
+interface Props { verdict?: (typeof WORDS)[number]; interactive?: boolean; compact?: boolean; rotate?: boolean; }
+const { verdict = 'BAD', interactive = false, compact = false, rotate = false } = Astro.props;
 ---
-<div class={`crystal-stage tone-${verdict.toLowerCase()}`} data-crystal>
-  {interactive && (['CLEAN', 'BAD', 'UGLY'] as const).map(word => <input class="crystal-choice" type="radio" name="preview-verdict" id={`preview-${word}`} value={word} checked={word === verdict} />)}
-  <div class="crystal-type">
+<div class:list={['crystal-stage', `tone-${toneClass(verdict)}`, { 'crystal-compact': compact, 'crystal-rotate': interactive && rotate }]} data-crystal>
+  {interactive && WORDS.map(word => <input class="crystal-choice" type="radio" name="preview-verdict" id={`preview-${word}`} value={word} checked={word === verdict} aria-label={`Show the ${word} slab`} />)}
+  {!compact && <div class="crystal-type">
     <span class="crystal-eyebrow">Sugar Depth · Verdicts</span>
     <div class="crystal-wordline">
-      {interactive ? (['CLEAN', 'BAD', 'UGLY'] as const).map(word => <span class={`crystal-word preview-${word}`} data-reflection={word}>{word}</span>) : <span class="crystal-word" data-reflection={verdict}>{verdict}</span>}
+      {interactive ? WORDS.map(word => <span class={`crystal-word preview-${word}`} data-reflection={word}>{word}</span>) : <span class="crystal-word" data-reflection={verdict}>{verdict}</span>}
       <span class="crystal-bead" aria-hidden="true"></span>
     </div>
-    <div class="crystal-signoff">No GOOD tier. No gram cutoff.</div>
-  </div>
+    <div class="crystal-signoff">Three verdicts. The worst ingredient decides.</div>
+  </div>}
   <div class="crystal-object" aria-hidden="true">
     <div class="crystal-caustic"></div>
     <div class="crystal-slab">
       <span class="crystal-slab-label">Verdict</span>
-      {interactive ? (['CLEAN', 'BAD', 'UGLY'] as const).map(word => <span class={`crystal-slab-word preview-${word}`}>{word}</span>) : <span class="crystal-slab-word">{verdict}</span>}
+      {interactive ? WORDS.map(word => <span class={`crystal-slab-word preview-${word}`}>{word}</span>) : <span class="crystal-slab-word">{verdict}</span>}
       <span class="crystal-glint"></span>
     </div>
   </div>
-  {interactive && <div class="crystal-controls" aria-label="Preview the three verdicts">
-    {(['CLEAN', 'BAD', 'UGLY'] as const).map(word => <label for={`preview-${word}`}><span class={`crystal-dot tone-${word.toLowerCase()}`}></span>{word}</label>)}
+  {interactive && <div class="crystal-controls" aria-hidden="true" data-swarm-dim>
+    {WORDS.map(word => <label for={`preview-${word}`}><span class={`crystal-dot tone-${toneClass(word)}`}></span>{word}</label>)}
   </div>}
 </div>
+{interactive && rotate && <script is:inline data-motion>
+(() => {
+  // Verdict carousel: CLEAN, OKAY, BAD in turn. A tap on a badge holds that verdict for a while, then the
+  // carousel carries on. It rests while the tab is hidden and stays still under prefers-reduced-motion.
+  const stage = document.querySelector('.crystal-rotate');
+  if (!stage || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const radios = [...stage.querySelectorAll('.crystal-choice')];
+  if (radios.length < 2) return;
+  const STEP = 2600, HOLD = 9000;
+  let timer;
+  const next = () => {
+    const i = radios.findIndex((r) => r.checked);
+    radios[(i + 1) % radios.length].checked = true;
+    schedule(STEP);
+  };
+  const schedule = (ms) => { clearTimeout(timer); if (!document.hidden) timer = setTimeout(next, ms); };
+  for (const type of ['change', 'click']) stage.addEventListener(type, () => schedule(HOLD));
+  document.addEventListener('visibilitychange', () => schedule(STEP));
+  schedule(STEP);
+})();
+</script>}

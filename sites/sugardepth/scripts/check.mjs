@@ -9,6 +9,8 @@ const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirect
 const pages = walk(dist).filter((f) => f.endsWith('.html'));
 const errors = [];
 const seen = { title: new Map(), desc: new Map() };
+// The only pages that carry the crystal swarm canvas and its script.
+const SWARM_PAGES = ['/index.html', '/how-it-works/index.html', '/about/index.html'];
 
 for (const file of pages) {
   const rel = `/${file.slice(dist.length).split(sep).join('/')}`;
@@ -38,13 +40,61 @@ for (const file of pages) {
   // One exact Google tag is allowed. replace() drops a single copy; a second copy or any other script still fails.
   const allowedGtm = [
     '<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K8262PBN"></script>',
-    "<script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date());</script>",
+    "<script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('set', { allow_google_signals: false, allow_ad_personalization_signals: false }); gtag('js', new Date());</script>",
   ];
   let scripts = html;
   for (const tag of allowedGtm) scripts = scripts.replace(tag, '');
-  if (/<script(?![^>]*(?:application\/ld\+json|data-motion))[^>]*>/.test(scripts)) errors.push(`${rel}: ships a non-JSON-LD <script> (only the data-motion helper and the two approved Google tag scripts are allowed)`);
+  // The home page may load one bundled module: the "try it" widget (components/TryIt.astro).
+  if (rel === '/index.html') scripts = scripts.replace(/<script type="module" src="\/_astro\/TryIt\.[^"]+\.js"><\/script>/, '');
+  // Three pages may load one more bundled module: the crystal swarm (components/CrystalSwarm.astro, lib/swarm.ts).
+  // replace() drops a single copy, and only on these pages; the file itself is checked below.
+  if (SWARM_PAGES.includes(rel)) scripts = scripts.replace(/<script type="module" src="\/_astro\/CrystalSwarm\.[^"]+\.js"><\/script>/, '');
+  if (/<script(?![^>]*(?:application\/ld\+json|data-motion))[^>]*>/.test(scripts)) errors.push(`${rel}: ships a non-JSON-LD <script> (only the data-motion helper, the two approved Google tag scripts, the home page's try-it module and the crystal swarm module on the home page, /how-it-works and /about are allowed)`);
 }
-for (const f of ['robots.txt', 'sitemap-index.xml', 'og/default.png', 'favicon.svg', 'how-it-works/index.html', 'privacy/index.html', 'terms/index.html']) if (!existsSync(join(dist, f))) errors.push(`missing ${f}`);
+{
+  // The swarm is a self-contained canvas script: it must not import another chunk or reach the network.
+  for (const f of readdirSync(join(dist, '_astro')).filter((n) => /^CrystalSwarm\..+\.js$/.test(n))) {
+    const js = readFileSync(join(dist, '_astro', f), 'utf8');
+    if (/\bimport\s*[("'{*]|\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon|EventSource|https?:\/\//.test(js)) errors.push(`/_astro/${f}: the crystal swarm module must not import other modules or make network requests`);
+  }
+  // The alias tiles must read without the script: every name and its answer are in the home page's HTML.
+  const home = readFileSync(join(dist, 'index.html'), 'utf8');
+  const tiles = (home.match(/<button class="tile" type="button" aria-pressed="false"><span class="tile-face tile-front"><span class="tile-alias">[^<]+<\/span><\/span><span class="tile-face tile-back"><span class="tile-tag">Added sugar<\/span><span class="tile-reveal">That's sugar\.<\/span><\/span><\/button>/g) || []).length;
+  if (tiles === 0) errors.push(`/index.html: expected the alias tiles (name and "That's sugar.") in the static HTML, found ${tiles}`);
+  // Every swarm canvas is decoration.
+  for (const rel of SWARM_PAGES) {
+    const html = readFileSync(join(dist, rel), 'utf8');
+    for (const m of html.matchAll(/<canvas\b[^>]*>/g)) if (!/aria-hidden="true"/.test(m[0])) errors.push(`${rel}: a <canvas> without aria-hidden="true"`);
+  }
+}
+{
+  // The try-it widget must be useful before its script runs: the sample verdicts are in the HTML.
+  const home = readFileSync(join(dist, 'index.html'), 'utf8');
+  const panels = (home.match(/class="sheet facts tryit-facts tone-[a-z]+" data-verdict="(?:CLEAN|OKAY|BAD)"/g) || []).length;
+  if (panels === 0) errors.push(`/index.html: expected the try-it sample verdicts in the static HTML, found ${panels}`);
+}
+for (const f of ['robots.txt', 'llms.txt', 'sitemap-index.xml', 'og/default.png', 'favicon.svg', 'how-it-works/index.html', 'faq/index.html', 'about/index.html', 'privacy/index.html', 'terms/index.html']) if (!existsSync(join(dist, f))) errors.push(`missing ${f}`);
+{
+  // The short pages keep an answer-sized meta description, and the home page stays three sections with the
+  // mission as its one heading.
+  for (const rel of ['index.html', 'how-it-works/index.html', 'faq/index.html', 'about/index.html', 'contact/index.html']) {
+    const file = join(dist, rel);
+    if (!existsSync(file)) continue;
+    const desc = readFileSync(file, 'utf8').match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '';
+    if (desc.length > 155) errors.push(`/${rel}: meta description is ${desc.length} characters (155 at most)`);
+  }
+  const main = readFileSync(join(dist, 'index.html'), 'utf8').match(/<main[\s\S]*<\/main>/)?.[0] ?? '';
+  const sections = (main.match(/<section[\s>]/g) || []).length;
+  if (sections !== 3) errors.push(`/index.html: expected three sections (mission, how it works, explore), found ${sections}`);
+  // llms.txt: starts with the site name, and every link in it is a page this build made.
+  const llmsFile = join(dist, 'llms.txt');
+  const llms = existsSync(llmsFile) ? readFileSync(llmsFile, 'utf8') : '';
+  if (llms && !llms.startsWith('# Sugar Depth\n')) errors.push('/llms.txt: must start with "# Sugar Depth"');
+  for (const m of llms.matchAll(/\]\(https:\/\/[^/)]+(\/[^)#?]*)\)/g)) {
+    const ok = [join(dist, m[1]), join(dist, m[1], 'index.html')].some((t) => existsSync(t) && statSync(t).isFile());
+    if (!ok) errors.push(`/llms.txt: link to a page that was not built: ${m[1]}`);
+  }
+}
 
 if (errors.length) {
   console.error(errors.join('\n'));

@@ -10,61 +10,73 @@ import { ADDED_SUGARS } from '../data/sugars';
 import { ADDED_SUGAR_ALIAS_COUNT, MAX_OKAY_ADDED_G, POLICY_VERSION, REGISTRY_VERSION } from '../data/ingredients';
 import { getGuides } from '../data/guides';
 import { breadcrumbs } from '../data/schema';
+import '../styles/brief.css';
 const crumbs = [{ name: 'Home', href: '/' }, { name: 'Hidden sugar names', href: '/hidden-sugar-names' }];
-// Hand-written guides about one name in a group (evaporated cane juice under sugar).
-const nameGuides = (await getGuides()).filter((g) => g.aliasGuide);
+// Hand-written guides about one name in a group (evaporated cane juice under sugar): that name's chip links to it.
+const nameGuides = new Map((await getGuides()).filter((g) => g.aliasGuide).map((g) => [`${g.page.id}:${g.name.toLowerCase()}`, g.slug]));
+// Every name is in the HTML. A long group shows its first names and keeps the rest in a native <details>.
+const SHOWN = 12;
 ---
 <Base
   title={`${ADDED_SUGAR_ALIAS_COUNT} hidden names for added sugar on food labels`}
-  description={`The ${ADDED_SUGAR_ALIAS_COUNT} added-sugar names Sugar Depth recognizes on ingredient lists, from evaporated cane juice and dextrose to brown rice syrup and juice concentrate, each linked to its ingredient page. All of them count as added sugar.`}
+  description={`The ${ADDED_SUGAR_ALIAS_COUNT} names for added sugar on ingredient lists, from evaporated cane juice and dextrose to brown rice syrup. Every one counts as added sugar.`}
   path="/hidden-sugar-names"
   jsonLd={[breadcrumbs(crumbs)]}
 >
-  <div class="wrap page-head editorial-article">
-    <Breadcrumbs items={crumbs} />
-    <span class="kicker">Name the disguise</span>
-    <h1>Hidden sugar names</h1>
-    <p class="lead">This is the list of {ADDED_SUGAR_ALIAS_COUNT} added-sugar names Sugar Depth recognizes on an ingredient list, grouped by what they really are, each group with its own page. Every one counts as added sugar: more than {MAX_OKAY_ADDED_G} g per serving, or grams that can't be read, makes a label <strong class="ugly">BAD</strong>, and {MAX_OKAY_ADDED_G} g or less makes it <strong class="bad">OKAY</strong>.</p>
-    <p class="voice">Sugar doesn't lie on the label. It just uses a lot of names.</p>
-  </div>
-  <div class="wrap page-body editorial-article">
-    <nav class="sheet" aria-label="Jump to a group" style="margin-bottom:40px">
-      <span class="kicker" style="margin-bottom:8px">Jump to</span>
-      <ul class="alias-list" style="margin:0">
-        {ADDED_SUGARS.map((g) => <li><a href={`#${g.page.slug}`} style="text-decoration:none">{g.heading}</a></li>)}
-      </ul>
-    </nav>
+  <div class="wrap page-head editorial-article brief-hero">
+    <div>
+      <Breadcrumbs items={crumbs} />
+      <span class="kicker">Name the disguise</span>
+      <h1>Hidden sugar names</h1>
+      <p class="lead">The {ADDED_SUGAR_ALIAS_COUNT} names Sugar Depth reads as added sugar on an ingredient list.</p>
+      <p class="brief-rule">More than {MAX_OKAY_ADDED_G} g of added sugar per serving, or grams that can't be read, is <strong class="ugly">BAD</strong>. {MAX_OKAY_ADDED_G} g or less is <strong class="bad">OKAY</strong>.</p>
+      <nav class="brief-jump" aria-label="Jump to a group">
+        <ul class="alias-list">
+          {ADDED_SUGARS.map((g) => <li><a href={`#${g.page.slug}`}>{g.page.name}</a></li>)}
+        </ul>
+      </nav>
+    </div>
     <figure class="editorial-frame aliases-film">
       <Film name="aliases" label="Six names, including evaporated cane juice and brown rice syrup, are each revealed as sugar." width={1080} height={1080}>
         <EditorialImage name="aliases" alt="Six glass trays hold sugar cubes, golden syrup, brown sugar, pale agave syrup, dark malt syrup and white powder." sizes="(max-width: 760px) calc(100vw - 40px), 560px" />
       </Film>
     </figure>
-    <div class="prose" style="max-width:none">
-      {ADDED_SUGARS.map((g) => (
-        <section id={g.page.slug} style="padding:0 0 32px" aria-labelledby={`${g.page.slug}-h`}>
-          <hr class="rule-5" />
-          <h2 id={`${g.page.slug}-h`} style="margin-top:12px;font-size:1.5rem">{g.heading}</h2>
-          <p class="voice" style="font-size:1.15rem;margin:0 0 6px">{g.blurb && `${g.blurb} `}That's sugar.</p>
-          {g.page.note && <p class="muted small" style="margin:0 0 6px">{g.page.note}</p>}
-          {g.page.patterns.length > 0 && <p class="muted small" style="margin:0 0 6px">Also any {g.page.patterns.map((p, i) => <>{i > 0 && ' or '}"{p.pattern}", such as {p.example}</>)}.</p>}
-          <p class="small" style="margin:0;display:flex;flex-wrap:wrap;gap:0 20px">
-            <a href={`/ingredients/${g.page.slug}`}>{g.page.name}: the ingredient page</a>
-            {nameGuides.filter((n) => n.page.id === g.page.id).map((n) => <a href={`/ingredients/${n.slug}`}>{n.name}: the guide</a>)}
-          </p>
-          <ul class="alias-list">{g.page.aliases.map((a) => <li>{a}</li>)}</ul>
-        </section>
-      ))}
+  </div>
+  <div class="wrap page-body editorial-article">
+    <div class="brief-names">
+      {ADDED_SUGARS.map((g) => {
+        const chip = (a: string) => {
+          const slug = nameGuides.get(`${g.page.id}:${a}`);
+          return <li>{slug ? <a href={`/ingredients/${slug}`}>{a}</a> : a}</li>;
+        };
+        const n = g.page.aliases.length;
+        return (
+          <section id={g.page.slug} aria-labelledby={`${g.page.slug}-h`}>
+            <h2 id={`${g.page.slug}-h`}><a href={`/ingredients/${g.page.slug}`}>{g.heading}</a></h2>
+            <p class="brief-blurb">{g.blurb ?? g.page.note}</p>
+            <ul class="alias-list">{g.page.aliases.slice(0, SHOWN).map(chip)}</ul>
+            {n > SHOWN && (
+              <details class="brief-more">
+                <summary>All {n} names</summary>
+                <ul class="alias-list">{g.page.aliases.slice(SHOWN).map(chip)}</ul>
+              </details>
+            )}
+            {g.page.patterns.length > 0 && <p class="brief-line">Also any {g.page.patterns.map((p, i) => <>{i > 0 && ' or '}"{p.pattern}"</>)}.</p>}
+          </section>
+        );
+      })}
     </div>
-    <div class="prose">
-      <h2>What isn't on this list</h2>
+    <div class="prose brief-not">
+      <h2>Not on this list</h2>
       <ul>
-        <li>Sugar that comes with whole foods, like <a href="/ingredients/milk">milk</a>, yogurt, whey, <a href="/ingredients/fruit">fruit</a>, dried fruit, <a href="/ingredients/fruit-or-vegetable-juice">single-strength juice</a> and <a href="/ingredients/fruit-puree">fruit puree</a>. Those are allowed in CLEAN.</li>
-        <li><a href="/ingredients/juice-from-concentrate">Juice from concentrate</a> and <a href="/ingredients/fruit-puree-concentrate">fruit puree concentrate</a>. They count as added sugar only when they sweeten another food.</li>
-        <li>Sweeteners that aren't sugar. Artificial sweeteners such as <a href="/ingredients/sucralose">sucralose</a> are BAD. Sugar alcohols such as <a href="/ingredients/erythritol">erythritol</a> and <a href="/ingredients/xylitol">xylitol</a>, <a href="/ingredients/allulose">allulose</a>, <a href="/ingredients/stevia">stevia</a> and <a href="/ingredients/monk-fruit">monk fruit</a> are OKAY. See the <a href="/ingredients">ingredient guides</a>.</li>
-        <li><a href="/ingredients/maltodextrin">Maltodextrin</a>, which sounds like sugar but is a nonsweet starch polymer, and <a href="/ingredients/malted-barley">malted barley</a>, the brewing grain.</li>
+        <li>Sugar that comes with whole foods, like <a href="/ingredients/milk">milk</a>, <a href="/ingredients/fruit">fruit</a> and <a href="/ingredients/fruit-or-vegetable-juice">single-strength juice</a>. Allowed in CLEAN.</li>
+        <li><a href="/ingredients/juice-from-concentrate">Juice from concentrate</a> and <a href="/ingredients/fruit-puree-concentrate">fruit puree concentrate</a>. Added sugar only when they sweeten another food.</li>
+        <li>Sweeteners that aren't sugar. <a href="/ingredients/sucralose">Sucralose</a> is BAD. <a href="/ingredients/erythritol">Erythritol</a> and <a href="/ingredients/stevia">stevia</a> are OKAY.</li>
+        <li><a href="/ingredients/maltodextrin">Maltodextrin</a>, a nonsweet starch polymer.</li>
       </ul>
-      <p class="small muted">From the Sugar Depth ingredient registry {REGISTRY_VERSION} and {POLICY_VERSION}. Names are matched exactly as whole ingredients, so "sugar" doesn't match "sugar alcohol". The list includes sugar's names in other languages, as printed on imported labels. The full rules are on <a href="/how-it-works">how it works</a>.</p>
-      <Sources keys={['addedSugarsRule', 'addedSugarsQA', 'ecj', 'rareSugars']} />
+      <Sources keys={['addedSugarsRule', 'addedSugarsQA', 'ecj', 'rareSugars']} collapsed>
+        <p class="brief-line">From the Sugar Depth ingredient registry {REGISTRY_VERSION} and {POLICY_VERSION}. Names are matched exactly as whole ingredients. The <a href="/how-it-works">full rules</a>.</p>
+      </Sources>
     </div>
     <div style="margin-top:48px"><ScanCta /></div>
   </div>

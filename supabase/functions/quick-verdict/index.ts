@@ -5,7 +5,8 @@
 import { withSupabase } from 'npm:@supabase/server@1.9.2';
 import { askJev } from '../_shared/jev.ts';
 import { env } from '../_shared/env.ts';
-import { allow, intSetting, isJpegBase64, tooMany } from '../_shared/guard.ts';
+import { isJpegBase64 } from '../_shared/guard.ts';
+import { reserveScan } from '../_shared/guest.ts';
 import { padForJev } from '../_shared/pad.ts';
 import { VERDICT_SCHEME } from '../_shared/rules.ts';
 import { clientFields, imageKb, requestTimer, timed } from '../_shared/timing.ts';
@@ -36,9 +37,9 @@ export default {
     // Each scan calls a paid model, so cap scans per account per day (SCAN_DAILY_LIMIT secret).
     const userId = ctx.userClaims?.id;
     if (!userId) return json({ error: 'Not signed in' }, 401);
-    const allowed = await allow(ctx.supabaseAdmin, `verdict:${userId}`, 86_400, intSetting('SCAN_DAILY_LIMIT', 100));
+    const denied = await reserveScan(ctx.supabaseAdmin, ctx.userClaims!, 'verdict');
     timer.mark('checks');
-    if (!allowed) return tooMany();
+    if (denied) return denied;
 
     const prepared = padForJev(image);
     if (prepared.padded) timer.set({ jev_padded: `${prepared.from}->${prepared.to}` });

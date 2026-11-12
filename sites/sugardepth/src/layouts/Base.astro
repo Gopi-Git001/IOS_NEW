@@ -6,9 +6,10 @@ import '@fontsource/libre-franklin/latin-900.css';
 import '@fontsource/newsreader/latin-400-italic.css';
 import '../styles/global.css';
 import '../styles/crystal.css';
+import '../styles/interactive.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { SITE_NAME, abs } from '../config';
+import { APP_URL, SITE_NAME, abs } from '../config';
 
 interface Props {
   title: string;
@@ -23,11 +24,13 @@ const { title, description, path, ogType = 'website', jsonLd = [], noindex = fal
 const canonical = abs(path);
 const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
 const ogImage = abs('/og/default.png');
+// Phones get a "Scan a label" button that stays at the bottom of the screen. The legal pages do without it.
+const stickyScan = !['/privacy', '/terms'].includes(path);
 ---
 <!doctype html>
 <html lang="en">
   <head>
-    <script is:inline async src="https://www.googletagmanager.com/gtm.js?id=GTM-K8262PBN"></script><script is:inline> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date());</script>
+    <script is:inline async src="https://www.googletagmanager.com/gtm.js?id=GTM-K8262PBN"></script><script is:inline> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('set', { allow_google_signals: false, allow_ad_personalization_signals: false }); gtag('js', new Date());</script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light" />
@@ -64,5 +67,31 @@ const ogImage = abs('/og/default.png');
       <slot />
     </main>
     <Footer />
+    {stickyScan && (
+      <div class="sticky-scan" data-sticky-scan>
+        <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
+      </div>
+    )}
+    {stickyScan && (
+      <script is:inline data-motion>
+        // The phone scan bar steps aside while another "Scan a label" button, the try-it form or the footer is on
+        // screen, so it never sits on top of them. Without this script it simply stays put (see interactive.css).
+        (function () {
+          var bar = document.querySelector('[data-sticky-scan]');
+          if (!bar || !('IntersectionObserver' in window)) return;
+          var onScreen = new Set();
+          bar.classList.add('is-away');
+          document.documentElement.setAttribute('data-sticky-scan', 'on');
+          var watcher = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) onScreen.add(entry.target);
+              else onScreen.delete(entry.target);
+            });
+            bar.classList.toggle('is-away', onScreen.size > 0);
+          });
+          Array.prototype.forEach.call(document.querySelectorAll('[data-sticky-hide], .site-footer'), function (el) { watcher.observe(el); });
+        })();
+      </script>
+    )}
   </body>
 </html>

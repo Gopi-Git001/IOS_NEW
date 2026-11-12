@@ -141,11 +141,12 @@ export function Wordmark({ size = 44, state = 'idle' }: { ink?: boolean; size?: 
   );
 }
 
-export function Header({ right, tagline, ink, mark }: { right?: ReactNode; tagline?: string; ink?: boolean; mark?: MarkState }) {
+/** `brand={false}` hides the cube mark (camera and result screens); the tagline and right controls stay. */
+export function Header({ right, tagline, ink, mark, brand = true }: { right?: ReactNode; tagline?: string; ink?: boolean; mark?: MarkState; brand?: boolean }) {
   return (
     <View style={styles.header}>
       <View style={styles.brandRow}>
-        <Wordmark ink={ink} state={mark} />
+        {brand ? <Wordmark ink={ink} state={mark} /> : null}
         {tagline ? <Text style={[styles.tagline, ink && styles.taglineInk]}>{tagline}</Text> : null}
       </View>
       <View style={styles.actions}>{right}</View>

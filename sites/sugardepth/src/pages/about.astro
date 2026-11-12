@@ -1,43 +1,37 @@
 ---
 import Base from '../layouts/Base.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
-import Sources from '../components/Sources.astro';
+import SourcesBrief from '../components/SourcesBrief.astro';
+import CrystalSwarm from '../components/CrystalSwarm.astro';
 import { ORG } from '../config';
+import { MISSION } from '../data/mission';
 import { breadcrumbs, organization } from '../data/schema';
+// After Base and the components, so these rules come last in the page's CSS.
+import '../styles/brief-pages.css';
 const crumbs = [{ name: 'Home', href: '/' }, { name: 'About', href: '/about' }];
 ---
-<Base title="About Sugar Depth and Martian Dynamics" description="Sugar Depth is made by Martian Dynamics LLC in Leander, Texas. Why it exists, how its rules are sourced, and what it does not claim." path="/about" jsonLd={[organization, breadcrumbs(crumbs)]}>
-  <div class="wrap page-head">
-    <Breadcrumbs items={crumbs} />
-    <span class="kicker">About</span>
-    <h1>Label transparency, with a sense of humor.</h1>
-    <p class="lead">Sugar Depth is a food-label scanner made by {ORG.name}, a small company in {ORG.locality}, Texas. It reads the ingredient list on a package and calls out added sugars and sweeteners by their real names.</p>
+<Base title="About Sugar Depth and Martian Dynamics" description="Sugar Depth is a food-label scanner made by Martian Dynamics LLC in Leander, Texas. Its mission, what it does not claim, and its sources." path="/about" jsonLd={[organization, breadcrumbs(crumbs)]}>
+  <div class="page-band swarm-band" data-swarm="accent">
+    <CrystalSwarm />
+    <div class="wrap page-head" data-swarm-copy>
+      <Breadcrumbs items={crumbs} />
+      <h1>About Sugar Depth</h1>
+      <p class="voice mission-line">{MISSION}</p>
+      <p class="lead">Sugar Depth is a food-label scanner made by {ORG.name} in {ORG.locality}, Texas.</p>
+    </div>
   </div>
-  <div class="wrap page-body prose">
-    <section class="mission-block" aria-labelledby="mission">
-      <h2 id="mission">Sugar has a lot of aliases. We read every one.</h2>
-      <p>Sugar Depth reads the fine print on every label and calls out each added sugar and sweetener, with the evidence behind it.</p>
-      <p>No scores, no spin, no lectures.</p>
-      <p>Evaporated cane juice is sugar. Brown rice syrup is sugar. "Zero sugar" can just mean something else is doing the sweetening.</p>
-      <p>We name it, show the rule and get out of your way. What you eat is your call.</p>
-    </section>
-
+  <div class="wrap page-body prose about">
     <h2>Why it exists</h2>
-    <p>Ingredient lists are honest, but they're written in a language few people read fluently. Sugar appears under dozens of names, and sweeteners that aren't sugar at all can sit behind a "0 g sugar" panel. Sugar Depth reads the list for you and says, in one word, whether anything sweet was added.</p>
-    <p>The tone is satirical on purpose. Sugar's disguises are a little absurd ("evaporated cane juice"), and pointing that out is more memorable than another chart. The facts underneath are not a joke: every label rule described on this site links to FDA guidance or federal regulations.</p>
-    <p class="mission">Your food is lying politely. We are here to be rude about it.</p>
+    <p>Sugar goes by dozens of names on labels, and sweeteners that aren't sugar can sit behind a "0 g sugar" panel. We read the fine print and name each one. No scores, no lectures: what you eat is your call.</p>
 
-    <h2>What Sugar Depth does not claim</h2>
+    <h2>What it does not claim</h2>
     <ul>
-      <li>It is not medical or nutrition advice, and it doesn't diagnose or treat anything.</li>
-      <li>Its verdicts are its own preferences about sweeteners. For example, FDA permits every sweetener named on this site; Sugar Depth simply chooses to flag them.</li>
-      <li>It doesn't check allergens.</li>
-      <li>It doesn't rate products overall, count calories or keep a product database.</li>
+      <li>Not medical or nutrition advice.</li>
+      <li>Verdicts are preferences, not safety findings.</li>
+      <li>No allergen checks, calorie counts or product database.</li>
     </ul>
-
-    <h2>How the rules are sourced</h2>
-    <p>The rules are published in full on <a href="/how-it-works">how it works</a>. How US labels treat each ingredient comes from these sources:</p>
-    <Sources heading="Primary sources" keys={['addedSugarsRule', 'addedSugarsQA', 'allulose', 'rareSugars', 'maltodextrin', 'fiber', 'nutritionLabel', 'sweeteners', 'ecj']} />
+    <p>The full rules are on <a href="/how-it-works">how it works</a>.</p>
+    <SourcesBrief keys={['addedSugarsRule', 'addedSugarsQA', 'allulose', 'rareSugars', 'maltodextrin', 'fiber', 'nutritionLabel', 'sweeteners', 'ecj']} />
 
     <h2>Company</h2>
     <p>{ORG.name}<br />{ORG.locality}, Texas, United States<br /><a href={`mailto:${ORG.email}`}>{ORG.email}</a></p>

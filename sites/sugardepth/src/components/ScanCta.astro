@@ -3,7 +3,7 @@ import { APP_URL } from '../config';
 import EditorialImage from './EditorialImage.astro';
 const { title = 'Point it at a label.', text = 'Open the scanner, photograph the ingredient list, get one verdict.', graphic = false } = Astro.props as { title?: string; text?: string; graphic?: boolean };
 ---
-<div class:list={['sheet', 'cta-band', { 'cta-editorial': graphic }]}>
+<div class:list={['sheet', 'cta-band', { 'cta-editorial': graphic }]} data-sticky-hide>
   {graphic && <EditorialImage name="specimen" alt="" sizes="(max-width: 760px) calc(100vw - 40px), 560px" />}
   <div>
     <h2>{title}</h2>

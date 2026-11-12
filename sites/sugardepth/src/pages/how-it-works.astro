@@ -1,22 +1,47 @@
 ---
 import Base from '../layouts/Base.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
-import Sources from '../components/Sources.astro';
+import SourcesBrief from '../components/SourcesBrief.astro';
 import ScanCta from '../components/ScanCta.astro';
 import EditorialImage from '../components/EditorialImage.astro';
-import Film from '../components/Film.astro';
-import FilmMotion from '../components/FilmMotion.astro';
-import { RULES, TREATMENTS } from '../data/rules';
+import CrystalSwarm from '../components/CrystalSwarm.astro';
+import { RULES, TREATMENT_ROWS, VERDICTS } from '../data/rules';
+import { MAX_OKAY_ADDED_G, pageById, POLICY_VERSION, toneClass, type IngredientPage } from '../data/ingredients';
 import { S } from '../data/sources';
 import { breadcrumbs, ORG_ID } from '../data/schema';
-import { POLICY_VERSION, REGISTRY_VERSION, CONTENT_UPDATED, abs } from '../config';
+import { CONTENT_UPDATED, abs } from '../config';
+// After Base and the components, so these rules come last in the page's CSS.
+import '../styles/brief-pages.css';
 const crumbs = [{ name: 'Home', href: '/' }, { name: 'How it works', href: '/how-it-works' }];
-const tone = (v: string) => (v.startsWith('UGLY') ? 'ugly' : v.startsWith('BAD') ? 'bad' : v.includes('CLEAN') ? 'clean' : '');
+const G = MAX_OKAY_ADDED_G;
+const TITLE = 'How Sugar Depth verdicts work: the CLEAN, OKAY and BAD rules';
+const SOURCES = ['addedSugarsRule', 'addedSugarsQA', 'allulose', 'rareSugars', 'maltodextrin', 'fiber', 'nutritionLabel', 'sweeteners'] as const;
+// The identity table: each row is read from the registry, and its entries must agree with each other.
+const one = (values: string[], what: string, row: string[]) => {
+  if (new Set(values).size !== 1) throw new Error(`how-it-works: ${row.join(', ')} do not share one ${what}`);
+  return values[0];
+};
+const treatments = TREATMENT_ROWS.map((row) => {
+  const pages = row.map((id) => {
+    const page = pageById(id);
+    if (!page) throw new Error(`how-it-works: "${id}" is not in the ingredient registry`);
+    return page;
+  });
+  const source = pages[0].sources.find((k) => k !== 'addedSugarsRule' && k !== 'euAdditives') as keyof typeof S | undefined;
+  return {
+    pages,
+    cls: one(pages.map((x: IngredientPage) => x.classLabel), 'class', row),
+    labeling: one(pages.map((x: IngredientPage) => x.labelingLabel), 'label treatment', row),
+    verdict: one(pages.map((x: IngredientPage) => x.verdict.label), 'verdict', row),
+    tone: toneClass(pages[0].verdict.tone),
+    source,
+  };
+});
 const article = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'How Sugar Depth verdicts work: the full rule table',
-  description: 'The ordered rules Sugar Depth uses to call a food label CLEAN, BAD or UGLY.',
+  headline: TITLE,
+  description: 'The ordered rules Sugar Depth uses to call a food label CLEAN, OKAY or BAD.',
   url: abs('/how-it-works'),
   mainEntityOfPage: abs('/how-it-works'),
   dateModified: CONTENT_UPDATED,
@@ -27,117 +52,145 @@ const article = {
 };
 ---
 <Base
-  title="How Sugar Depth verdicts work: the full CLEAN, BAD, UGLY rule table"
-  description="The ordered rules Sugar Depth uses to judge a food label: any added sugar, artificial sweetener, erythritol, xylitol or alcohol is UGLY; stevia, monk fruit, allulose and other sugar alcohols are BAD; nothing sweet added is CLEAN."
+  title={TITLE}
+  description={`BAD: over ${G} g added sugar per serving, an artificial sweetener or alcohol. OKAY: ${G} g or less, sugar alcohols or stevia. CLEAN: nothing sweet added.`}
   path="/how-it-works"
   jsonLd={[article, breadcrumbs(crumbs)]}
 >
-  <div class="wrap page-head editorial-article">
-    <Breadcrumbs items={crumbs} />
-    <span class="kicker">The rulebook · {POLICY_VERSION}</span>
-    <h1>How verdicts work</h1>
-    <p class="lead">
-      Sugar Depth gives a food label one of three verdicts. <strong class="ugly">UGLY</strong> means it lists any added
-      sugar, any artificial sweetener, erythritol, xylitol or drinking alcohol. <strong class="bad">BAD</strong> means no
-      UGLY trigger, but stevia, monk fruit, thaumatin, allulose or another sugar alcohol.{" "}
-      <strong class="clean">CLEAN</strong> means a complete ingredient list with nothing sweet added.
-    </p>
-    <p class="voice">There is no GOOD tier. There is no gram cutoff. A pinch of sugar is still sugar.</p>
+  <div class="page-band swarm-band" data-swarm="accent">
+    <CrystalSwarm />
+    <div class="wrap page-head editorial-article" data-swarm-copy>
+      <Breadcrumbs items={crumbs} />
+      <span class="kicker">The rulebook</span>
+      <h1>How verdicts work</h1>
+      <p class="voice">Three verdicts. The worst ingredient decides.</p>
+      <ul class="verdict-keys">
+        {VERDICTS.map((v) => <li><strong class={toneClass(v.word)}>{v.word}</strong> <span>{v.line}</span></li>)}
+      </ul>
+    </div>
+  </div>
+
+  <div class="wrap editorial-article">
     <figure class="editorial-frame label-figure">
       <EditorialImage name="label" alt="A thick clear glass slab rests over fine print on a cream food package, with a sugar cube beside it." />
     </figure>
   </div>
 
   <div class="wrap page-body editorial-article">
-    <div class="prose">
-      <h2 id="pipeline">What happens to your photo</h2>
-      <ol>
-        <li><strong>Reading.</strong> An AI vision model (Anthropic's Claude) copies the ingredient list and the printed sugar numbers exactly as they appear. It doesn't sort anything or give a verdict.</li>
-        <li><strong>Cleaning up.</strong> The text is split into ingredients, including ones nested in brackets, "and/or" choices, lead-ins like "Contains 2% or less of", footnote marks and E or INS codes.</li>
-        <li><strong>Matching.</strong> Each ingredient is matched to one versioned registry ({REGISTRY_VERSION}) by its exact name, never by a fragment. "Sugar" never matches "sugar alcohol", and "maltodextrin" never matches "resistant maltodextrin".</li>
-        <li><strong>Deciding.</strong> The ordered rules below produce the verdict, the rule that fired, and the printed words that triggered it.</li>
-      </ol>
-      <figure class="editorial-frame steps-film">
-        <Film name="three-steps" label="Three illustrated stages: photograph the label, read the ingredient names, and reveal one verdict." width={1280} height={720}>
-          <EditorialImage name="label" alt="Clear glass magnifies the ingredient print on a cream package beside a sugar cube." sizes="(max-width: 760px) calc(100vw - 40px), 800px" />
-        </Film>
-      </figure>
-      <p>
-        A separate verdict checker also looks at the photo and makes the final call; the rules below decide when that
-        checker is unavailable or unsure, so in rare cases the verdict shown can differ from what the rules alone would give.
-      </p>
+    <p class="expander-hint muted">The details, one tap each.</p>
+    <div class="expanders" data-expanders>
+      <details class="expander">
+        <summary><h2 id="rules">The rule table</h2></summary>
+        <div class="expander-body">
+          <div class="table-wrap">
+            <table class="facts-table rules-table" role="table">
+              <caption>Sugar Depth {POLICY_VERSION}. Checked top to bottom; the first match decides.</caption>
+              <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" id="rule-col-rule">Order</th><th scope="col" role="columnheader" id="rule-col-when">When</th><th scope="col" role="columnheader" id="rule-col-result">Result</th></tr></thead>
+              <tbody role="rowgroup">
+                {RULES.map((r, i) => (
+                  <tr id={`rule-${r.id}`} role="row">
+                    <td class="rid" role="cell" headers="rule-col-rule" data-label="Order">{i + 1}</td>
+                    <td role="cell" headers="rule-col-when" data-label="When">{r.condition}</td>
+                    <td class={`out ${r.outcome} ${toneClass(r.outcome)}`} role="cell" headers="rule-col-result" data-label="Result">{r.result}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="prose">
+            <h3>Cut-off lists</h3>
+            <p>A cut-off list can only hide more ingredients. So added sugar, a sweetener or alcohol in the visible part decides; with none visible, Sugar Depth asks for a retake.</p>
+            <h3>Blends</h3>
+            <p>Every ingredient inside a blend is checked. Stevia never overrides a worse ingredient, so a blend of sucralose and stevia is BAD.</p>
+            <h3>What the rules don't do</h3>
+            <p>The rules make no guesses from an ingredient's position in the list or a brand's intent.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="expander">
+        <summary><h2 id="pipeline">What happens to your photo</h2></summary>
+        <div class="expander-body prose">
+          <ol>
+            <li><strong>Reading.</strong> An AI vision model (Anthropic's Claude) copies the ingredient list and sugar numbers as printed.</li>
+            <li><strong>Cleaning up.</strong> The text is split into single ingredients, including ones nested in brackets.</li>
+            <li><strong>Matching.</strong> Each ingredient is matched to the registry by its exact name, never by a fragment.</li>
+            <li><strong>Deciding.</strong> The ordered rules give the verdict and the printed words that triggered it.</li>
+          </ol>
+          <p>A separate checker also looks at the photo. The stricter of the two calls is the verdict shown.</p>
+        </div>
+      </details>
+
+      <details class="expander">
+        <summary><h2 id="identity">Ingredient examples</h2></summary>
+        <div class="expander-body">
+          <div class="table-wrap">
+            <table class="facts-table examples-table" role="table">
+              <caption>What it is, how US labels count it, and the Sugar Depth verdict</caption>
+              <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" id="identity-col-ingredient">Ingredient</th><th scope="col" role="columnheader" id="identity-col-class">What it is</th><th scope="col" role="columnheader" id="identity-col-label">US label treatment</th><th scope="col" role="columnheader" id="identity-col-verdict">Sugar Depth</th></tr></thead>
+              <tbody role="rowgroup">
+                {treatments.map((t) => (
+                  <tr role="row">
+                    <td class="rid ingr" role="cell" headers="identity-col-ingredient" data-label="Ingredient"><strong>{t.pages.map((x, i) => <>{i > 0 && ', '}<a href={`/ingredients/${x.slug}`}>{i > 0 ? x.name.toLowerCase() : x.name}</a></>)}</strong></td>
+                    <td role="cell" headers="identity-col-class" data-label="What it is">{t.cls}</td>
+                    <td role="cell" headers="identity-col-label" data-label="US label treatment">{t.source ? <a href={S[t.source].url}>{t.labeling}</a> : t.labeling}</td>
+                    <td class={`out ${t.tone}`} role="cell" headers="identity-col-verdict" data-label="Sugar Depth">{t.verdict}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <details class="expander">
+        <summary><h2 id="quantities">How the grams count</h2></summary>
+        <div class="expander-body prose">
+          <ul>
+            <li>Added sugar per serving is the only amount that changes a verdict: more than {G}&nbsp;g is BAD, {G}&nbsp;g or less is OKAY.</li>
+            <li>A printed 0&nbsp;g doesn't cancel a listed added sugar: US labels may round under 0.5&nbsp;g down to zero (<a href={S.nutritionLabel.url}>21 CFR 101.9</a>). That label is OKAY.</li>
+            <li>If the panel shows added sugar but a complete ingredient list names none, the panel grams decide.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="expander">
+        <summary><h2 id="limits">Limits</h2></summary>
+        <div class="expander-body prose">
+          <ul>
+            <li><strong>Not medical advice.</strong> Verdicts are preferences, not safety findings or a diet plan.</li>
+            <li><strong>No allergen checks.</strong> Read the label yourself for allergens.</li>
+            <li><strong>Only what's printed.</strong> There is no product database.</li>
+            <li><strong>Unreadable means retake.</strong> A blurry or cut-off list gets a retake request, not a guess.</li>
+            <li><strong>Juice depends on the product.</strong> <a href="/ingredients/juice-concentrate">Juice concentrate</a>, <a href="/ingredients/juice-from-concentrate">juice from concentrate</a> and <a href="/ingredients/fruit-puree-concentrate">fruit puree concentrate</a> are added sugar when they sweeten another food, and natural sugar in a product made only of fruit or juice.</li>
+            <li><strong>Strict mode.</strong> On by default. With it off, a product whose only sweetener is stevia, monk fruit or thaumatin shows as CLEAN.</li>
+            <li><strong>US labels first.</strong> Label notes follow US FDA rules.</li>
+          </ul>
+        </div>
+      </details>
     </div>
 
-    <h2 id="rules" style="margin-top:56px">The rule table</h2>
-    <p class="muted prose">Rules are checked from top to bottom. The first one that matches decides.</p>
-    <div class="table-wrap">
-      <table class="facts-table" role="table">
-        <caption>Sugar Depth {POLICY_VERSION}. First match wins.</caption>
-        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" id="rule-col-rule">Rule</th><th scope="col" role="columnheader" id="rule-col-when">When</th><th scope="col" role="columnheader" id="rule-col-result">Result</th></tr></thead>
-        <tbody role="rowgroup">
-          {RULES.map((r) => (
-            <tr id={`rule-${r.id}`} role="row">
-              <td class="rid" role="cell" headers="rule-col-rule"><span class="table-label" aria-hidden="true">Rule</span>{r.id}</td>
-              <td role="cell" headers="rule-col-when"><span class="table-label" aria-hidden="true">When</span>{r.condition}</td>
-              <td class={`out ${r.outcome} ${tone(r.outcome)}`} role="cell" headers="rule-col-result"><span class="table-label" aria-hidden="true">Result</span>{r.result}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="prose">
-      <h3>Why UGLY is checked before a cut-off list</h3>
-      <p>A cut-off list can only hide more ingredients, never fewer. So if the visible part already lists sugar, the label is UGLY even though the rest is missing. If nothing UGLY is visible and the list is cut off, Sugar Depth asks for a retake instead of guessing CLEAN.</p>
-      <h3>Blends and the worst ingredient</h3>
-      <p>Every ingredient inside a blend is checked, so "sweetener blend (erythritol, stevia leaf extract)" is UGLY because of the erythritol. Stevia never overrides a worse ingredient.</p>
-      <h3>What the rules don't do</h3>
-      <p>The rules make no guesses from an ingredient's position in the list, its amount, or a brand's intent. Sugar listed last counts the same as sugar listed first.</p>
-    </div>
-
-    <h2 id="identity" style="margin-top:56px">Identity vs. treatment</h2>
-    <p class="muted prose">What an ingredient is, how US labels count it, and how Sugar Depth treats it are three separate questions. Some examples:</p>
-    <div class="table-wrap">
-      <table class="facts-table" role="table">
-        <caption>Identity, US label treatment and Sugar Depth verdict</caption>
-        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" id="identity-col-ingredient">Ingredient</th><th scope="col" role="columnheader" id="identity-col-class">What it is</th><th scope="col" role="columnheader" id="identity-col-label">US label treatment</th><th scope="col" role="columnheader" id="identity-col-verdict">Sugar Depth</th></tr></thead>
-        <tbody role="rowgroup">
-          {TREATMENTS.map((t) => (
-            <tr role="row">
-              <td class="rid ingr" role="cell" headers="identity-col-ingredient"><span class="table-label" aria-hidden="true">Ingredient</span><strong>{t.guide ? <a href={`/ingredients/${t.guide}`}>{t.ingredient}</a> : t.ingredient}</strong></td>
-              <td role="cell" headers="identity-col-class"><span class="table-label" aria-hidden="true">What it is</span>{t.cls}</td>
-              <td role="cell" headers="identity-col-label"><span class="table-label" aria-hidden="true">US label treatment</span>{t.source ? <a href={S[t.source as keyof typeof S].url}>{t.labeling}</a> : t.labeling}</td>
-              <td class={`out ${tone(t.verdict)}`} role="cell" headers="identity-col-verdict"><span class="table-label" aria-hidden="true">Sugar Depth</span>{t.verdict}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="prose">
-      <h2 id="quantities">Quantities</h2>
-      <ul>
-        <li>Total Sugars and Added Sugars are kept separate, along with their basis: per serving, per 100 g, per 100 ml, or unknown.</li>
-        <li>Missing grams stay missing. They are never turned into 0.</li>
-        <li>A printed <strong>0 g</strong> doesn't cancel a listed added sugar. US labels may round amounts under 0.5 g down to zero (<a href={S.nutritionLabel.url}>21 CFR 101.9</a>), and the result says so.</li>
-        <li>If the panel shows Added Sugars above 0 g but no added sugar was found in a complete list, the result is UGLY and the contradiction is reported.</li>
-        <li>Grams never change the verdict on their own. There is no "only a little" exception.</li>
-      </ul>
-
-      <h2 id="limits">Limits</h2>
-      <ul>
-        <li><strong>Not medical advice.</strong> The verdicts are Sugar Depth's preferences about added sugars and sweeteners. They are not safety findings, and they are not a diet plan.</li>
-        <li><strong>No allergen checks.</strong> Always read the label yourself for allergens.</li>
-        <li><strong>Only what's printed.</strong> Sugar Depth reads the label in the photo. It has no product database, so it can't know about a recipe change the label doesn't show.</li>
-        <li><strong>Unreadable means retake.</strong> A blurry, glare-covered or cut-off list gets a request to retake the photo, not a guess.</li>
-        <li><strong>Unknown names.</strong> An unrecognized ingredient that sounds sweet (or an unknown sweetener code from E950 to E969) leaves the result unresolved. Unrecognized ingredients with no sweet signal don't block CLEAN, and are listed for transparency.</li>
-        <li><strong>Juice needs context.</strong> "Juice from concentrate" and "fruit puree concentrate" come back unresolved, because the label alone doesn't say whether they count as added sugar. See <a href="/ingredients/juice-concentrate">juice concentrate</a>.</li>
-        <li><strong>US labels first.</strong> Label treatment notes follow US FDA rules. E numbers are recognized, but other countries' labeling rules aren't described here.</li>
-      </ul>
+    <div class="prose after-expanders">
       <p>Browse the <a href="/ingredients">ingredient guides</a> or the full list of <a href="/hidden-sugar-names">hidden sugar names</a>.</p>
-      <Sources keys={['addedSugarsRule', 'addedSugarsQA', 'allulose', 'rareSugars', 'maltodextrin', 'fiber', 'nutritionLabel', 'sweeteners']} />
+      <SourcesBrief keys={[...SOURCES]} />
     </div>
-    <div style="margin-top:48px"><ScanCta /></div>
+    <div style="margin-top:48px"><ScanCta text="One photo. One word." /></div>
   </div>
-  <FilmMotion />
+
+  <!-- A link to a rule or a section (#rule-X1, #limits) opens the expander it lives in. -->
+  <script is:inline data-motion>
+    (function () {
+      function reveal() {
+        var id = decodeURIComponent(location.hash.slice(1));
+        var target = id && document.getElementById(id);
+        var box = target && target.closest('details');
+        if (!box) return;
+        box.open = true;
+        target.scrollIntoView();
+      }
+      window.addEventListener('hashchange', reveal);
+      reveal();
+    })();
+  </script>
 </Base>

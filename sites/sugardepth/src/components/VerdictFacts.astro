@@ -1,8 +1,9 @@
 ---
+import { toneClass } from '../data/ingredients';
 // The verdict set like a Nutrition Facts panel (DESIGN.md "Verdict Facts panel").
 type Row = { name: string; tag?: 'Sugar' | 'Sweetener' | 'Natural'; tone?: 'ugly' | 'bad' | 'clean' };
 interface Props {
-  verdict: 'CLEAN' | 'BAD' | 'UGLY';
+  verdict: 'CLEAN' | 'OKAY' | 'BAD';
   why: string;
   rows: Row[];
   label?: string;
@@ -11,7 +12,8 @@ interface Props {
   rule?: string;
 }
 const { verdict, why, rows, label = 'Your label', basis = 'ingredient list', foot, rule } = Astro.props;
-const tone = verdict.toLowerCase();
+// Colour classes keep their older names: amber is `bad`, red is `ugly`.
+const tone = toneClass(verdict);
 ---
 <figure class={`sheet facts tone-${tone}`} style="margin:0">
   <p class="facts-title" aria-hidden="true">Verdict Facts</p>

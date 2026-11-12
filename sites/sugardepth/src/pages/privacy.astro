@@ -6,7 +6,7 @@ import { breadcrumbs } from '../data/schema';
 const crumbs = [{ name: 'Home', href: '/' }, { name: 'Privacy policy', href: '/privacy' }];
 const EFFECTIVE = 'November 10, 2026';
 ---
-<Base title="Privacy policy" description="How Sugar Depth handles your data: Google sign-in, label photos that are never stored, the AI services that read them, retention, deletion and your privacy rights." path="/privacy" jsonLd={[breadcrumbs(crumbs)]}>
+<Base title="Privacy policy" description="How Sugar Depth handles your data: Google sign-in, guest scans, label photos that are never stored, the AI services that read them, analytics cookies, retention, deletion and your privacy rights." path="/privacy" jsonLd={[breadcrumbs(crumbs)]}>
   <div class="wrap page-head">
     <Breadcrumbs items={crumbs} />
     <span class="kicker">Legal</span>
@@ -19,8 +19,11 @@ const EFFECTIVE = 'November 10, 2026';
 
     <h2>What we collect</h2>
     <h3>Your Google sign-in profile</h3>
-    <p>You sign in with Google. We ask Google only for your basic profile, using the <code>openid</code>, <code>email</code> and <code>profile</code> permissions. That gives us your name, email address, profile picture and Google account ID. We can't see your Gmail, contacts, files or anything else in your Google account.</p>
+    <p>Signing in is done with Google. We ask Google only for your basic profile, using the <code>openid</code>, <code>email</code> and <code>profile</code> permissions. That gives us your name, email address, profile picture and Google account ID. We can't see your Gmail, contacts, files or anything else in your Google account.</p>
     <p>On our servers we keep your sign-in record: those profile details, plus when you signed up and when you last signed in. The display name and settings you choose inside the app are saved on your device, not on our servers.</p>
+    <h3>If you try the scanner without signing in</h3>
+    <p>The scanner may offer a few free scans (three by default) before it asks you to sign in. If you use one, your first scan creates a guest account on our servers. It holds a random ID and a placeholder email address that we generate. It doesn't hold your name or your real email address.</p>
+    <p>Guest scans are read the same way as any other scan, as described next. If you sign in with Google afterwards, that sign-in replaces the guest session in your browser.</p>
     <h3>Label photos and the text in them</h3>
     <p>The scanner uses your camera only when you open it to photograph a label. Each photo goes to our backend, which passes it to the two AI services listed below. They read the ingredient text and decide the verdict. The photo is then discarded. We never save label photos to our database, file storage or logs.</p>
     <p>The ingredient text and verdict come back to your device, and your scan history is kept there. We don't keep copies of your scan history on our servers.</p>
@@ -28,19 +31,22 @@ const EFFECTIVE = 'November 10, 2026';
     <h3>Usage and technical data</h3>
     <ul>
       <li>To enforce the daily scan limit, we keep a counter tied to your account. Old counters are deleted regularly; they hold only a count and a date.</li>
+      <li>Guest scans are counted against the guest account's ID, so the free scans can't be used twice. These records hold that ID and no other details about you.</li>
+      <li>To limit how many guest accounts can be started from one network in an hour, starting one adds to an hourly counter for your IP address. The counter stores a keyed hash (HMAC-SHA256) of the address, not the address itself.</li>
       <li>Our backend logs record technical details of each scan, such as the outcome, which rule decided it and any errors. The app also sends timing for each scan (how long each step took, the photo's size in pixels and kilobytes, your platform and connection type) so we can make scans faster. These logs never include the photo.</li>
       <li>Our hosting providers keep standard request logs, such as IP address, browser type, time and page requested, for security and troubleshooting.</li>
+      <li>Google Analytics records how this website and the web scanner are used. The details are under "Cookies and analytics" below.</li>
     </ul>
 
     <h2>How we use it</h2>
-    <p>We use this information to sign you in, read your labels and return verdicts, enforce fair-use limits, keep the service secure and answer your messages. We don't use it for advertising and we don't build profiles about you.</p>
+    <p>We use this information to sign you in, read your labels and return verdicts, enforce fair-use limits, see how the website and scanner are used, keep the service secure and answer your messages. We don't use it for advertising and we don't build profiles about you.</p>
 
     <h2>Who processes your data</h2>
     <ul>
-      <li><strong>Supabase</strong> hosts our backend in the United States (AWS us-east-1). That includes sign-in, your account record and the functions that handle each scan.</li>
+      <li><strong>Supabase</strong> hosts our backend in the United States (AWS us-east-1). That includes sign-in, your account record, guest accounts, the scan-limit counters and the functions that handle each scan.</li>
       <li><strong>Anthropic</strong> (Claude) reads the ingredient text from your photo. Under Anthropic's commercial terms, data sent through its API isn't used to train its models and is deleted within 30 days, unless Anthropic must keep it longer for safety or legal reasons.</li>
-      <li><strong>TypeSafe AI</strong> (its Jev model) also looks at your photo to make the CLEAN, BAD or UGLY call. TypeSafe says it doesn't train its models on this data. It processes data in the United States and keeps it only as long as reasonably necessary to provide its service.</li>
-      <li><strong>Google</strong> provides sign-in.</li>
+      <li><strong>TypeSafe AI</strong> (its Jev model) also looks at your photo to make the CLEAN, OKAY or BAD call. TypeSafe says it doesn't train its models on this data. It processes data in the United States and keeps it only as long as reasonably necessary to provide its service.</li>
+      <li><strong>Google</strong> provides sign-in. It also provides Google Analytics, which measures how this website and the web scanner are used.</li>
       <li><strong>Vercel</strong> hosts this website and the web version of the scanner.</li>
     </ul>
     <p>Each provider handles data under its own terms and privacy policy.</p>
@@ -49,19 +55,27 @@ const EFFECTIVE = 'November 10, 2026';
     <p>We don't sell your personal information. We don't share it for cross-context behavioral advertising. We don't use it for targeted advertising.</p>
 
     <h2>Cookies and analytics</h2>
-    <p>This website and the scanner use Google Analytics through Google Tag Manager to understand site usage, which sets cookies. Read <a href="https://policies.google.com/privacy">Google's privacy policy</a>. To keep you signed in, the scanner stores a session token in your browser's local storage. Signing out removes it.</p>
+    <p>This website and the web scanner load a Google tag that runs Google Analytics, so we can see how they are used. It loads with every page and sets cookies whose names start with <code>_ga</code>. The cookies hold a random ID that lets Google Analytics tell one browser's visits from another's. They don't hold your name or email address.</p>
+    <p>Google Analytics records things like the address and title of each page you open, how far you scroll, links you follow to other sites and whether you start filling in a form. It also receives general details about your browser and device, such as screen size, language, browser version and operating system, and, as with any web request, your IP address. Read <a href="https://policies.google.com/privacy">Google's privacy policy</a>.</p>
+    <p>The home page has a box where you can paste an ingredient list. That text is checked in your browser and isn't sent to us or to Google Analytics. Analytics can record that the box was used, but not what you typed.</p>
+    <p>Nothing on this website or in the scanner depends on Google Analytics. Both work the same if your browser blocks it.</p>
+    <p>To keep you signed in, the scanner stores a session token in your browser's local storage. Signing out removes it. A guest session is stored the same way. It stays until you sign in with Google, which replaces it, or clear the scanner's site data in your browser.</p>
 
     <h2>How long we keep it</h2>
     <ul>
       <li><strong>Label photos:</strong> not kept by us. They are discarded once the verdict is returned. The AI providers' own retention is described above.</li>
       <li><strong>Sign-in record:</strong> kept until you delete your account.</li>
       <li><strong>Scan-limit counter:</strong> about two days.</li>
+      <li><strong>Guest accounts and guest scan counts:</strong> not deleted automatically. They stay on our servers until we remove them.</li>
+      <li><strong>Guest sign-up counter (hashed IP address):</strong> removed by the same regular cleanup as the scan-limit counter, which deletes counters more than two days old.</li>
+      <li><strong>Analytics cookies:</strong> they stay in your browser until they expire, which can be more than a year, or until you clear them. The usage data itself is held by Google Analytics, not on our servers.</li>
       <li><strong>Logs:</strong> kept for a limited time on our providers' standard schedules, then deleted.</li>
     </ul>
 
     <h2>Deleting your account</h2>
     <p>You can delete your account at any time from the scanner's menu. This permanently deletes your sign-in record from our servers and clears the scan history on your device.</p>
     <p>You can also email <a href={`mailto:${ORG.email}`}>{ORG.email}</a> from the address on your account. We'll delete your account within 30 days and confirm when it's done.</p>
+    <p>A guest session has no profile screen, so a guest account can't be deleted from the scanner. Clearing the scanner's site data in your browser removes the guest session from your device. The guest account on our servers stays until we remove it.</p>
 
     <h2>Children</h2>
     <p>Sugar Depth is not for children under 13, and we don't knowingly collect information from them. If you believe a child under 13 has created an account, email us and we'll delete it.</p>
