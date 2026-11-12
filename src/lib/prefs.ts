@@ -1,3 +1,4 @@
+import { AUTO_CAPTURE_DEFAULT } from './autoCaptureGate';
 import { stored } from './stored';
 import { isConfigured, supabase } from './supabase';
 
@@ -8,7 +9,7 @@ export type Prefs = {
   gentle: boolean;
   /** Vibrate when a verdict appears. */
   haptics: boolean;
-  /** Web camera can capture a sharp, steady label without tapping. */
+  /** Web camera can capture a sharp, steady label without tapping. Off until turned on in Menu. */
   autoCapture: boolean;
 };
 
@@ -18,7 +19,7 @@ type Saved = Prefs & { unsynced?: boolean };
 
 export type PrefsRow = { strict_mode: boolean; gentle_mode: boolean; haptics: boolean };
 
-const defaults: Prefs = { strict: true, gentle: false, haptics: true, autoCapture: true };
+const defaults: Prefs = { strict: true, gentle: false, haptics: true, autoCapture: AUTO_CAPTURE_DEFAULT };
 
 const store = stored<Saved>('quickgab.prefs', defaults, (saved) => ({ ...defaults, ...(saved as Partial<Saved>) }));
 

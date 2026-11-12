@@ -16,6 +16,7 @@ import { LabelCamera } from '../components/LabelCamera';
 import { SmallMascot, useSmallMascotClearance } from '../components/SmallMascot';
 import { brand, colors, fonts } from '../theme';
 import { freeScansLabel } from '../lib/guestTrial';
+import { autoCaptureOn } from '../lib/autoCaptureGate';
 
 const HINT = 'Fit the ingredient list in the panel';
 const NO_FLASH = 'Flash not available on this camera';
@@ -111,7 +112,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
         onReadyChange={setReady}
         onTorchSupport={onTorchSupport}
         onTorchFailed={onTorchFailed}
-        autoCapture={prefs.autoCapture && (!onSignIn || (freeScans ?? 0) > 0) && active && !busy && ready}
+        autoCapture={autoCaptureOn({ pref: prefs.autoCapture, scansLeft: !onSignIn || (freeScans ?? 0) > 0, active, busy, ready })}
         onAutoCapture={shoot}
       />
       <Scrims />
