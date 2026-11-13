@@ -12,7 +12,7 @@ import type { Session } from '@supabase/supabase-js';
 import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { getGuestQuota, guestConfig, guestMode, guestTrialFlag, signInAsGuest } from './src/lib/api';
 import { isGuestUser, type GuestQuota } from './src/lib/guestTrial';
 import { GuestScanPrompt } from './src/components/GuestScanPrompt';
@@ -24,7 +24,7 @@ import type { Photo } from './src/lib/photo';
 import { runScan } from './src/lib/scan';
 import { finishScanTiming, markScanPainted, noteScan } from './src/lib/scanTiming';
 import { isConfigured, supabase } from './src/lib/supabase';
-import { placeholderResults } from './src/placeholderResults';
+import { appMode, DEMO_DELAY_MS, placeholderAt } from './src/placeholderResults';
 import { CameraScreen } from './src/screens/CameraScreen';
 import { ResultScreen, type ScanState } from './src/screens/ResultScreen';
 import type { Sheet } from './src/components/Chrome';
@@ -32,16 +32,33 @@ import { syncProfile } from './src/lib/account';
 import { MenuScreen } from './src/screens/MenuScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
 import { SignInScreen } from './src/screens/SignInScreen';
-import { colors } from './src/theme';
+import { colors, fonts } from './src/theme';
 import type { ScanResult, Verdict } from './src/types';
 
-// Without Supabase settings in .env the app runs in demo mode: no sign-in, fake results.
+// Without Supabase settings in .env, development (Expo Go) runs in demo mode: no sign-in, fake results.
+// A release build without them (App Store, web export) shows a "not configured" screen instead.
+const mode = appMode(__DEV__, isConfigured);
 const DEMO_TAGLINE = 'Demo mode · fake results';
 let demoCount = 0;
 const demoScan = () =>
-  new Promise<ScanResult>((resolve) =>
-    setTimeout(() => resolve(placeholderResults[demoCount++ % placeholderResults.length]), 1600),
+  new Promise<ScanResult>((resolve) => setTimeout(() => resolve(placeholderAt(demoCount++)), DEMO_DELAY_MS));
+
+function NotConfiguredScreen() {
+  return (
+    <View style={styles.notConfigured}>
+      <Text style={styles.notConfiguredTitle}>Not configured</Text>
+      <Text style={styles.notConfiguredBody}>
+        This build has no server settings, so it can't check labels. Please update the app or try again later.
+      </Text>
+    </View>
   );
+}
+
+const styles = StyleSheet.create({
+  notConfigured: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: colors.background },
+  notConfiguredTitle: { fontFamily: fonts.black, fontSize: 28, color: '#FFFFFF', marginBottom: 12, textAlign: 'center' },
+  notConfiguredBody: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 22, color: 'rgba(255,255,255,0.7)', textAlign: 'center' },
+});
 
 type Scan = { photoUri: string; state: ScanState };
 
@@ -213,6 +230,15 @@ export default function App() {
     if (next === 'profile' && trialVisitor) setSignInOpen(true);
     else setSheet(next);
   };
+
+  if (mode === 'not-configured') {
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="light" />
+        <View style={{ flex: 1, backgroundColor: colors.background }}>{fontsLoaded && <NotConfiguredScreen />}</View>
+      </SafeAreaProvider>
+    );
+  }
 
   return (
     <SafeAreaProvider>
