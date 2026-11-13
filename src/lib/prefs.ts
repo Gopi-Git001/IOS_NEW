@@ -32,8 +32,11 @@ export const usePrefs = store.use;
 async function push() {}
 
 export function setPref<K extends keyof Prefs>(key: K, value: Prefs[K]) {
-  store.set({ ...store.get(), [key]: value, unsynced: true });
-  push().catch(() => {}); // Offline: stays unsynced and is sent on the next sync.
+  // Waits for the saved settings to load (only at startup, a few ms) so the other saved settings are kept.
+  store
+    .update((current) => ({ ...current, [key]: value, unsynced: true }))
+    .then(push)
+    .catch(() => {}); // Offline: stays unsynced and is sent on the next sync.
 }
 
 /** After loading the profile: send local changes the server hasn't seen, otherwise take the server's values. */
@@ -43,4 +46,5 @@ export async function syncPrefs(row: PrefsRow | null) {
   if (row) store.set({ ...store.get(), strict: row.strict_mode, gentle: row.gentle_mode, haptics: row.haptics });
 }
 
+/** Sign-out and account deletion go back to the default settings (the scan history is handled in history.ts). */
 export const resetPrefs = () => store.set(defaults);
