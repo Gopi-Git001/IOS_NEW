@@ -1,17 +1,17 @@
-import { AtSign, LogOut, Trash2, User } from 'lucide-react-native';
+import { LogOut, Trash2, User } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { demoAlert, Group, listStyles, Row, Sheet } from '../components/ListUI';
 import { verdictColor } from '../components/VerdictPanel';
 import { confirmAction, notify } from '../lib/confirm';
 import { deleteAccountAndData, saveDisplayName, signOut, type Stats, syncProfile, syncStats, useProfile } from '../lib/account';
-import { initials, percent } from '../lib/display';
+import { accountRowText, initials, percent } from '../lib/display';
 import { isConfigured } from '../lib/supabase';
 import { brand, colors, fonts, frost } from '../theme';
 
 type Props = { visible: boolean; onClose: () => void; email?: string };
 
-/** The person screen: name, Google email, stats, sign out and delete account. */
+/** The person screen: name, account email, stats, sign out and delete account. */
 export function ProfileScreen({ visible, onClose, email }: Props) {
   const { displayName, stats } = useProfile();
 
@@ -34,12 +34,7 @@ export function ProfileScreen({ visible, onClose, email }: Props) {
         <NameCard displayName={displayName} />
 
         <Group title="Account">
-          <Row
-            icon={AtSign}
-            label="Google account"
-            value={!isConfigured ? 'Demo mode' : email && !isTestEmail(email) ? email : 'Test session'}
-            onPress={isConfigured ? undefined : demoAlert}
-          />
+          <AccountRow text={accountRowText(email, isConfigured)} onPress={isConfigured ? undefined : demoAlert} />
         </Group>
 
         <Group title="My stats">
@@ -55,8 +50,21 @@ export function ProfileScreen({ visible, onClose, email }: Props) {
   );
 }
 
-/** Guest and old phone sessions use hidden placeholder emails; never show those. */
-const isTestEmail = (email: string) => /@(guest|phone)\.sugarhunter\.app$/.test(email);
+/** The ACCOUNT row: only the email (any sign-in method), left-aligned, one line; shrinks a little, then ends in "…". */
+function AccountRow({ text, onPress }: { text: string; onPress?: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : 'text'}
+      style={({ pressed }) => [listStyles.row, pressed && listStyles.rowPressed]}
+    >
+      <Text style={[listStyles.rowLabel, styles.accountText]} numberOfLines={1} ellipsizeMode="tail" adjustsFontSizeToFit minimumFontScale={0.8}>
+        {text}
+      </Text>
+    </Pressable>
+  );
+}
 
 // ---------- Name ----------
 
@@ -244,4 +252,5 @@ const styles = StyleSheet.create({
   legendPercent: { fontFamily: fonts.black, fontSize: 20, letterSpacing: -0.5 },
   legendLabel: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 0.6, color: colors.inkMuted, marginTop: 2 },
   noScans: { fontFamily: fonts.regular, fontSize: 14, color: colors.inkMuted },
+  accountText: { flex: 1, textAlign: 'left' },
 });

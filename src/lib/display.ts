@@ -65,6 +65,16 @@ export function initials(name: string | null | undefined) {
   return words.slice(0, 2).map((w) => [...w][0].toUpperCase()).join('');
 }
 
+/**
+ * Text of the Profile ACCOUNT row, the same for every sign-in method: the email, 'Demo mode' without a
+ * backend, or 'Test session' when there's no email or only a hidden guest/phone placeholder email.
+ */
+export function accountRowText(email: string | null | undefined, configured: boolean) {
+  if (!configured) return 'Demo mode';
+  const e = (email ?? '').trim();
+  return e && !/@(guest|phone)\.sugarhunter\.app$/i.test(e) ? e : 'Test session';
+}
+
 /** Whole-number percentage of `part` in `total` (0 when there are no scans). */
 export const percent = (part: number, total: number) => (total > 0 ? Math.round((part / total) * 100) : 0);
 

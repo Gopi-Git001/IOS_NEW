@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { ScanResult } from '../types.ts';
-import { addToHistory, applyStrictMode, HISTORY_LIMIT, ingredientNames, reasonLine, ingredientSummary, initials, maskPhone, percent, sugarStackingLine } from './display.ts';
+import { accountRowText, addToHistory, applyStrictMode, HISTORY_LIMIT, ingredientNames, reasonLine, ingredientSummary, initials, maskPhone, percent, sugarStackingLine } from './display.ts';
 
 const result = (over: Partial<ScanResult>): ScanResult => ({
   verdict: 'OKAY',
@@ -104,4 +104,14 @@ test('strict mode keeps the stacking line', () => {
   const r = result({ addedSugars: ['Sugar', 'Honey'], sugarStacking: s });
   assert.deepEqual(applyStrictMode(r, false), r);
   assert.equal(sugarStackingLine(applyStrictMode(r, false))?.line, '2 different added sugars, first at ingredient 1 of 3');
+});
+
+test('account row shows only the email, for any sign-in method', () => {
+  assert.equal(accountRowText('ana@example.com', true), 'ana@example.com');
+  assert.equal(accountRowText('someone@icloud.com', true), 'someone@icloud.com');
+  assert.equal(accountRowText('ana@example.com', false), 'Demo mode');
+  assert.equal(accountRowText('old@guest.sugarhunter.app', true), 'Test session');
+  assert.equal(accountRowText('x@phone.sugarhunter.app', true), 'Test session');
+  assert.equal(accountRowText(undefined, true), 'Test session');
+  assert.equal(accountRowText('  ', true), 'Test session');
 });
