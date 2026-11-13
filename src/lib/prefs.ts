@@ -1,4 +1,5 @@
 import { AUTO_CAPTURE_DEFAULT } from './autoCaptureGate';
+import { devLog, HAPTICS_DEFAULT, type HapticsSource, readHapticsPref } from './haptics';
 import { stored } from './stored';
 import { isConfigured, supabase } from './supabase';
 
@@ -19,9 +20,16 @@ type Saved = Prefs & { unsynced?: boolean };
 
 export type PrefsRow = { strict_mode: boolean; gentle_mode: boolean; haptics: boolean };
 
-const defaults: Prefs = { strict: true, gentle: false, haptics: true, autoCapture: AUTO_CAPTURE_DEFAULT };
+const defaults: Prefs = { strict: true, gentle: false, haptics: HAPTICS_DEFAULT, autoCapture: AUTO_CAPTURE_DEFAULT };
 
-const store = stored<Saved>('quickgab.prefs', defaults, (saved) => ({ ...defaults, ...(saved as Partial<Saved>) }));
+let hapticsSource: HapticsSource = 'default';
+const store = stored<Saved>('quickgab.prefs', defaults, (saved) => {
+  // Haptics: a saved true/false wins; a missing or non-boolean value keeps the default (ON).
+  const haptics = readHapticsPref(saved);
+  hapticsSource = haptics.source;
+  return { ...defaults, ...(saved as Partial<Saved>), haptics: haptics.value };
+});
+void store.loaded.then(() => devLog?.(`[haptics] setting at load: ${store.get().haptics ? 'on' : 'off'} (source: ${hapticsSource})`));
 
 const toRow = (p: Prefs): PrefsRow => ({ strict_mode: p.strict, gentle_mode: p.gentle, haptics: p.haptics });
 

@@ -4,7 +4,7 @@ import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { warmScan } from '../lib/scanTransport';
 import { getPrefs, usePrefs } from '../lib/prefs';
-import { shutterHaptic } from '../lib/shutterHaptic';
+import { playHaptic, SHUTTER_HAPTIC_DELAY_MS } from '../lib/haptics';
 import { notify } from '../lib/confirm';
 import { BlurryPhotoError, type LabelCameraHandle, type Photo, type ViewBox } from '../lib/photo';
 import { markScan, noteScan, startScanTiming } from '../lib/scanTiming';
@@ -102,10 +102,11 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
       markScan('captured');
       noteScan({ photo_px: `${photo.width}x${photo.height}` });
       if (Platform.OS !== 'web') noteScan({ capture_path: 'native' });
-      // After the shot, so the buzz can't shake the phone while the photo is taken.
-      shutterHaptic(getPrefs(), () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
       setTorch(false);
       onCapture(photo);
+      // After the shot and after the result screen has closed the camera: iOS can drop haptics while the
+      // camera session runs. The setting is read when the buzz plays.
+      setTimeout(() => playHaptic('shutter', getPrefs(), () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)), SHUTTER_HAPTIC_DELAY_MS);
     } catch (e) {
       if (e instanceof BlurryPhotoError) notify('Photo is blurry', 'Hold the phone steady and tap again.');
       else notify('Could not take photo', 'Please try again.');
