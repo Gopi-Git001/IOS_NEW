@@ -15,6 +15,13 @@ import * as Linking from 'expo-linking';
 import { isRunningInExpoGo } from 'expo';
 import { getBundleOrigin } from 'expo/internal/bundle-origin';
 import { parseAuthResult, redactUrl, type RedirectEnv, resolveNativeRedirect } from './authRedirect';
+import { createSingleFlight, describeAuthUrl, flowOutcome, safeMessage } from './authFlow';
+
+// Dev only: one line per JS start, so a reload while the Google sheet is open shows up in the log.
+if (__DEV__) console.log(`[auth] app start ${Platform.OS}`);
+
+const GOOGLE_OPEN_FAILED = 'Could not open Google sign-in. Try again.';
+const googleSignIn = createSingleFlight();
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
 async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
@@ -264,35 +271,76 @@ function nativeRedirect(): string {
  * started (web: the page leaves for Google and comes back signed in) or the person closed the
  * sign-in sheet (phones). An ?error= redirect is a failure message, never silent.
  */
-export async function signInWithGoogle(): Promise<string | null> {
-  const failed = 'Could not open Google sign-in. Try again.';
+export function signInWithGoogle(): Promise<string | null> {
+  // One sign-in at a time: a second tap while the browser sheet is open does nothing.
+  return googleSignIn.run(signInWithGoogleOnce, null, () => {
+    if (__DEV__) console.log('[auth] ignored: already in progress');
+  });
+}
+
+async function signInWithGoogleOnce(): Promise<string | null> {
   if (Platform.OS === 'web') {
     const back = window.location.origin + window.location.pathname;
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: back } });
-    return error ? failed : null;
+    return error ? GOOGLE_OPEN_FAILED : null;
   }
+  const step: { current: 'cancel' | 'error' | 'session-set' } = { current: 'error' };
+  try {
+    return await nativeGoogleSignIn(step);
+  } catch (e) {
+    if (__DEV__) console.log(`[auth] error: ${safeMessage(e)}`);
+    return 'Google sign-in failed. Try again.';
+  } finally {
+    if (__DEV__) {
+      const hasSession = await logSessionState();
+      console.log(`[auth] flow end ${flowOutcome(step.current, hasSession)}`);
+    }
+  }
+}
+
+async function nativeGoogleSignIn(step: { current: 'cancel' | 'error' | 'session-set' }): Promise<string | null> {
+  const failed = GOOGLE_OPEN_FAILED;
   const redirect = nativeRedirect();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: redirect, skipBrowserRedirect: true },
   });
   if (error || !data?.url) return failed;
-  if (__DEV__) console.log('[auth] redirect', redirect);
+  if (__DEV__) console.log(`[auth] redirectTo ${redirect}`);
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirect);
-  if (__DEV__) console.log('[auth] result', result.type);
-  const outcome = parseAuthResult(result);
-  if (outcome.kind === 'cancel') return null;
-  if (outcome.kind === 'error') {
-    // Never log the code, tokens or full URL: only the URL without its query / fragment.
-    if (__DEV__) console.warn('[auth] Google sign-in redirect error', result.type === 'success' ? redactUrl(result.url) : result.type);
-    return outcome.message;
+  if (__DEV__) {
+    console.log(`[auth] result ${result.type}`);
+    // Only whether a code / tokens came back and the error text; never the values or the full URL.
+    if (result.type === 'success') console.log(`[auth] return url: ${describeAuthUrl(result.url)}`);
   }
+  const outcome = parseAuthResult(result);
+  if (outcome.kind === 'cancel') {
+    step.current = 'cancel';
+    return null;
+  }
+  if (outcome.kind === 'error') return outcome.message;
+  const label = outcome.kind === 'code' ? 'exchange' : 'setSession';
   const { error: sessionError } =
     outcome.kind === 'code'
       ? await supabase.auth.exchangeCodeForSession(outcome.code)
       : await supabase.auth.setSession({ access_token: outcome.accessToken, refresh_token: outcome.refreshToken });
-  if (sessionError && __DEV__) console.warn('[auth] setting the session failed', outcome.kind, sessionError.message);
-  return sessionError ? 'Could not sign you in. Try again.' : null;
+  if (__DEV__) console.log(sessionError ? `[auth] ${label} failed: ${safeMessage(sessionError.message)}` : `[auth] ${label} ok`);
+  if (sessionError) return 'Could not sign you in. Try again.';
+  step.current = 'session-set';
+  return null;
+}
+
+/** "[auth] session: yes|no user: yes|no" (presence only, no ids or tokens). Dev only. */
+async function logSessionState(): Promise<boolean> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const session = data?.session ?? null;
+    console.log(`[auth] session: ${session ? 'yes' : 'no'} user: ${session?.user ? 'yes' : 'no'}`);
+    return !!session;
+  } catch (e) {
+    console.log(`[auth] session: unknown (${safeMessage(e)})`);
+    return false;
+  }
 }
 
 /** On the web, Google sends people back with ?error=... when they cancel or something fails. */
