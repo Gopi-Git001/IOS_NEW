@@ -1,6 +1,6 @@
 // "Catch Me If You Can": tap an ingredient row to see what it really is. Set as a bone-paper label card.
 import { useEffect, useRef } from 'react';
-import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type Kind, lookup } from '../lib/glossary';
 import { colors, fonts, frost } from '../theme';
@@ -11,8 +11,14 @@ const kindLabel: Record<Kind, string> = { added: 'Added sugar', sweetener: 'Swee
 
 export type Pick = { name: string; kind: Kind } | null;
 
+/** Tallest the card may be: the window minus the top and bottom insets, the 8 px bottom gap and 8 px clear of the top inset. */
+export function glossaryCardMaxHeight(windowHeight: number, insets: { top: number; bottom: number }) {
+  return Math.max(0, windowHeight - insets.top - insets.bottom - 16);
+}
+
 export function GlossaryCard({ pick, onClose }: { pick: Pick; onClose: () => void }) {
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   const rise = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -29,21 +35,27 @@ export function GlossaryCard({ pick, onClose }: { pick: Pick; onClose: () => voi
   return (
     <Modal transparent visible animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
-      <Animated.View style={[styles.card, { marginBottom: insets.bottom + 8, transform: [{ translateY }] }]} accessibilityViewIsModal>
-        <View style={styles.top}>
-          <Text style={styles.kind}>{kindLabel[pick.kind]}</Text>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{kindTag[pick.kind]}</Text>
+      {/* Never taller than the safe area: with large Dynamic Type the text scrolls instead of rising under the island. */}
+      <Animated.View
+        style={[styles.card, { marginBottom: insets.bottom + 8, maxHeight: glossaryCardMaxHeight(height, insets), transform: [{ translateY }] }]}
+        accessibilityViewIsModal
+      >
+        <ScrollView style={styles.scroll} bounces={false} alwaysBounceVertical={false} showsVerticalScrollIndicator={false}>
+          <View style={styles.top}>
+            <Text style={styles.kind}>{kindLabel[pick.kind]}</Text>
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>{kindTag[pick.kind]}</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.rule10} />
-        <Text style={styles.name}>{pick.name}</Text>
-        <Text style={[styles.reveal, { color }]} accessibilityRole="header">
-          {entry.reveal}
-        </Text>
-        <Text style={styles.blurb}>{entry.blurb}</Text>
-        <View style={styles.rule5} />
-        <Text style={styles.effectText}>{entry.effect}</Text>
+          <View style={styles.rule10} />
+          <Text style={styles.name}>{pick.name}</Text>
+          <Text style={[styles.reveal, { color }]} accessibilityRole="header">
+            {entry.reveal}
+          </Text>
+          <Text style={styles.blurb}>{entry.blurb}</Text>
+          <View style={styles.rule5} />
+          <Text style={styles.effectText}>{entry.effect}</Text>
+        </ScrollView>
         <Pressable onPress={onClose} accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
           <Text style={styles.buttonText}>Got it</Text>
         </Pressable>
@@ -67,6 +79,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     boxShadow: '0px -6px 30px rgba(0,0,0,0.4)',
   },
+  scroll: { flexGrow: 0, flexShrink: 1 },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   kind: { fontFamily: fonts.black, fontSize: 22, letterSpacing: -0.6, color: colors.ink },
   tag: { borderWidth: 1, borderColor: colors.rule, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
