@@ -4,7 +4,7 @@ import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@s
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import type { JevVerdict, ScanResult } from '../types';
 import { type CaptureMeta, type Photo, type Rect, toPixels, UPLOAD_MAX_SIDE, UPLOAD_MIN_SIDE } from './photo';
-import { noteScan, scanTimingId } from './scanTiming';
+import { markScan, noteScan, scanTimingId } from './scanTiming';
 import { supabase } from './supabase';
 import { postScan } from './scanTransport';
 import { requestScanStream, RetryableScanError, type ScanEvent } from './scanStream';
@@ -42,7 +42,13 @@ const READ_FAILED = "Couldn't read the label. Try again.";
 export async function streamScan(image: string, onEvent: (event: ScanEvent) => void, client?: CaptureMeta): Promise<boolean> {
   try {
     return await requestScanStream(
-      (signal) => postScan({ image, scan_id: scanTimingId(), client }, signal),
+      async (signal) => {
+        const response = await postScan({ image, scan_id: scanTimingId(), client }, signal, markScan);
+        // `whole`: this runtime buffers the body, so both answers arrive together at the end.
+        const incremental = typeof TextDecoder !== 'undefined' && typeof response.body?.getReader === 'function';
+        noteScan({ stream_status: response.status, stream_body: incremental ? 'incremental' : 'whole' });
+        return response;
+      },
       onEvent,
       LISTS_TIMEOUT_MS,
     );
@@ -99,6 +105,7 @@ async function encodeForUpload({ uri, width, height }: Photo, crop: Rect | undef
 
 /** Fast path: Jev makes the CLEAN / OKAY / BAD call straight from the photo. Never throws. */
 export async function quickVerdict(image: string, client?: CaptureMeta): Promise<JevVerdict> {
+  markScan('legacy_request_start');
   const { data, error } = await supabase.functions.invoke<{ jev: JevVerdict; verdicts?: string; timing?: unknown }>('quickgob-quick-verdict', {
     body: { image, scan_id: scanTimingId(), client },
   });
@@ -113,6 +120,7 @@ export async function quickVerdict(image: string, client?: CaptureMeta): Promise
 
 /** Detail path: Claude lists the sugars, and the rules give a backstop verdict. */
 export async function readLabel(image: string, client?: CaptureMeta): Promise<ScanResult> {
+  markScan('legacy_request_start');
   const started = performance.now();
   const outcome = (result: string) => noteScan({ scan_label_outcome: result, scan_label_ms: Math.round(performance.now() - started) });
   const controller = new AbortController();
