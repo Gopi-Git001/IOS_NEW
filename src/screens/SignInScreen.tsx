@@ -1,5 +1,6 @@
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import * as Linking from 'expo-linking';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { CharacterView, MASCOT_FEET_RATIO } from '../components/Character';
@@ -7,6 +8,7 @@ import { Ambient, Footer, useReducedMotion } from '../components/Chrome';
 import { SmallMascot, smallMascotBox, WIDE_FROM } from '../components/SmallMascot';
 import { CrystalSwarm } from '../components/CrystalSwarm';
 import { signInWithGoogle, takeAuthRedirectError } from '../lib/api';
+import { describeAuthUrl, isAuthLink } from '../lib/authFlow';
 import { colors, fonts, frost } from '../theme';
 
 // Option A layout (docs/design/signin-option-a-*.png). Wide = laptop, narrow = phones and tablets.
@@ -103,13 +105,33 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
   // Coming back from Google with an error (for example, the person pressed Cancel).
   useEffect(() => setError(takeAuthRedirectError()), []);
 
+  // Dev only: did the sign-in return link reach the app (for example after a reload while the Google
+  // sheet was open)? Logs what the link carries (never the code or tokens); handles nothing.
+  useEffect(() => {
+    if (!__DEV__ || Platform.OS === 'web') return;
+    const logLink = (url: string | null) => {
+      if (url && isAuthLink(url)) console.log(`[auth] incoming link: ${describeAuthUrl(url)}`);
+    };
+    Linking.getInitialURL()
+      .then(logLink)
+      .catch(() => {});
+    const sub = Linking.addEventListener('url', ({ url }) => logLink(url));
+    return () => sub.remove();
+  }, []);
+
   const start = async () => {
+    if (__DEV__) console.log('[auth] tap');
     setBusy(true);
     setError(null);
-    const err = await signInWithGoogle();
-    // On the web the page is leaving for Google; on phones the auth listener in App.tsx takes over.
-    if (err) setError(err);
-    setBusy(false);
+    try {
+      const err = await signInWithGoogle();
+      // On the web the page is leaving for Google; on phones the auth listener in App.tsx takes over.
+      if (err) setError(err);
+    } catch {
+      setError('Google sign-in failed. Try again.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
