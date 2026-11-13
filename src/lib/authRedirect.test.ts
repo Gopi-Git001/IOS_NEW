@@ -149,3 +149,28 @@ test('redactUrl strips the query and fragment (code, tokens, errors)', () => {
   assert.ok(!redactUrl(`${TUNNEL}?code=secret-code`).includes('secret-code'));
   assert.ok(!redactUrl(`${TUNNEL}#access_token=tok123&refresh_token=ref456`).includes('tok123'));
 });
+
+test('release / bare builds stay on reallabel://auth even with an embedded manifest or a host', () => {
+  for (const executionEnvironment of ['standalone', 'bare']) {
+    const url = buildNativeRedirect({
+      os: 'ios',
+      executionEnvironment,
+      appOwnership: null,
+      hasExpoGoConfig: true,
+      linkingUri: 'exps://example.on.expo.app',
+      bundleOrigin: 'https://example.on.expo.app',
+      hostUri: 'example.on.expo.app',
+    });
+    assert.equal(url, 'reallabel://auth');
+  }
+});
+
+test('the native ExpoGo module wins over a standalone-looking executionEnvironment', () => {
+  const url = buildNativeRedirect({
+    os: 'ios',
+    isRunningInExpoGo: true,
+    executionEnvironment: 'standalone',
+    bundleOrigin: 'https://c-robbin001-b1arzb-mwf2ajj6dv4rb1v0.on.expo.app',
+  });
+  assert.equal(url, 'exps://c-robbin001-b1arzb-mwf2ajj6dv4rb1v0.on.expo.app/--/auth');
+});

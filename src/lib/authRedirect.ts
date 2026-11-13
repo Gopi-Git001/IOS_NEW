@@ -48,8 +48,11 @@ const EXPO_GO_LINK = /^exps?:\/\//i;
 export function isExpoGo(
   env: Pick<RedirectEnv, 'isRunningInExpoGo' | 'appOwnership' | 'executionEnvironment' | 'hasExpoGoConfig' | 'linkingUri'>,
 ): boolean {
+  if (env.isRunningInExpoGo === true) return true;
+  // A release or bare native build is never Expo Go, even if it has an embedded manifest
+  // (Constants.expoGoConfig returns the embedded manifest there) or a custom-scheme linkingUri.
+  if (env.executionEnvironment === 'standalone' || env.executionEnvironment === 'bare') return false;
   return (
-    env.isRunningInExpoGo === true ||
     env.executionEnvironment === 'storeClient' ||
     env.appOwnership === 'expo' ||
     env.hasExpoGoConfig === true ||

@@ -231,7 +231,8 @@ function nativeRedirect(): string {
     isRunningInExpoGo: safely(() => isRunningInExpoGo()),
     appOwnership: safely(() => Constants.appOwnership),
     executionEnvironment: safely(() => Constants.executionEnvironment),
-    hasExpoGoConfig: safely(() => Constants.expoGoConfig != null),
+    // Only a dev-server manifest has `developer`; an embedded release manifest does not.
+    hasExpoGoConfig: safely(() => Constants.expoGoConfig?.developer != null),
     bundleOrigin: safely(() => getBundleOrigin()),
     experienceUrl: safely(() => Constants.experienceUrl),
     hostUri: safely(() => Constants.expoConfig?.hostUri),
