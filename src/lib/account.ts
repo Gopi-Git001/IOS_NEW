@@ -1,4 +1,5 @@
 // The signed-in user's profile (name, stats) with a local copy, plus sign-out and delete.
+import { createAccountDeleter } from './accountDeletion';
 import { deleteAccount } from './api';
 import { clearHistory, getHistory } from './history';
 import { type PrefsRow, resetPrefs, syncPrefs } from './prefs';
@@ -51,9 +52,9 @@ export async function signOut() {
   clearLocalCache();
 }
 
-/** Deletes the account on the server (scans, profile, user), then everything kept on this phone. */
-export async function deleteAccountAndData() {
-  await deleteAccount();
-  clearLocalCache();
-  clearHistory();
-}
+/**
+ * Deletes the account on the server (the Auth user; scans are never stored there), then everything kept on this
+ * phone: cached profile, settings and the scan history. A server failure throws and leaves all of it in place.
+ * Order and double-tap handling: `createAccountDeleter` in accountDeletion.ts.
+ */
+export const deleteAccountAndData = createAccountDeleter(deleteAccount, [clearLocalCache, clearHistory]);

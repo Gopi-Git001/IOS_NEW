@@ -188,7 +188,10 @@ function confirmDelete() {
     `This permanently deletes your ${brand.name} account and all of your scan history. It cannot be undone.`,
     'Delete',
     () => {
-      deleteAccountAndData().catch((e: Error) => notify('Delete failed', e.message));
+      // Failure keeps the account and everything on this phone (accountDeletion.ts).
+      deleteAccountAndData().catch((e: unknown) =>
+        notify('Delete failed', e instanceof Error && e.message ? e.message : 'Could not delete account. Try again.'),
+      );
     },
     true,
   );
