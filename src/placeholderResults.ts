@@ -44,10 +44,12 @@ export const placeholderAt = (n: number): ScanResult =>
 export type AppMode = 'live' | 'demo' | 'not-configured';
 
 /**
- * Live with Supabase settings. Without them, development (Expo Go) runs the demo; a release build
- * (App Store, web export) shows a "not configured" screen and never fake verdicts.
+ * Live with Supabase settings on every platform. Without them, development (Expo Go) and web builds
+ * (including a local `npm run build:web`) run the demo; only a native (iOS/Android) release build
+ * shows a "not configured" screen and never fake verdicts.
  */
-export function appMode(isDev: boolean, configured: boolean): AppMode {
+export function appMode(isDev: boolean, configured: boolean, platform: string): AppMode {
   if (configured) return 'live';
-  return isDev ? 'demo' : 'not-configured';
+  if (isDev || platform === 'web') return 'demo';
+  return 'not-configured';
 }
