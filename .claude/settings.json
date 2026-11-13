@@ -31,6 +31,10 @@
       "Bash(timeout:*)",
       "Bash(/workspace/factory/integrate.sh:*)",
       "Bash(npm run build:web:*)",
+      "Bash(cp:*)",
+      "Bash(node:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npm uninstall:*)",
       "Read",
       "Edit",
       "Write"

@@ -53,6 +53,15 @@ Expo Go (SDK 58) ships a fixed set of native modules. A JS-only package always w
 | @supabase/supabase-js, react-native-url-polyfill, lucide-react-native, @expo-google-fonts/* | no (JS) | yes | |
 | Not present: expo-apple-authentication | yes | yes | Needed for task 9. It is bundled in Expo Go, but tokens are issued for Expo Go's bundle ID, so a full test needs a dev build. |
 
+## Owner decisions
+
+Recorded Nov 13, 2026.
+
+- Shutter sound: OFF.
+- Links host:  for the privacy, terms and support URLs.
+- URL scheme: stays .
+- Pending the team lead: bundle ID ( proposed), display name, and age rating.
+
 ## Task backlog
 
 ### 1. `ios-app-config`
