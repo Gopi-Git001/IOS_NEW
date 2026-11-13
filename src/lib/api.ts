@@ -10,6 +10,8 @@ import { postScan } from './scanTransport';
 import { requestScanStream, RetryableScanError, type ScanEvent } from './scanStream';
 import { normalizeJev, normalizeResult } from './verdicts';
 import { parseGuestQuota } from './guestTrial';
+import Constants from 'expo-constants';
+import { buildNativeRedirect, parseAuthResult } from './authRedirect';
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
 async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
@@ -198,11 +200,17 @@ export async function signInAsGuest(): Promise<string | null> {
   return authError ? 'Free scans are unavailable. Sign in with Google.' : null;
 }
 
-const NATIVE_REDIRECT = 'reallabel://auth';
+/** reallabel://auth everywhere except Android Expo Go (exp://<host>/--/auth); see authRedirect.ts. */
+const NATIVE_REDIRECT = buildNativeRedirect({
+  os: Platform.OS,
+  executionEnvironment: Constants.executionEnvironment,
+  linkingUri: Constants.linkingUri,
+});
 
 /**
  * Google sign-in through Supabase Auth (free; no SMS). Returns an error message, or null when it
- * started (web: the page leaves for Google and comes back signed in) or the person cancelled (phones).
+ * started (web: the page leaves for Google and comes back signed in) or the person closed the
+ * sign-in sheet (phones). An ?error= redirect is a failure message, never silent.
  */
 export async function signInWithGoogle(): Promise<string | null> {
   const failed = 'Could not open Google sign-in. Try again.';
@@ -217,10 +225,14 @@ export async function signInWithGoogle(): Promise<string | null> {
   });
   if (error || !data?.url) return failed;
   const result = await WebBrowser.openAuthSessionAsync(data.url, NATIVE_REDIRECT);
-  if (result.type !== 'success') return null;
-  const code = new URL(result.url).searchParams.get('code');
-  if (!code) return 'Google sign-in was cancelled.';
-  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+  const outcome = parseAuthResult(result);
+  if (outcome.kind === 'cancel') return null;
+  if (outcome.kind === 'error') {
+    console.warn('[auth] Google sign-in redirect error', result.type === 'success' ? result.url : result.type);
+    return outcome.message;
+  }
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(outcome.code);
+  if (exchangeError) console.warn('[auth] exchangeCodeForSession failed', exchangeError.message);
   return exchangeError ? 'Could not sign you in. Try again.' : null;
 }
 
