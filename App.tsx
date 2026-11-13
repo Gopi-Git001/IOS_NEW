@@ -20,6 +20,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { applyStrictMode } from './src/lib/display';
 import { recordScan } from './src/lib/history';
 import { getPrefs, usePrefs } from './src/lib/prefs';
+import { playHaptic } from './src/lib/haptics';
 import type { Photo } from './src/lib/photo';
 import { runScan } from './src/lib/scan';
 import { finishScanTiming, markScanPainted, noteScan } from './src/lib/scanTiming';
@@ -176,7 +177,8 @@ export default function App() {
       if (!state.listsPending) void refreshQuota();
       const { strict, haptics } = getPrefs();
       // Buzz when the first verdict appears; save to history once the ingredient lists are in.
-      if (!buzzed && haptics) Haptics.notificationAsync(verdictHaptic[applyStrictMode(state.result, strict).verdict]).catch(() => {});
+      // The camera is already closed here: the result screen replaced it when the scan started.
+      if (!buzzed) playHaptic('verdict', { haptics }, () => Haptics.notificationAsync(verdictHaptic[applyStrictMode(state.result, strict).verdict]));
       buzzed = true;
       if (!recorded && !state.listsPending) {
         recorded = true;

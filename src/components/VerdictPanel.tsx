@@ -7,6 +7,7 @@ import { ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, V
 import { ingredientNames, sugarStackingLine } from '../lib/display';
 import type { Kind } from '../lib/glossary';
 import { getPrefs } from '../lib/prefs';
+import { playHaptic } from '../lib/haptics';
 import { colors, crystal, fonts, frost } from '../theme';
 import type { ScanResult, Verdict } from '../types';
 import { kindTag, type Pick } from './GlossaryCard';
@@ -75,7 +76,7 @@ export function VerdictContent({ result, listsPending, onRetryLists, onPick }: C
   const stacking = sugarStackingLine(result);
 
   const pick = (name: string, kind: Kind) => {
-    if (getPrefs().haptics) Haptics.selectionAsync().catch(() => {});
+    playHaptic('select', getPrefs(), () => Haptics.selectionAsync());
     onPick({ name, kind });
   };
 
