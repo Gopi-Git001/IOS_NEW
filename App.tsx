@@ -216,7 +216,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style={mustSignIn ? 'dark' : 'light'} />
+      <StatusBar style="light" />
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         {ready &&
           (mustSignIn ? (
