@@ -25,6 +25,11 @@ audio (the camera plugin has `microphonePermission: false`), crash logs (no cras
 Scan history (verdicts and ingredient lists) stays on the device in AsyncStorage and is never
 sent to the server, so it is not "collected" in Apple's sense.
 
+Signing out (Profile) keeps the scan history on this phone; Clear history in Menu removes it.
+Signing out also clears the name and stats cached on this phone and resets the settings (strict
+mode, gentle mode, haptics, auto capture) to their defaults (`signOut()` → `clearLocalCache()` in
+`src/lib/account.ts`). Deleting the account removes the history on this phone as well.
+
 ## Third-party processors
 
 Label photos go from the app to our Supabase Edge Functions and then to:
