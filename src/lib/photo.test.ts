@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { boxInImage, toPixels, uploadPlan, withMargin } from './photo.ts';
+import { boxInImage, pickPictureSize, toPixels, uploadPlan, withMargin } from './photo.ts';
 
 const close = (a: number, b: number) => assert.ok(Math.abs(a - b) < 1e-9, `${a} != ${b}`);
 
@@ -54,4 +54,46 @@ test('a guide box under 280 px falls back to the whole frame', () => {
 
 test('pixels are rounded and clamped to the image', () => {
   assert.deepEqual(toPixels({ x: 0.5, y: 0.5, width: 0.6, height: 0.6 }, 1000, 800), { originX: 500, originY: 400, width: 500, height: 400 });
+});
+
+// What expo-camera's getAvailablePictureSizesAsync returns on iOS.
+const IOS_SIZES = ['3840x2160', '1920x1080', '1280x720', '640x480', '352x288', 'Photo', 'High', 'Medium', 'Low'];
+const iphone = (box: { x: number; y: number; width: number; height: number }) => ({ ...box, viewWidth: 390, viewHeight: 844 });
+
+/** The upload the picked size leads to, with the photo in portrait like takePictureAsync returns it. */
+function uploadFor(size: string, box: ReturnType<typeof iphone>) {
+  const [long, short] = size.split('x').map(Number);
+  return uploadPlan(short, long, boxInImage(box, short, long));
+}
+
+test('picture size: 1920 px is enough when there is no guide box', () => {
+  assert.equal(pickPictureSize(IOS_SIZES, null), '1920x1080');
+});
+
+test('picture size: the smallest size whose guide-box crop still fills a 1568 px upload', () => {
+  const box = iphone({ x: 24, y: 180, width: 342, height: 420 });
+  const size = pickPictureSize(IOS_SIZES, box);
+  assert.equal(size, '3840x2160'); // 1920x1080 would crop to ~1185 px.
+  const plan = uploadFor(size!, box);
+  assert.ok(plan.cropped);
+  assert.equal(Math.max(plan.width, plan.height), 1568);
+  assert.ok(Math.min(plan.width, plan.height) >= 280);
+  assert.ok(Math.max(uploadFor('1920x1080', box).width, uploadFor('1920x1080', box).height) < 1568);
+});
+
+test('picture size: a tall guide box fits in 1920x1080', () => {
+  const box = iphone({ x: 10, y: 40, width: 370, height: 760 });
+  assert.equal(pickPictureSize(IOS_SIZES, box), '1920x1080');
+  const plan = uploadFor('1920x1080', box);
+  assert.equal(Math.max(plan.width, plan.height), 1568);
+});
+
+test('picture size: keeps the full-resolution default when nothing is big enough', () => {
+  assert.equal(pickPictureSize(IOS_SIZES, iphone({ x: 150, y: 380, width: 90, height: 80 })), undefined);
+  assert.equal(pickPictureSize(['Photo', 'High', '1280x720'], null), undefined);
+  assert.equal(pickPictureSize([], null), undefined);
+});
+
+test('picture size: Android-style lists pick the smallest size of at least 1920 px', () => {
+  assert.equal(pickPictureSize(['4000x3000', '2560x1920', '1920x1440', '1600x1200'], null), '1920x1440');
 });

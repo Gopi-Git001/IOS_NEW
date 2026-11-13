@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { postScanQuietly } from './scanTransport';
 import { clientTrace } from '../../supabase/functions/_shared/clientTrace';
@@ -5,6 +6,8 @@ import { clientTrace } from '../../supabase/functions/_shared/clientTrace';
 // Trace of one scan, from shutter tap to lists on screen. Printed to the console as
 // `[scan-timing] {...}`; in the browser it is also posted to the Metro dev server (see
 // metro.config.js), which appends it to .scan-timing/scans.jsonl for `npm run timing:report`.
+// Expo Go in dev posts there too. Capture stages: `shutter_done` (still back from the camera),
+// `captured`, then `prepared` with `crop_resize_ms`, `encode_ms`, `prepare_ms`, `upload_px`, `upload_bytes`.
 
 type Trace = { id: string; t0: number; marks: Record<string, number>; info: Record<string, unknown> };
 
@@ -33,6 +36,17 @@ export function markScanPainted(stage: string) {
   });
 }
 
+/**
+ * Dev only: the Metro server's timing endpoint. The browser posts to its own origin; Expo Go on the
+ * iPhone posts to the Metro host it loaded the bundle from, so its scans land in the same report.
+ */
+function devTimingEndpoint(): string | null {
+  if (!__DEV__) return null;
+  if (Platform.OS === 'web') return '/__scan-timing';
+  const host = Constants.expoConfig?.hostUri;
+  return host && /^[\w.-]+:\d+$/.test(host) ? `http://${host}/__scan-timing` : null;
+}
+
 export function finishScanTiming() {
   const trace = current;
   if (!trace) return;
@@ -51,8 +65,9 @@ export function finishScanTiming() {
     console.log('[scan-timing]', JSON.stringify(record));
     // Explicit allowlist on both ends: no free-text errors, label content, IDs or model results.
     postScanQuietly({ action: 'timing', trace: clientTrace(record) });
-    if (__DEV__ && Platform.OS === 'web') {
-      fetch('/__scan-timing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record) }).catch(() => {});
+    const endpoint = devTimingEndpoint();
+    if (endpoint) {
+      fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record) }).catch(() => {});
     }
   });
 }
