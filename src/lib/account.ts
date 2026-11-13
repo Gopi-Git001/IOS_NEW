@@ -54,7 +54,17 @@ export async function signOut() {
 
 /**
  * Deletes the account on the server (the Auth user; scans are never stored there), then everything kept on this
- * phone: cached profile, settings and the scan history. A server failure throws and leaves all of it in place.
+ * phone (cached profile, settings, scan history), then signs out locally. Unless the server confirms
+ * `{ deleted: true }` it throws and leaves all of it in place, still signed in.
  * Order and double-tap handling: `createAccountDeleter` in accountDeletion.ts.
  */
-export const deleteAccountAndData = createAccountDeleter(deleteAccount, [clearLocalCache, clearHistory]);
+export const deleteAccountAndData = createAccountDeleter(
+  deleteAccount,
+  [clearLocalCache, clearHistory],
+  async () => {
+    await supabase.auth.signOut({ scope: 'local' });
+  },
+  (line) => {
+    if (__DEV__) console.log(line);
+  },
+);

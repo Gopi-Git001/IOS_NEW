@@ -182,16 +182,22 @@ export function confirmSignOut() {
 }
 
 function confirmDelete() {
+  if (__DEV__) console.log('[delete] tap');
   if (!isConfigured) return demoAlert();
   confirmAction(
     'Delete account?',
     `This permanently deletes your ${brand.name} account and all of your scan history. It cannot be undone.`,
     'Delete',
     () => {
-      // Failure keeps the account and everything on this phone (accountDeletion.ts).
-      deleteAccountAndData().catch((e: unknown) =>
-        notify('Delete failed', e instanceof Error && e.message ? e.message : 'Could not delete account. Try again.'),
-      );
+      if (__DEV__) console.log('[delete] confirm');
+      // Success only after the server confirmed { deleted: true }; failure keeps the account, everything on this
+      // phone and the session (accountDeletion.ts).
+      deleteAccountAndData()
+        .then(() => notify('Account deleted', `Your ${brand.name} account and scan history were deleted.`))
+        .catch((e: unknown) => {
+          if (__DEV__) console.log('[delete] failed, still signed in');
+          notify('Delete failed', e instanceof Error && e.message ? e.message : 'Could not delete account. Try again.');
+        });
     },
     true,
   );
