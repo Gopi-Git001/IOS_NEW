@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { HAPTICS_DEFAULT, playHaptic, readHapticsPref, shouldBuzz } from './haptics';
+import { describeHapticCall, HAPTICS_DEFAULT, playHaptic, readHapticsPref, shouldBuzz } from './haptics';
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -28,7 +28,7 @@ test('setting on: every kind buzzes once and logs fired', async () => {
     assert.equal(playHaptic(kind, { haptics: true }, async () => void calls++, (l) => lines.push(l)), true);
     await flush();
     assert.equal(calls, 1);
-    assert.deepEqual(lines, [`[haptics] ${kind} fired`]);
+    assert.deepEqual(lines, [`${kind} call (where: unknown) allowed: yes`, `${kind} fired`]);
   }
 });
 
@@ -38,7 +38,7 @@ test('setting off: nothing buzzes and the skip is logged', () => {
     const lines: string[] = [];
     assert.equal(playHaptic(kind, { haptics: false }, async () => void calls++, (l) => lines.push(l)), false);
     assert.equal(calls, 0);
-    assert.deepEqual(lines, [`[haptics] ${kind} skipped (setting off)`]);
+    assert.deepEqual(lines, [`${kind} call (where: unknown) allowed: no`, `${kind} skipped (setting off)`]);
   }
   assert.equal(shouldBuzz({ haptics: false }), false);
   assert.equal(shouldBuzz({ haptics: true }), true);
@@ -49,7 +49,19 @@ test('an expo-haptics rejection or throw is logged, never thrown', async () => {
   assert.doesNotThrow(() => playHaptic('verdict', { haptics: true }, () => Promise.reject(new Error('no engine')), (l) => lines.push(l)));
   assert.equal(playHaptic('shutter', { haptics: true }, () => { throw new Error('sync'); }, (l) => lines.push(l)), false);
   await flush();
-  assert.deepEqual(lines.sort(), ['[haptics] shutter error: sync', '[haptics] verdict error: no engine']);
+  assert.deepEqual(lines.filter((l) => l.includes('error')).sort(), ['shutter error: sync', 'verdict error: no engine']);
+});
+
+test('the call line names the caller and whether the setting allowed it', () => {
+  const lines: string[] = [];
+  playHaptic('shutter', { haptics: true }, async () => {}, (l) => lines.push(l), 'CameraScreen.tsx capture');
+  playHaptic('select', { haptics: false }, async () => {}, (l) => lines.push(l), 'VerdictPanel.tsx toggle');
+  assert.deepEqual(lines, [
+    'shutter call (where: CameraScreen.tsx capture) allowed: yes',
+    'select call (where: VerdictPanel.tsx toggle) allowed: no',
+    'select skipped (setting off)',
+  ]);
+  assert.equal(describeHapticCall('verdict', 'App.tsx show', true), 'verdict call (where: App.tsx show) allowed: yes');
 });
 
 test('no logger (release / tests): still safe', async () => {

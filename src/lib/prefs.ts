@@ -1,5 +1,6 @@
 import { AUTO_CAPTURE_DEFAULT } from './autoCaptureGate';
-import { devLog, HAPTICS_DEFAULT, type HapticsSource, readHapticsPref } from './haptics';
+import { devLog } from './devLog';
+import { HAPTICS_DEFAULT, type HapticsSource, readHapticsPref } from './haptics';
 import { stored } from './stored';
 import { isConfigured, supabase } from './supabase';
 
@@ -29,7 +30,7 @@ const store = stored<Saved>('quickgab.prefs', defaults, (saved) => {
   hapticsSource = haptics.source;
   return { ...defaults, ...(saved as Partial<Saved>), haptics: haptics.value };
 });
-void store.loaded.then(() => devLog?.(`[haptics] setting at load: ${store.get().haptics ? 'on' : 'off'} (source: ${hapticsSource})`));
+void store.loaded.then(() => devLog('haptics', `setting at load: ${store.get().haptics ? 'on' : 'off'} (source: ${hapticsSource})`));
 
 const toRow = (p: Prefs): PrefsRow => ({ strict_mode: p.strict, gentle_mode: p.gentle, haptics: p.haptics });
 

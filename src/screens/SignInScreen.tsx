@@ -7,8 +7,9 @@ import { CharacterView, MASCOT_FEET_RATIO } from '../components/Character';
 import { Ambient, Footer, useReducedMotion } from '../components/Chrome';
 import { SmallMascot, smallMascotBox, WIDE_FROM } from '../components/SmallMascot';
 import { CrystalSwarm } from '../components/CrystalSwarm';
-import { signInWithGoogle, takeAuthRedirectError } from '../lib/api';
+import { isGoogleSignInRunning, signInWithGoogle, takeAuthRedirectError } from '../lib/api';
 import { describeAuthUrl, isAuthLink } from '../lib/authFlow';
+import { devLog } from '../lib/devLog';
 import { colors, fonts, frost } from '../theme';
 
 // Option A layout (docs/design/signin-option-a-*.png). Wide = laptop, narrow = phones and tablets.
@@ -110,7 +111,7 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
   useEffect(() => {
     if (!__DEV__ || Platform.OS === 'web') return;
     const logLink = (url: string | null) => {
-      if (url && isAuthLink(url)) console.log(`[auth] incoming link: ${describeAuthUrl(url)}`);
+      if (url && isAuthLink(url)) devLog('auth', `incoming link: ${describeAuthUrl(url)}`);
     };
     Linking.getInitialURL()
       .then(logLink)
@@ -120,7 +121,7 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
   }, []);
 
   const start = async () => {
-    if (__DEV__) console.log('[auth] tap');
+    devLog('auth', `tap (flow running: ${isGoogleSignInRunning() ? 'yes' : 'no'})`);
     setBusy(true);
     setError(null);
     try {

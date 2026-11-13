@@ -5,7 +5,10 @@
 
 export type HapticKind = 'shutter' | 'verdict' | 'select';
 export type HapticsSource = 'default' | 'stored';
-type Log = (line: string) => void;
+import { devLog } from './devLog';
+
+/** Receives the message after the "[haptics] <time>" prefix. */
+type Log = (message: string) => void;
 
 /** The Haptics setting is on until the user turns it off in Menu. */
 export const HAPTICS_DEFAULT = true;
@@ -25,25 +28,36 @@ export function readHapticsPref(saved: unknown): { value: boolean; source: Hapti
 /** On = buzz, off = never buzz. */
 export const shouldBuzz = (prefs: { haptics: boolean }) => prefs.haptics === true;
 
+/** Dev-only "[haptics] HH:MM:SS.mmm <message>" logger (silent in release builds and Node tests). */
+export const hapticsLog: Log = (message) => devLog('haptics', message);
+
+/** "verdict call (where: App.tsx show) allowed: yes" — one line per playHaptic call. */
+export const describeHapticCall = (kind: HapticKind, where: string | undefined, allowed: boolean) =>
+  `${kind} call (where: ${where ?? 'unknown'}) allowed: ${allowed ? 'yes' : 'no'}`;
+
 /**
  * Plays `buzz` only when the setting is on. Never throws; errors from expo-haptics are logged (dev) and swallowed.
- * Returns whether the buzz was started.
+ * Returns whether the buzz was started. `where` names the caller for the dev log only.
  */
-export function playHaptic(kind: HapticKind, prefs: { haptics: boolean }, buzz: () => Promise<unknown>, log: Log | undefined = devLog): boolean {
-  if (!shouldBuzz(prefs)) {
-    log?.(`[haptics] ${kind} skipped (setting off)`);
+export function playHaptic(
+  kind: HapticKind,
+  prefs: { haptics: boolean },
+  buzz: () => Promise<unknown>,
+  log: Log | undefined = hapticsLog,
+  where?: string,
+): boolean {
+  const allowed = shouldBuzz(prefs);
+  log?.(describeHapticCall(kind, where, allowed));
+  if (!allowed) {
+    log?.(`${kind} skipped (setting off)`);
     return false;
   }
-  const fail = (e: unknown) => log?.(`[haptics] ${kind} error: ${e instanceof Error ? e.message : String(e)}`);
+  const fail = (e: unknown) => log?.(`${kind} error: ${e instanceof Error ? e.message : String(e)}`);
   try {
-    buzz().then(() => log?.(`[haptics] ${kind} fired`), fail);
+    buzz().then(() => log?.(`${kind} fired`), fail);
   } catch (e) {
     fail(e);
     return false;
   }
   return true;
 }
-
-/** Dev-only console logger; undefined in release builds and in Node tests. */
-export const devLog: Log | undefined =
-  typeof __DEV__ !== 'undefined' && __DEV__ ? (line) => console.log(line) : undefined;

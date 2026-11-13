@@ -115,6 +115,32 @@ export function isAuthLink(url: string | null | undefined): boolean {
   return rest === 'auth' || rest.startsWith('auth/') || /\/--\/auth(\/|$)/.test(rest);
 }
 
+const yesNo = (value: unknown) => (value ? 'yes' : 'no');
+
+/** A Supabase auth event name (SIGNED_IN, TOKEN_REFRESHED…) safe for a log line; anything else is "unknown". */
+export function authEventName(event: unknown): string {
+  return typeof event === 'string' && /^[A-Z_]{1,40}$/.test(event) ? event : 'unknown';
+}
+
+/** "getSession result: session yes|no[ error=<text>]" — presence only, never tokens or ids. */
+export function describeGetSession(session: unknown, error?: unknown): string {
+  return `getSession result: session ${yesNo(session)}${error ? ` error=${safeMessage(error)}` : ''}`;
+}
+
+/** "auth event SIGNED_IN session: yes|no" — the event name and presence only. */
+export function describeAuthEvent(event: unknown, session: unknown): string {
+  return `auth event ${authEventName(event)} session: ${yesNo(session)}`;
+}
+
+/** Code paths that set the app's session state (App.tsx). */
+export type SessionPath = 'initial-getSession' | `auth-event:${string}` | 'sign-out' | 'delete' | 'other';
+
+/** "set app session (auth-event:SIGNED_IN): yes|no" — which code path and presence only. */
+export function describeSessionSet(path: SessionPath, session: unknown): string {
+  const safePath = path.startsWith('auth-event:') ? `auth-event:${authEventName(path.slice('auth-event:'.length))}` : path;
+  return `set app session (${safePath}): ${yesNo(session)}`;
+}
+
 export type FlowOutcome = 'signed-in' | 'cancelled' | 'error' | 'no-session';
 
 /**

@@ -76,7 +76,7 @@ export function VerdictContent({ result, listsPending, onRetryLists, onPick }: C
   const stacking = sugarStackingLine(result);
 
   const pick = (name: string, kind: Kind) => {
-    playHaptic('select', getPrefs(), () => Haptics.selectionAsync());
+    playHaptic('select', getPrefs(), () => Haptics.selectionAsync(), undefined, 'VerdictPanel.tsx select');
     onPick({ name, kind });
   };
 

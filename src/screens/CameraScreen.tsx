@@ -106,7 +106,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
       onCapture(photo);
       // After the shot and after the result screen has closed the camera: iOS can drop haptics while the
       // camera session runs. The setting is read when the buzz plays.
-      setTimeout(() => playHaptic('shutter', getPrefs(), () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)), SHUTTER_HAPTIC_DELAY_MS);
+      setTimeout(() => playHaptic('shutter', getPrefs(), () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), undefined, 'CameraScreen.tsx capture'), SHUTTER_HAPTIC_DELAY_MS);
     } catch (e) {
       if (e instanceof BlurryPhotoError) notify('Photo is blurry', 'Hold the phone steady and tap again.');
       else notify('Could not take photo', 'Please try again.');
