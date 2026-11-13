@@ -13,3 +13,8 @@ test('privacy policy names the third-party AI processors', () => {
   assert.match(privacyPolicyDraft, /TypeSafe/);
   assert.match(privacyPolicyDraft, /third-party AI/);
 });
+
+test('privacy policy says what signing out does', () => {
+  assert.match(privacyPolicyDraft, /Signing out keeps the scan history on this phone; Clear history in Menu removes it\./);
+  assert.match(privacyPolicyDraft, /resets the settings on this phone/);
+});
