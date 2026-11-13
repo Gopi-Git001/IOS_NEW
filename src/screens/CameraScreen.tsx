@@ -3,7 +3,8 @@ import * as Haptics from 'expo-haptics';
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { warmScan } from '../lib/scanTransport';
-import { usePrefs } from '../lib/prefs';
+import { getPrefs, usePrefs } from '../lib/prefs';
+import { shutterHaptic } from '../lib/shutterHaptic';
 import { notify } from '../lib/confirm';
 import { BlurryPhotoError, type LabelCameraHandle, type Photo, type ViewBox } from '../lib/photo';
 import { markScan, noteScan, startScanTiming } from '../lib/scanTiming';
@@ -102,7 +103,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
       noteScan({ photo_px: `${photo.width}x${photo.height}` });
       if (Platform.OS !== 'web') noteScan({ capture_path: 'native' });
       // After the shot, so the buzz can't shake the phone while the photo is taken.
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+      shutterHaptic(getPrefs(), () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
       setTorch(false);
       onCapture(photo);
     } catch (e) {

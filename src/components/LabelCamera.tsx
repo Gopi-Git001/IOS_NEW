@@ -28,7 +28,7 @@ export function LabelCamera({ torch, box, active, onReadyChange, onTorchSupport,
     () => ({
       async capture() {
         if (!camera.current) throw new Error('Camera not ready');
-        const { uri, width, height } = await camera.current.takePictureAsync({ quality: CAPTURE_QUALITY });
+        const { uri, width, height } = await camera.current.takePictureAsync({ quality: CAPTURE_QUALITY, shutterSound: false });
         markScan('shutter_done');
         noteScan({ picture_size: pictureSize ?? 'default', capture_quality: CAPTURE_QUALITY });
         const photo = { uri, width, height, crop: box ? withMargin(boxInImage(box, width, height), CROP_MARGIN) : undefined };
