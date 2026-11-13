@@ -24,7 +24,13 @@ export function ProfileScreen({ visible, onClose, email }: Props) {
 
   return (
     <Sheet visible={visible} title="Profile" onBack={onClose} backLabel="Close profile">
-      <ScrollView contentContainerStyle={listStyles.content} keyboardShouldPersistTaps="handled">
+      {/* iOS: the name editor's Save/Cancel stay above the keyboard on a 375x667 screen (insets shrink back on close, no jump). */}
+      <ScrollView
+        contentContainerStyle={listStyles.content}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        automaticallyAdjustKeyboardInsets
+      >
         <NameCard displayName={displayName} />
 
         <Group title="Account">
@@ -66,6 +72,8 @@ function NameCard({ displayName }: { displayName: string | null }) {
     setEditing(true);
   };
   const save = async () => {
+    // Keyboard "done" and the Save button can both fire; save once.
+    if (saving) return;
     setSaving(true);
     try {
       await saveDisplayName(draft);
@@ -92,6 +100,10 @@ function NameCard({ displayName }: { displayName: string | null }) {
             maxLength={40}
             placeholder="Your name"
             placeholderTextColor={colors.inkFaint}
+            autoCapitalize="words"
+            autoCorrect={false}
+            textContentType="name"
+            autoComplete="name"
             returnKeyType="done"
             onSubmitEditing={save}
             style={styles.input}
