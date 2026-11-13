@@ -15,7 +15,17 @@ import * as Linking from 'expo-linking';
 import { isRunningInExpoGo } from 'expo';
 import { getBundleOrigin } from 'expo/internal/bundle-origin';
 import { parseAuthResult, redactUrl, type RedirectEnv, resolveNativeRedirect } from './authRedirect';
-import { createSingleFlight, describeAuthUrl, flowOutcome, safeMessage } from './authFlow';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  createCodeExchanger,
+  createSingleFlight,
+  describeAuthUrl,
+  describeIncomingExchange,
+  flowOutcome,
+  incomingLinkAction,
+  safeMessage,
+  type UsedCodeStore,
+} from './authFlow';
 import { confirmDeleted, DELETE_FAILED, DELETE_SLUG, deletedFlag } from './accountDeletion';
 import { devLog } from './devLog';
 
@@ -23,7 +33,30 @@ import { devLog } from './devLog';
 devLog('auth', `app start ${Platform.OS}`);
 
 const GOOGLE_OPEN_FAILED = 'Could not open Google sign-in. Try again.';
+const SESSION_FAILED = 'Could not sign you in. Try again.';
 const googleSignIn = createSingleFlight();
+
+// Fingerprints (not the codes) of sign-in codes already sent, so a reload that hands the same
+// return link to the app again never sends a used code twice.
+const USED_CODES_KEY = 'reallabel-auth-used-codes';
+const usedCodes: UsedCodeStore = {
+  async has(fingerprint) {
+    const raw = await AsyncStorage.getItem(USED_CODES_KEY);
+    return (raw ?? '').split(',').includes(fingerprint);
+  },
+  async add(fingerprint) {
+    const raw = await AsyncStorage.getItem(USED_CODES_KEY);
+    const list = (raw ?? '').split(',').filter(Boolean).slice(-9);
+    await AsyncStorage.setItem(USED_CODES_KEY, [...list, fingerprint].join(','));
+  },
+};
+
+// One PKCE exchange at a time, each code once: shared by the Google flow (iOS, Android without a
+// reload) and the incoming return link (Android Expo Go reloads the app on return).
+const codeExchange = createCodeExchanger(async (code) => {
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  return error ? safeMessage(error.message) : null;
+}, usedCodes);
 
 /** True while a Google sign-in started by signInWithGoogle() has not finished (for the dev tap log). */
 export const isGoogleSignInRunning = () => googleSignIn.running;
@@ -284,6 +317,12 @@ function nativeRedirect(): string {
  * sign-in sheet (phones). An ?error= redirect is a failure message, never silent.
  */
 export function signInWithGoogle(): Promise<string | null> {
+  // A return link is being traded for a session: a new flow now would replace the stored PKCE
+  // verifier that exchange needs (and Google would be opened a second time).
+  if (codeExchange.running) {
+    devLog('auth', 'ignored: incoming link exchange in progress');
+    return Promise.resolve(null);
+  }
   // One sign-in at a time: a second tap while the browser sheet is open does nothing.
   return googleSignIn.run(signInWithGoogleOnce, null, () => {
     devLog('auth', 'ignored: already in progress');
@@ -329,15 +368,60 @@ async function nativeGoogleSignIn(step: { current: 'cancel' | 'error' | 'session
     return null;
   }
   if (outcome.kind === 'error') return outcome.message;
-  const label = outcome.kind === 'code' ? 'exchange' : 'setSession';
-  const { error: sessionError } =
-    outcome.kind === 'code'
-      ? await supabase.auth.exchangeCodeForSession(outcome.code)
-      : await supabase.auth.setSession({ access_token: outcome.accessToken, refresh_token: outcome.refreshToken });
-  devLog('auth', sessionError ? `${label} failed: ${safeMessage(sessionError.message)}` : `${label} ok`);
-  if (sessionError) return 'Could not sign you in. Try again.';
+  if (outcome.kind === 'code') {
+    // Shared with the incoming-link handler: the same code is never sent twice.
+    const exchanged = await codeExchange.exchange(outcome.code);
+    if (exchanged.status === 'failed') {
+      devLog('auth', `exchange failed: ${safeMessage(exchanged.message)}`);
+      return SESSION_FAILED;
+    }
+    devLog('auth', exchanged.status === 'ok' ? `exchange ok${exchanged.duplicate ? ' (shared)' : ''}` : `exchange skipped (${exchanged.reason})`);
+    step.current = 'session-set';
+    return null;
+  }
+  const { error: sessionError } = await supabase.auth.setSession({
+    access_token: outcome.accessToken,
+    refresh_token: outcome.refreshToken,
+  });
+  devLog('auth', sessionError ? `setSession failed: ${safeMessage(sessionError.message)}` : 'setSession ok');
+  if (sessionError) return SESSION_FAILED;
   step.current = 'session-set';
   return null;
+}
+
+/**
+ * The sign-in return link reached the app outside the running flow (Android Expo Go reloads the
+ * app when exps://<host>/--/auth?code=... arrives, so openAuthSessionAsync never returns; or the
+ * Custom Tab "dismiss" won the race against the link). Trades its code for a session exactly once;
+ * onAuthStateChange (App.tsx) then sets the session. Returns an error message to show, or null.
+ * Waits for a running Google flow to finish first (it may be exchanging this very code).
+ */
+export async function completeSignInFromLink(url: string): Promise<string | null> {
+  if (Platform.OS === 'web') return null;
+  const action = incomingLinkAction(url);
+  if (action.kind === 'ignore') return null;
+  if (action.kind === 'error') {
+    devLog('auth', describeIncomingExchange({ status: 'failed', message: action.detail }));
+    return action.message;
+  }
+  if (action.kind === 'no-code') {
+    devLog('auth', describeIncomingExchange({ status: 'skipped', reason: 'no code in link' }));
+    return null;
+  }
+  try {
+    await googleSignIn.whenIdle();
+    const { data } = await supabase.auth.getSession();
+    if (data?.session) {
+      devLog('auth', describeIncomingExchange({ status: 'skipped', reason: 'already signed in' }));
+      return null;
+    }
+    const result = await codeExchange.exchange(action.code);
+    devLog('auth', describeIncomingExchange(result));
+    return result.status === 'failed' ? SESSION_FAILED : null;
+  } catch (e) {
+    devLog('auth', describeIncomingExchange({ status: 'failed', message: safeMessage(e) }));
+    return SESSION_FAILED;
+  }
 }
 
 /** "[auth] session: yes|no user: yes|no" (presence only, no ids or tokens). Dev only. */

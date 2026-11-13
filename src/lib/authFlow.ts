@@ -13,27 +13,176 @@ export type SingleFlight = {
    * the task settles, whether it resolved or threw.
    */
   run<T>(task: () => Promise<T>, whenBusy: T, onBusy?: () => void): Promise<T>;
+  /** Resolves once no task is running (at once when idle). Never rejects. */
+  whenIdle(): Promise<void>;
 };
 
 export function createSingleFlight(): SingleFlight {
-  let running = false;
+  let running: Promise<unknown> | null = null;
   return {
     get running() {
-      return running;
+      return running !== null;
     },
     async run<T>(task: () => Promise<T>, whenBusy: T, onBusy?: () => void): Promise<T> {
       if (running) {
         onBusy?.();
         return whenBusy;
       }
-      running = true;
+      const current = task();
+      running = current;
       try {
-        return await task();
+        return await current;
       } finally {
-        running = false;
+        if (running === current) running = null;
+      }
+    },
+    async whenIdle() {
+      while (running) {
+        try {
+          await running;
+        } catch {}
       }
     },
   };
+}
+
+export type ExchangeResult =
+  | { status: 'ok'; duplicate?: boolean }
+  | { status: 'failed'; message: string; duplicate?: boolean }
+  | { status: 'skipped'; reason: string };
+
+/** Remembers which codes were already sent (survives a JS reload when given AsyncStorage). */
+export type UsedCodeStore = {
+  has(fingerprint: string): Promise<boolean>;
+  add(fingerprint: string): Promise<void>;
+};
+
+export type CodeExchanger = {
+  /** True while an exchange is in flight. */
+  readonly running: boolean;
+  /**
+   * Trades a PKCE code for a session exactly once. The same code while its exchange is in flight
+   * gets that exchange's result (marked duplicate, no second request); a code already used (in
+   * this run or, with a store, before a reload) is skipped. A different code while one is in
+   * flight is skipped too: both would read the same stored verifier.
+   */
+  exchange(code: string): Promise<ExchangeResult>;
+};
+
+/**
+ * Short non-reversible tag for a one-time code (FNV-1a, 32 bit), so "already used" can be stored
+ * without storing the code itself.
+ */
+export function codeFingerprint(code: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < code.length; i++) {
+    hash ^= code.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return `${code.length}-${hash.toString(16)}`;
+}
+
+/** `run` returns an error message, or null when the session was set. */
+export function createCodeExchanger(run: (code: string) => Promise<string | null>, store?: UsedCodeStore): CodeExchanger {
+  const used = new Set<string>();
+  let inFlight: { fingerprint: string; result: Promise<ExchangeResult> } | null = null;
+  const start = async (fingerprint: string, code: string): Promise<ExchangeResult> => {
+    try {
+      if (store && (await store.has(fingerprint).catch(() => false))) return { status: 'skipped', reason: 'code already used' };
+      await store?.add(fingerprint).catch(() => {});
+      const error = await run(code);
+      return error ? { status: 'failed', message: error } : { status: 'ok' };
+    } catch (e) {
+      return { status: 'failed', message: safeMessage(e) };
+    }
+  };
+  return {
+    get running() {
+      return inFlight !== null;
+    },
+    async exchange(code: string): Promise<ExchangeResult> {
+      const fingerprint = codeFingerprint(code);
+      if (inFlight) {
+        if (inFlight.fingerprint !== fingerprint) return { status: 'skipped', reason: 'another exchange in progress' };
+        const shared = await inFlight.result;
+        return shared.status === 'skipped' ? shared : { ...shared, duplicate: true };
+      }
+      if (used.has(fingerprint)) return { status: 'skipped', reason: 'code already used' };
+      used.add(fingerprint);
+      const current = { fingerprint, result: start(fingerprint, code) };
+      inFlight = current;
+      try {
+        return await current.result;
+      } finally {
+        if (inFlight === current) inFlight = null;
+      }
+    },
+  };
+}
+
+/** "incoming link exchange ok|failed: <message>|skipped (<reason>)" — never the code itself. */
+export function describeIncomingExchange(result: ExchangeResult): string {
+  if (result.status === 'ok') return `incoming link exchange ok${result.duplicate ? ' (shared with the running flow)' : ''}`;
+  if (result.status === 'failed') return `incoming link exchange failed: ${safeMessage(result.message)}`;
+  return `incoming link exchange skipped (${cleanText(result.reason) ?? 'unknown'})`;
+}
+
+export type IncomingLinkAction =
+  | { kind: 'ignore' }
+  | { kind: 'error'; message: string; detail: string }
+  | { kind: 'no-code' }
+  | { kind: 'code'; code: string };
+
+/**
+ * What to do with a link that opened the app (Android Expo Go reloads the app when the sign-in
+ * return link arrives, so the running flow never sees it). Not a sign-in link: ignore. ?error=:
+ * show it (access_denied reads as cancelled). ?code=: exchange it.
+ */
+export function incomingLinkAction(url: string | null | undefined): IncomingLinkAction {
+  if (!isAuthLink(url)) return { kind: 'ignore' };
+  const params = paramsOf(url as string);
+  const error = params.get('error') || params.get('error_code');
+  if (error) {
+    const detail = cleanText(params.get('error_description')) ?? cleanText(error) ?? 'unknown';
+    return {
+      kind: 'error',
+      message: error === 'access_denied' ? 'Google sign-in was cancelled.' : 'Google sign-in failed. Try again.',
+      detail,
+    };
+  }
+  const code = params.get('code');
+  return code ? { kind: 'code', code } : { kind: 'no-code' };
+}
+
+/** What App.tsx has applied so far: whether any auth event arrived, and whether a session is set. */
+export type SessionGate = { eventSeen: boolean; hasSession: boolean | undefined };
+
+export type SessionDecision = { apply: true } | { apply: false; reason: string };
+
+/**
+ * Whether a session update may replace the app's session. getSession() and INITIAL_SESSION report
+ * the state at start-up; a SIGNED_IN from a code exchange can land before them. They must never
+ * overwrite a newer session with a stale "no session" (that showed the sign-in page again).
+ * - initial-getSession: only while no auth event has been applied.
+ * - INITIAL_SESSION without a session: not when a session is already set.
+ * - Every other event (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED…) applies.
+ */
+export function sessionDecision(gate: SessionGate, path: SessionPath, hasSession: boolean): SessionDecision {
+  if (path === 'initial-getSession' && gate.eventSeen) return { apply: false, reason: 'an auth event already set it' };
+  if (path === 'auth-event:INITIAL_SESSION' && !hasSession && gate.hasSession === true) {
+    return { apply: false, reason: 'stale no-session' };
+  }
+  return { apply: true };
+}
+
+/** The gate after an update on `path` was applied. */
+export function nextGate(gate: SessionGate, path: SessionPath, hasSession: boolean): SessionGate {
+  return { eventSeen: gate.eventSeen || path.startsWith('auth-event:'), hasSession };
+}
+
+/** "kept app session (initial-getSession): ignored no (an auth event already set it)". */
+export function describeSessionKept(path: SessionPath, session: unknown, reason: string): string {
+  return `kept app session (${safeSessionPath(path)}): ignored ${yesNo(session)} (${cleanText(reason) ?? 'unknown'})`;
 }
 
 export type AuthUrlInfo = {
@@ -137,8 +286,11 @@ export type SessionPath = 'initial-getSession' | `auth-event:${string}` | 'sign-
 
 /** "set app session (auth-event:SIGNED_IN): yes|no" — which code path and presence only. */
 export function describeSessionSet(path: SessionPath, session: unknown): string {
-  const safePath = path.startsWith('auth-event:') ? `auth-event:${authEventName(path.slice('auth-event:'.length))}` : path;
-  return `set app session (${safePath}): ${yesNo(session)}`;
+  return `set app session (${safeSessionPath(path)}): ${yesNo(session)}`;
+}
+
+function safeSessionPath(path: SessionPath): string {
+  return path.startsWith('auth-event:') ? `auth-event:${authEventName(path.slice('auth-event:'.length))}` : path;
 }
 
 export type FlowOutcome = 'signed-in' | 'cancelled' | 'error' | 'no-session';
