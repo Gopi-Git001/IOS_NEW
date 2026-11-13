@@ -1,10 +1,18 @@
 import { isConfigured, supabase } from './supabase';
 
+/** Timing hook for the scan request: step names only, never the body, keys or token. */
+export type ScanRequestStep = 'session_ready' | 'response_headers';
+
 /** Fetch rather than functions.invoke: preserve the response stream. */
-export async function postScan(body: Record<string, unknown>, signal?: AbortSignal): Promise<Response> {
+export async function postScan(
+  body: Record<string, unknown>,
+  signal?: AbortSignal,
+  onStep?: (step: ScanRequestStep) => void,
+): Promise<Response> {
   const { data } = await supabase.auth.getSession();
   if (!isConfigured || !data.session) throw new Error('Not signed in');
-  return fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/quickgob-scan`, {
+  onStep?.('session_ready');
+  const response = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/quickgob-scan`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -14,6 +22,8 @@ export async function postScan(body: Record<string, unknown>, signal?: AbortSign
     body: JSON.stringify(body),
     signal,
   });
+  onStep?.('response_headers');
+  return response;
 }
 
 /** Signed-in only; entirely best-effort and never starts a paid request. */
