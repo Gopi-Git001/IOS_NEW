@@ -21,7 +21,16 @@ import { applyStrictMode } from './src/lib/display';
 import { recordScan } from './src/lib/history';
 import { getPrefs, usePrefs } from './src/lib/prefs';
 import { playHaptic } from './src/lib/haptics';
-import { describeAuthEvent, describeGetSession, describeSessionSet, type SessionPath } from './src/lib/authFlow';
+import {
+  describeAuthEvent,
+  describeGetSession,
+  describeSessionKept,
+  describeSessionSet,
+  nextGate,
+  sessionDecision,
+  type SessionGate,
+  type SessionPath,
+} from './src/lib/authFlow';
 import { devLog } from './src/lib/devLog';
 import type { Photo } from './src/lib/photo';
 import { runScan } from './src/lib/scan';
@@ -106,7 +115,16 @@ export default function App() {
   useEffect(() => {
     if (!isConfigured) return;
     // Dev-only [auth] lines: presence (yes/no) and event names only, never tokens or ids.
+    // The gate keeps a late getSession() / INITIAL_SESSION "no session" from overwriting a session a
+    // code exchange just set (that showed the sign-in page again: "sign in 2 times").
+    let gate: SessionGate = { eventSeen: false, hasSession: undefined };
     const setSessionFrom = (path: SessionPath, s: Session | null) => {
+      const decision = sessionDecision(gate, path, !!s);
+      if (!decision.apply) {
+        devLog('auth', describeSessionKept(path, s, decision.reason));
+        return;
+      }
+      gate = nextGate(gate, path, !!s);
       devLog('auth', describeSessionSet(path, s));
       setSession(s);
     };

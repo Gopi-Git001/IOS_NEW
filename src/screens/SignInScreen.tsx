@@ -7,7 +7,7 @@ import { CharacterView, MASCOT_FEET_RATIO } from '../components/Character';
 import { Ambient, Footer, useReducedMotion } from '../components/Chrome';
 import { SmallMascot, smallMascotBox, WIDE_FROM } from '../components/SmallMascot';
 import { CrystalSwarm } from '../components/CrystalSwarm';
-import { isGoogleSignInRunning, signInWithGoogle, takeAuthRedirectError } from '../lib/api';
+import { completeSignInFromLink, isGoogleSignInRunning, signInWithGoogle, takeAuthRedirectError } from '../lib/api';
 import { describeAuthUrl, isAuthLink } from '../lib/authFlow';
 import { devLog } from '../lib/devLog';
 import { colors, fonts, frost } from '../theme';
@@ -106,18 +106,37 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
   // Coming back from Google with an error (for example, the person pressed Cancel).
   useEffect(() => setError(takeAuthRedirectError()), []);
 
-  // Dev only: did the sign-in return link reach the app (for example after a reload while the Google
-  // sheet was open)? Logs what the link carries (never the code or tokens); handles nothing.
+  // The sign-in return link reached the app outside the Google flow: Android Expo Go reloads the app
+  // when exps://<host>/--/auth?code=... arrives (it is then the initial URL), or the Custom Tab's
+  // "dismiss" beat the link. Trade its code for a session once (api.ts); App.tsx's auth listener then
+  // leaves this screen. An error in the link or a failed exchange is shown, never silently dropped.
   useEffect(() => {
-    if (!__DEV__ || Platform.OS === 'web') return;
-    const logLink = (url: string | null) => {
-      if (url && isAuthLink(url)) devLog('auth', `incoming link: ${describeAuthUrl(url)}`);
+    if (Platform.OS === 'web') return;
+    let live = true;
+    const onLink = (url: string | null) => {
+      if (!url || !isAuthLink(url)) return;
+      devLog('auth', `incoming link: ${describeAuthUrl(url)}`);
+      setBusy(true);
+      setError(null);
+      completeSignInFromLink(url)
+        .then((err) => {
+          if (live && err) setError(err);
+        })
+        .catch(() => {
+          if (live) setError('Could not sign you in. Try again.');
+        })
+        .finally(() => {
+          if (live) setBusy(false);
+        });
     };
     Linking.getInitialURL()
-      .then(logLink)
+      .then(onLink)
       .catch(() => {});
-    const sub = Linking.addEventListener('url', ({ url }) => logLink(url));
-    return () => sub.remove();
+    const sub = Linking.addEventListener('url', ({ url }) => onLink(url));
+    return () => {
+      live = false;
+      sub.remove();
+    };
   }, []);
 
   const start = async () => {
