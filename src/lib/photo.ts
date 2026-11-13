@@ -48,6 +48,38 @@ export function uploadPlan(width: number, height: number, region: Rect | null) {
   return { src, width: Math.round(src.width * scale), height: Math.round(src.height * scale), cropped: src === box };
 }
 
+/** JPEG quality of the phone's still. It is decoded once and re-encoded at upload size, so 0.9 bought nothing. */
+export const CAPTURE_QUALITY = 0.8;
+
+/** The still size we aim for: just enough that the guide-box crop still fills a 1568 px upload. */
+export const TARGET_PICTURE_SIDE = 1920;
+
+/**
+ * Picks the smallest `pictureSize` (from `getAvailablePictureSizesAsync`, e.g. "1920x1080") whose crop to
+ * the guide box (with its margin) still has a longest side of 1568 px and a shortest of 280 px, so the
+ * phone decodes far fewer pixels than a 12–48 MP full-sensor still. Sizes under 1920 px are never picked.
+ * Returns undefined (keep the full-resolution "Photo" default) when no WxH size is big enough.
+ */
+export function pickPictureSize(sizes: readonly string[], box: ViewBox | null): string | undefined {
+  const portrait = !box || box.viewHeight >= box.viewWidth;
+  const fits = (long: number, short: number) => {
+    const [width, height] = portrait ? [short, long] : [long, short];
+    if (!box) return long >= UPLOAD_MAX_SIDE;
+    const rect = toPixels(withMargin(boxInImage(box, width, height), CROP_MARGIN), width, height);
+    return Math.max(rect.width, rect.height) >= UPLOAD_MAX_SIDE && Math.min(rect.width, rect.height) >= UPLOAD_MIN_SIDE;
+  };
+  let best: { size: string; pixels: number } | undefined;
+  for (const size of sizes) {
+    const m = /^(\d+)x(\d+)$/.exec(size);
+    if (!m) continue;
+    const long = Math.max(+m[1], +m[2]);
+    const short = Math.min(+m[1], +m[2]);
+    if (long < TARGET_PICTURE_SIDE || !fits(long, short)) continue;
+    if (!best || long * short < best.pixels) best = { size, pixels: long * short };
+  }
+  return best?.size;
+}
+
 /** Thrown by `capture()` when the photo is too soft to read; the next tap is accepted anyway. */
 export class BlurryPhotoError extends Error {}
 

@@ -3,7 +3,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import type { JevVerdict, ScanResult } from '../types';
-import { type CaptureMeta, type Photo, type Rect, toPixels } from './photo';
+import { type CaptureMeta, type Photo, type Rect, toPixels, UPLOAD_MAX_SIDE, UPLOAD_MIN_SIDE } from './photo';
 import { noteScan, scanTimingId } from './scanTiming';
 import { supabase } from './supabase';
 import { postScan } from './scanTransport';
@@ -50,9 +50,9 @@ export async function streamScan(image: string, onEvent: (event: ScanEvent) => v
   }
 }
 
-/** Jev rejects any side over 1568 px or under 280 px. */
-const MAX_SIDE = 1568;
-const MIN_SIDE = 280;
+/** Jev rejects any side over 1568 px or under 280 px (one source of truth in photo.ts). */
+const MAX_SIDE = UPLOAD_MAX_SIDE;
+const MIN_SIDE = UPLOAD_MIN_SIDE;
 const UPLOAD_QUALITY = 0.85;
 
 /**
@@ -63,11 +63,15 @@ const UPLOAD_QUALITY = 0.85;
 export async function preparePhoto(photo: Photo): Promise<string> {
   // The web camera already cropped, scaled and encoded the upload in one pass.
   if (photo.upload) return photo.upload;
+  const started = performance.now();
   try {
     return await encodeForUpload(photo, photo.crop);
   } catch (e) {
     if (!photo.crop) throw e;
+    noteScan({ crop_failed: true });
     return encodeForUpload(photo, undefined);
+  } finally {
+    noteScan({ prepare_ms: Math.round(performance.now() - started) });
   }
 }
 
@@ -80,10 +84,14 @@ async function encodeForUpload({ uri, width, height }: Photo, crop: Rect | undef
     ({ width, height } = rect);
   }
   if (Math.max(width, height) > MAX_SIDE) ctx.resize(height > width ? { height: MAX_SIDE } : { width: MAX_SIDE });
+  const t0 = performance.now();
   const rendered = await ctx.renderAsync();
-  noteScan({ upload_px: `${rendered.width}x${rendered.height}` });
+  const t1 = performance.now();
+  noteScan({ upload_px: `${rendered.width}x${rendered.height}`, crop_resize_ms: Math.round(t1 - t0) });
   const { base64 } = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: UPLOAD_QUALITY, base64: true });
+  noteScan({ encode_ms: Math.round(performance.now() - t1) });
   if (!base64) throw new Error('Could not prepare the photo.');
+  noteScan({ upload_bytes: Math.round((base64.length * 3) / 4) });
   return base64;
 }
 
