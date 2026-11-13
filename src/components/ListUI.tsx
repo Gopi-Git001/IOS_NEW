@@ -93,7 +93,8 @@ export function openLink(url: string) {
   Linking.openURL(url).catch(() => notify("Couldn't open link", url));
 }
 
-export const demoAlert = () => notify('Demo mode', 'The backend is not connected yet, so results are fake and there is no account.');
+export const demoAlert = () =>
+  notify('Demo mode', 'The backend is not connected yet, so results are fake and there is no account to rename, sign out of or delete.');
 
 export const listStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
