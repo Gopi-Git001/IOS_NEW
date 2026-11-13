@@ -58,9 +58,9 @@ Expo Go (SDK 58) ships a fixed set of native modules. A JS-only package always w
 Recorded Nov 13, 2026.
 
 - Shutter sound: OFF.
-- Links host:  for the privacy, terms and support URLs.
-- URL scheme: stays .
-- Pending the team lead: bundle ID ( proposed), display name, and age rating.
+- Links host: `sugardepth.com` for the privacy, terms and support URLs.
+- URL scheme: stays `reallabel`.
+- Pending the team lead: bundle ID (`com.sugardepth.app` proposed), display name, and age rating.
 
 ## Task backlog
 
