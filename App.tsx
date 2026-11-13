@@ -21,6 +21,8 @@ import { applyStrictMode } from './src/lib/display';
 import { recordScan } from './src/lib/history';
 import { getPrefs, usePrefs } from './src/lib/prefs';
 import { playHaptic } from './src/lib/haptics';
+import { describeAuthEvent, describeGetSession, describeSessionSet, type SessionPath } from './src/lib/authFlow';
+import { devLog } from './src/lib/devLog';
 import type { Photo } from './src/lib/photo';
 import { runScan } from './src/lib/scan';
 import { finishScanTiming, markScanPainted, noteScan } from './src/lib/scanTiming';
@@ -103,8 +105,19 @@ export default function App() {
 
   useEffect(() => {
     if (!isConfigured) return;
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+    // Dev-only [auth] lines: presence (yes/no) and event names only, never tokens or ids.
+    const setSessionFrom = (path: SessionPath, s: Session | null) => {
+      devLog('auth', describeSessionSet(path, s));
+      setSession(s);
+    };
+    supabase.auth.getSession().then(({ data, error }) => {
+      devLog('auth', describeGetSession(data.session, error));
+      setSessionFrom('initial-getSession', data.session);
+    });
+    const { data } = supabase.auth.onAuthStateChange((event, s) => {
+      devLog('auth', describeAuthEvent(event, s));
+      setSessionFrom(`auth-event:${event}`, s);
+    });
     return () => data.subscription.unsubscribe();
   }, []);
   useEffect(() => {
@@ -178,7 +191,7 @@ export default function App() {
       const { strict, haptics } = getPrefs();
       // Buzz when the first verdict appears; save to history once the ingredient lists are in.
       // The camera is already closed here: the result screen replaced it when the scan started.
-      if (!buzzed) playHaptic('verdict', { haptics }, () => Haptics.notificationAsync(verdictHaptic[applyStrictMode(state.result, strict).verdict]));
+      if (!buzzed) playHaptic('verdict', { haptics }, () => Haptics.notificationAsync(verdictHaptic[applyStrictMode(state.result, strict).verdict]), undefined, 'App.tsx handleCapture show');
       buzzed = true;
       if (!recorded && !state.listsPending) {
         recorded = true;

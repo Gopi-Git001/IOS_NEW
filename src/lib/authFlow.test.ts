@@ -1,6 +1,62 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { classifyAuthUrl, createSingleFlight, describeAuthUrl, flowOutcome, isAuthLink, safeMessage } from './authFlow.ts';
+import {
+  authEventName,
+  classifyAuthUrl,
+  createSingleFlight,
+  describeAuthEvent,
+  describeAuthUrl,
+  describeGetSession,
+  describeSessionSet,
+  flowOutcome,
+  isAuthLink,
+  safeMessage,
+} from './authFlow.ts';
+
+// A fake session full of secrets: none of these may ever reach a log line.
+const SECRETS = ['eyJ.access.SECRET', 'refresh-SECRET', 'user-id-1234', 'person@example.com', 'provider-SECRET'];
+const fakeSession = {
+  access_token: SECRETS[0],
+  refresh_token: SECRETS[1],
+  provider_token: SECRETS[4],
+  user: { id: SECRETS[2], email: SECRETS[3] },
+};
+const assertNoSecrets = (line: string) => {
+  for (const s of SECRETS) assert.equal(line.includes(s), false, `leaked ${s} in "${line}"`);
+};
+
+test('session-state log helpers print only yes/no and the event name', () => {
+  const lines = [
+    describeGetSession(fakeSession),
+    describeGetSession(null),
+    describeAuthEvent('SIGNED_IN', fakeSession),
+    describeAuthEvent('SIGNED_OUT', null),
+    describeSessionSet('initial-getSession', fakeSession),
+    describeSessionSet('auth-event:TOKEN_REFRESHED', fakeSession),
+    describeSessionSet('sign-out', null),
+  ];
+  assert.deepEqual(lines, [
+    'getSession result: session yes',
+    'getSession result: session no',
+    'auth event SIGNED_IN session: yes',
+    'auth event SIGNED_OUT session: no',
+    'set app session (initial-getSession): yes',
+    'set app session (auth-event:TOKEN_REFRESHED): yes',
+    'set app session (sign-out): no',
+  ]);
+  lines.forEach(assertNoSecrets);
+});
+
+test('odd event names and getSession errors are cleaned', () => {
+  assert.equal(authEventName('SIGNED_IN'), 'SIGNED_IN');
+  assert.equal(authEventName(`code=${SECRETS[0]}`), 'unknown');
+  assert.equal(authEventName(undefined), 'unknown');
+  assert.equal(describeAuthEvent(SECRETS[2], fakeSession), 'auth event unknown session: yes');
+  assert.equal(describeSessionSet(`auth-event:${SECRETS[0]}`, null), 'set app session (auth-event:unknown): no');
+  const withError = describeGetSession(null, new Error('fetch failed https://x.supabase.co/auth/v1/token?refresh_token=refresh-SECRET'));
+  assert.equal(withError, 'getSession result: session no error=fetch failed https://x.supabase.co/auth/v1/token');
+  assertNoSecrets(withError);
+});
 
 function deferred<T>() {
   let resolve!: (value: T) => void;

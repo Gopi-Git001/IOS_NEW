@@ -17,12 +17,16 @@ import { getBundleOrigin } from 'expo/internal/bundle-origin';
 import { parseAuthResult, redactUrl, type RedirectEnv, resolveNativeRedirect } from './authRedirect';
 import { createSingleFlight, describeAuthUrl, flowOutcome, safeMessage } from './authFlow';
 import { confirmDeleted, DELETE_FAILED, DELETE_SLUG, deletedFlag } from './accountDeletion';
+import { devLog } from './devLog';
 
 // Dev only: one line per JS start, so a reload while the Google sheet is open shows up in the log.
-if (__DEV__) console.log(`[auth] app start ${Platform.OS}`);
+devLog('auth', `app start ${Platform.OS}`);
 
 const GOOGLE_OPEN_FAILED = 'Could not open Google sign-in. Try again.';
 const googleSignIn = createSingleFlight();
+
+/** True while a Google sign-in started by signInWithGoogle() has not finished (for the dev tap log). */
+export const isGoogleSignInRunning = () => googleSignIn.running;
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
 async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
@@ -256,8 +260,9 @@ function nativeRedirect(): string {
   const choice = resolveNativeRedirect(env);
   if (__DEV__) {
     // Hosts and links only (query / fragment cut off): no tokens, no keys.
-    console.log(
-      '[auth] detect',
+    devLog(
+      'auth',
+      'detect ' +
       JSON.stringify({
         isRunningInExpoGo: env.isRunningInExpoGo,
         executionEnvironment: env.executionEnvironment,
@@ -268,7 +273,7 @@ function nativeRedirect(): string {
         createURL: redactUrl(env.createURL),
       }),
     );
-    if (choice.noHost) console.warn('[auth] Expo Go detected but no dev server host');
+    if (choice.noHost) devLog('auth', 'Expo Go detected but no dev server host');
   }
   return choice.url;
 }
@@ -281,7 +286,7 @@ function nativeRedirect(): string {
 export function signInWithGoogle(): Promise<string | null> {
   // One sign-in at a time: a second tap while the browser sheet is open does nothing.
   return googleSignIn.run(signInWithGoogleOnce, null, () => {
-    if (__DEV__) console.log('[auth] ignored: already in progress');
+    devLog('auth', 'ignored: already in progress');
   });
 }
 
@@ -295,12 +300,12 @@ async function signInWithGoogleOnce(): Promise<string | null> {
   try {
     return await nativeGoogleSignIn(step);
   } catch (e) {
-    if (__DEV__) console.log(`[auth] error: ${safeMessage(e)}`);
+    devLog('auth', `error: ${safeMessage(e)}`);
     return 'Google sign-in failed. Try again.';
   } finally {
     if (__DEV__) {
       const hasSession = await logSessionState();
-      console.log(`[auth] flow end ${flowOutcome(step.current, hasSession)}`);
+      devLog('auth', `flow end ${flowOutcome(step.current, hasSession)}`);
     }
   }
 }
@@ -313,13 +318,11 @@ async function nativeGoogleSignIn(step: { current: 'cancel' | 'error' | 'session
     options: { redirectTo: redirect, skipBrowserRedirect: true },
   });
   if (error || !data?.url) return failed;
-  if (__DEV__) console.log(`[auth] redirectTo ${redirect}`);
+  devLog('auth', `redirectTo ${redactUrl(redirect)}`);
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirect);
-  if (__DEV__) {
-    console.log(`[auth] result ${result.type}`);
-    // Only whether a code / tokens came back and the error text; never the values or the full URL.
-    if (result.type === 'success') console.log(`[auth] return url: ${describeAuthUrl(result.url)}`);
-  }
+  devLog('auth', `result ${result.type}`);
+  // Only whether a code / tokens came back and the error text; never the values or the full URL.
+  if (result.type === 'success') devLog('auth', `return url: ${describeAuthUrl(result.url)}`);
   const outcome = parseAuthResult(result);
   if (outcome.kind === 'cancel') {
     step.current = 'cancel';
@@ -331,7 +334,7 @@ async function nativeGoogleSignIn(step: { current: 'cancel' | 'error' | 'session
     outcome.kind === 'code'
       ? await supabase.auth.exchangeCodeForSession(outcome.code)
       : await supabase.auth.setSession({ access_token: outcome.accessToken, refresh_token: outcome.refreshToken });
-  if (__DEV__) console.log(sessionError ? `[auth] ${label} failed: ${safeMessage(sessionError.message)}` : `[auth] ${label} ok`);
+  devLog('auth', sessionError ? `${label} failed: ${safeMessage(sessionError.message)}` : `${label} ok`);
   if (sessionError) return 'Could not sign you in. Try again.';
   step.current = 'session-set';
   return null;
@@ -342,10 +345,10 @@ async function logSessionState(): Promise<boolean> {
   try {
     const { data } = await supabase.auth.getSession();
     const session = data?.session ?? null;
-    console.log(`[auth] session: ${session ? 'yes' : 'no'} user: ${session?.user ? 'yes' : 'no'}`);
+    devLog('auth', `session: ${session ? 'yes' : 'no'} user: ${session?.user ? 'yes' : 'no'}`);
     return !!session;
   } catch (e) {
-    console.log(`[auth] session: unknown (${safeMessage(e)})`);
+    devLog('auth', `session: unknown (${safeMessage(e)})`);
     return false;
   }
 }
