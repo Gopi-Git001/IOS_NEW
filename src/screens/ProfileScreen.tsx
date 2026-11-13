@@ -1,10 +1,11 @@
 import { LogOut, Trash2, User } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { demoAlert, Group, listStyles, Row, Sheet } from '../components/ListUI';
 import { verdictColor } from '../components/VerdictPanel';
 import { confirmAction, notify } from '../lib/confirm';
 import { deleteAccountAndData, saveDisplayName, signOut, type Stats, syncProfile, syncStats, useProfile } from '../lib/account';
+import { buildStamp, readBuildEnv } from '../lib/buildStamp';
 import { accountRowText, initials, percent } from '../lib/display';
 import { isConfigured } from '../lib/supabase';
 import { brand, colors, fonts, frost } from '../theme';
@@ -45,9 +46,18 @@ export function ProfileScreen({ visible, onClose, email }: Props) {
           <Row icon={LogOut} label="Sign out" onPress={confirmSignOut} />
           <Row icon={Trash2} label="Delete account" danger onPress={confirmDelete} />
         </Group>
+
+        <BuildStamp />
       </ScrollView>
     </Sheet>
   );
+}
+
+/** Dev builds only: commit, branch, platform and bundle time at the very bottom; release renders nothing. */
+function BuildStamp() {
+  const line = buildStamp(readBuildEnv(), Platform.OS, __DEV__);
+  if (!line) return null;
+  return <Text style={styles.buildStamp} selectable>{line}</Text>;
 }
 
 /** The ACCOUNT row: only the email (any sign-in method), left-aligned, one line; shrinks a little, then ends in "…". */
@@ -253,4 +263,5 @@ const styles = StyleSheet.create({
   legendLabel: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 0.6, color: colors.inkMuted, marginTop: 2 },
   noScans: { fontFamily: fonts.regular, fontSize: 14, color: colors.inkMuted },
   accountText: { flex: 1, textAlign: 'left' },
+  buildStamp: { fontFamily: fonts.regular, fontSize: 11, color: colors.inkFaint, textAlign: 'center', marginTop: 24, marginBottom: 8 },
 });
