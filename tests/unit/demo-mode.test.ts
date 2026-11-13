@@ -22,9 +22,22 @@ test('demo verdict arrives after about 1.6 s', () => {
   assert.equal(DEMO_DELAY_MS, 1600);
 });
 
-test('release builds without Supabase settings never run the demo', () => {
-  assert.equal(appMode(false, false), 'not-configured');
-  assert.equal(appMode(true, false), 'demo');
-  assert.equal(appMode(false, true), 'live');
-  assert.equal(appMode(true, true), 'live');
+test('native release builds without Supabase settings never run the demo', () => {
+  assert.equal(appMode(false, false, 'ios'), 'not-configured');
+  assert.equal(appMode(false, false, 'android'), 'not-configured');
+});
+
+test('web builds (including a local build:web) without Supabase settings run the demo', () => {
+  assert.equal(appMode(false, false, 'web'), 'demo');
+});
+
+test('development without Supabase settings runs the demo on every platform', () => {
+  for (const p of ['ios', 'android', 'web']) assert.equal(appMode(true, false, p), 'demo');
+});
+
+test('with Supabase settings every platform is live', () => {
+  for (const p of ['ios', 'android', 'web']) {
+    assert.equal(appMode(false, true, p), 'live');
+    assert.equal(appMode(true, true, p), 'live');
+  }
 });

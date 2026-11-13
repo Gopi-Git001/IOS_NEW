@@ -12,7 +12,7 @@ import type { Session } from '@supabase/supabase-js';
 import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { getGuestQuota, guestConfig, guestMode, guestTrialFlag, signInAsGuest } from './src/lib/api';
 import { isGuestUser, type GuestQuota } from './src/lib/guestTrial';
 import { GuestScanPrompt } from './src/components/GuestScanPrompt';
@@ -35,9 +35,9 @@ import { SignInScreen } from './src/screens/SignInScreen';
 import { colors, fonts } from './src/theme';
 import type { ScanResult, Verdict } from './src/types';
 
-// Without Supabase settings in .env, development (Expo Go) runs in demo mode: no sign-in, fake results.
-// A release build without them (App Store, web export) shows a "not configured" screen instead.
-const mode = appMode(__DEV__, isConfigured);
+// Without Supabase settings in .env, development (Expo Go) and web builds run in demo mode: no sign-in,
+// fake results. A native (iOS/Android) release build without them shows a "not configured" screen instead.
+const mode = appMode(__DEV__, isConfigured, Platform.OS);
 const DEMO_TAGLINE = 'Demo mode · fake results';
 let demoCount = 0;
 const demoScan = () =>
