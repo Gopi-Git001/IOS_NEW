@@ -17,6 +17,8 @@ import { SmallMascot, useSmallMascotClearance } from '../components/SmallMascot'
 import { brand, colors, fonts } from '../theme';
 import { freeScansLabel } from '../lib/guestTrial';
 import { autoCaptureOn } from '../lib/autoCaptureGate';
+import { acceptScanConsent, gateScan, useScanConsent } from '../lib/scanConsent';
+import { ScanConsentNotice } from '../components/ScanConsentNotice';
 
 const HINT = 'Fit the ingredient list in the panel';
 const NO_FLASH = 'Flash not available on this camera';
@@ -40,6 +42,8 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
   const [noFlash, setNoFlash] = useState(false);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
+  const consented = useScanConsent();
+  const [consentOpen, setConsentOpen] = useState(false);
 
   useEffect(() => {
     if (!noFlash) return;
@@ -78,7 +82,15 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
     );
   }
 
-  const shoot = async () => {
+  // Nothing is captured or sent until the one-time scan notice is accepted (this applies to demo mode too).
+  const shoot = () => (consentOpen ? Promise.resolve(false) : gateScan(capture, () => setConsentOpen(true)));
+  const acceptConsent = () => {
+    acceptScanConsent();
+    setConsentOpen(false);
+    gateScan(capture, () => {}).catch(() => {});
+  };
+
+  const capture = async () => {
     const standIn = testPhoto();
     if (shooting.current || busy || !active || (!standIn && (!camera.current || !ready))) return;
     shooting.current = true;
@@ -112,7 +124,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
         onReadyChange={setReady}
         onTorchSupport={onTorchSupport}
         onTorchFailed={onTorchFailed}
-        autoCapture={autoCaptureOn({ pref: prefs.autoCapture, scansLeft: !onSignIn || (freeScans ?? 0) > 0, active, busy, ready })}
+        autoCapture={autoCaptureOn({ pref: prefs.autoCapture, scansLeft: !onSignIn || (freeScans ?? 0) > 0, active: active && consented && !consentOpen, busy, ready })}
         onAutoCapture={shoot}
       />
       <Scrims />
@@ -167,6 +179,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
       </SafeAreaView>
       {/* A still frame, so nothing animates over the live camera. */}
       <SmallMascot still />
+      <ScanConsentNotice visible={active && consentOpen} onAccept={acceptConsent} onNotNow={() => setConsentOpen(false)} />
     </View>
   );
 }
