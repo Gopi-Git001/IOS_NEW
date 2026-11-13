@@ -12,7 +12,9 @@ import { normalizeJev, normalizeResult } from './verdicts';
 import { parseGuestQuota } from './guestTrial';
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
-import { buildNativeRedirect, parseAuthResult, redactUrl } from './authRedirect';
+import { isRunningInExpoGo } from 'expo';
+import { getBundleOrigin } from 'expo/internal/bundle-origin';
+import { parseAuthResult, redactUrl, type RedirectEnv, resolveNativeRedirect } from './authRedirect';
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
 async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
@@ -209,17 +211,51 @@ export async function signInAsGuest(): Promise<string | null> {
   return authError ? 'Free scans are unavailable. Sign in with Google.' : null;
 }
 
+/** Runs a lookup that can throw (native module missing, manifest missing) and gives null instead. */
+function safely<T>(read: () => T): T | null {
+  try {
+    return read() ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Expo Go (iOS + Android): exp://<host>/--/auth from expo-linking; native builds: reallabel://auth.
+ * Expo Go (iOS + Android): exps://<host>/--/auth (https dev server, e.g. tunnel) or
+ * exp://<host>/--/auth (LAN), built from the dev server host; native builds: reallabel://auth.
  * Read at sign-in time so a changed LAN / tunnel host is picked up. See authRedirect.ts.
  */
 function nativeRedirect(): string {
-  return buildNativeRedirect({
+  const env: RedirectEnv = {
     os: Platform.OS,
-    appOwnership: Constants.appOwnership,
-    executionEnvironment: Constants.executionEnvironment,
-    expoGoUrl: Linking.createURL('auth'),
-  });
+    isRunningInExpoGo: safely(() => isRunningInExpoGo()),
+    appOwnership: safely(() => Constants.appOwnership),
+    executionEnvironment: safely(() => Constants.executionEnvironment),
+    hasExpoGoConfig: safely(() => Constants.expoGoConfig != null),
+    bundleOrigin: safely(() => getBundleOrigin()),
+    experienceUrl: safely(() => Constants.experienceUrl),
+    hostUri: safely(() => Constants.expoConfig?.hostUri),
+    linkingUri: safely(() => Constants.linkingUri),
+    createURL: safely(() => Linking.createURL('auth')),
+  };
+  const choice = resolveNativeRedirect(env);
+  if (__DEV__) {
+    // Hosts and links only (query / fragment cut off): no tokens, no keys.
+    console.log(
+      '[auth] detect',
+      JSON.stringify({
+        isRunningInExpoGo: env.isRunningInExpoGo,
+        executionEnvironment: env.executionEnvironment,
+        appOwnership: env.appOwnership,
+        hostUri: redactUrl(env.hostUri),
+        linkingUri: redactUrl(env.linkingUri),
+        bundleOrigin: redactUrl(env.bundleOrigin),
+        createURL: redactUrl(env.createURL),
+      }),
+    );
+    if (choice.noHost) console.warn('[auth] Expo Go detected but no dev server host');
+  }
+  return choice.url;
 }
 
 /**

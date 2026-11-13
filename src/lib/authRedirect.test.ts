@@ -6,44 +6,96 @@ import {
   NATIVE_REDIRECT,
   parseAuthResult,
   redactUrl,
+  resolveNativeRedirect,
   SIGN_IN_CANCELLED,
   SIGN_IN_FAILED,
 } from './authRedirect.ts';
 
-const TUNNEL = 'exp://c-robbin001-b1arzb-mwf0jyi2u20oabzh.on.expo.app/--/auth';
+const HOST = 'c-robbin001-b1arzb-mwf2ajj6dv4rb1v0.on.expo.app';
+const TUNNEL = `exps://${HOST}/--/auth`;
 const LAN = 'exp://192.168.1.5:8081/--/auth';
 
-test('Expo Go on iOS uses the exp://.../--/auth link from expo-linking', () => {
-  assert.equal(buildNativeRedirect({ os: 'ios', appOwnership: 'expo', executionEnvironment: 'storeClient', expoGoUrl: TUNNEL }), TUNNEL);
-  assert.equal(buildNativeRedirect({ os: 'ios', appOwnership: null, executionEnvironment: 'storeClient', expoGoUrl: LAN }), LAN);
+test('tunnel in Expo Go: createURL gave reallabel://auth, redirect is still exps://<host>/--/auth', () => {
+  // The owner's iPhone: the bundle came from the https tunnel, createURL used the app scheme.
+  const env = {
+    os: 'ios',
+    isRunningInExpoGo: true,
+    executionEnvironment: 'standalone',
+    appOwnership: null,
+    bundleOrigin: `https://${HOST}`,
+    createURL: 'reallabel://auth',
+  };
+  assert.equal(buildNativeRedirect(env), TUNNEL);
+  assert.deepEqual(resolveNativeRedirect(env), { url: TUNNEL, expoGo: true, noHost: false });
+  // Same with no bundle origin but the tunnel's experienceUrl / linkingUri.
+  assert.equal(buildNativeRedirect({ os: 'ios', isRunningInExpoGo: true, experienceUrl: `exps://${HOST}`, createURL: 'reallabel://auth' }), TUNNEL);
+  assert.equal(buildNativeRedirect({ os: 'ios', isRunningInExpoGo: true, linkingUri: `exps://${HOST}/--/`, createURL: 'reallabel:///auth' }), TUNNEL);
 });
 
-test('Expo Go on Android uses the exp:// link too', () => {
-  assert.equal(buildNativeRedirect({ os: 'android', appOwnership: 'expo', executionEnvironment: 'storeClient', expoGoUrl: LAN }), LAN);
-  assert.equal(buildNativeRedirect({ os: 'android', executionEnvironment: 'storeClient', expoGoUrl: TUNNEL }), TUNNEL);
-});
-
-test("appOwnership 'expo' alone counts as Expo Go", () => {
-  assert.equal(isExpoGo({ appOwnership: 'expo', executionEnvironment: null }), true);
+test('appOwnership null + executionEnvironment storeClient is Expo Go', () => {
   assert.equal(isExpoGo({ appOwnership: null, executionEnvironment: 'storeClient' }), true);
-  assert.equal(isExpoGo({ appOwnership: null, executionEnvironment: 'standalone' }), false);
-  assert.equal(buildNativeRedirect({ os: 'ios', appOwnership: 'expo', executionEnvironment: undefined, expoGoUrl: TUNNEL }), TUNNEL);
+  assert.equal(buildNativeRedirect({ os: 'ios', appOwnership: null, executionEnvironment: 'storeClient', bundleOrigin: `https://${HOST}` }), TUNNEL);
+  assert.equal(buildNativeRedirect({ os: 'android', appOwnership: null, executionEnvironment: 'storeClient', hostUri: '192.168.1.5:8081' }), LAN);
+});
+
+test('isRunningInExpoGo true with executionEnvironment undefined is Expo Go', () => {
+  assert.equal(isExpoGo({ isRunningInExpoGo: true, executionEnvironment: undefined, appOwnership: undefined }), true);
+  assert.equal(buildNativeRedirect({ os: 'ios', isRunningInExpoGo: true, executionEnvironment: undefined, bundleOrigin: 'http://192.168.1.5:8081' }), LAN);
+});
+
+test('any single Expo Go signal is enough; none means a native build', () => {
+  assert.equal(isExpoGo({ appOwnership: 'expo' }), true);
+  assert.equal(isExpoGo({ hasExpoGoConfig: true }), true);
+  assert.equal(isExpoGo({ linkingUri: 'exp://192.168.1.5:8081/--/' }), true);
+  assert.equal(isExpoGo({ linkingUri: `exps://${HOST}/--/` }), true);
+  assert.equal(isExpoGo({ isRunningInExpoGo: false, appOwnership: null, executionEnvironment: 'standalone', hasExpoGoConfig: false, linkingUri: 'reallabel://' }), false);
+});
+
+test('https dev server gives exps://, http gives exp://', () => {
+  const base = { os: 'ios', isRunningInExpoGo: true };
+  assert.equal(buildNativeRedirect({ ...base, bundleOrigin: `https://${HOST}` }), TUNNEL);
+  assert.equal(buildNativeRedirect({ ...base, bundleOrigin: `http://${HOST}` }), `exp://${HOST}/--/auth`);
+  // The bundle origin wins over hostUri / linkingUri; https-ness follows the source with that host.
+  assert.equal(buildNativeRedirect({ ...base, bundleOrigin: 'http://192.168.1.5:8081', hostUri: HOST, linkingUri: `exps://${HOST}/--/` }), LAN);
+  assert.equal(buildNativeRedirect({ ...base, hostUri: HOST, linkingUri: `exps://${HOST}/--/` }), TUNNEL);
+  // A trusted exp(s):// createURL is used when nothing else has a host.
+  assert.equal(buildNativeRedirect({ ...base, createURL: `exps://${HOST}/--/auth?x=1` }), TUNNEL);
+  assert.equal(buildNativeRedirect({ ...base, createURL: LAN }), LAN);
+  // Results never have double slashes, a query or a fragment.
+  for (const url of [
+    buildNativeRedirect({ ...base, bundleOrigin: `https://${HOST}/` }),
+    buildNativeRedirect({ ...base, experienceUrl: `exps://${HOST}//?a=b#c` }),
+  ]) {
+    assert.equal(url, TUNNEL);
+  }
+});
+
+test('hostUri with a port (LAN) gives exp://192.168.1.5:8081/--/auth', () => {
+  assert.equal(buildNativeRedirect({ os: 'ios', isRunningInExpoGo: true, hostUri: '192.168.1.5:8081' }), LAN);
+  assert.equal(buildNativeRedirect({ os: 'android', executionEnvironment: 'storeClient', linkingUri: 'exp://192.168.1.5:8081/--/' }), LAN);
+  // A tunnel hostUri without a scheme: on.expo.app tunnels are https.
+  assert.equal(buildNativeRedirect({ os: 'ios', isRunningInExpoGo: true, hostUri: HOST }), TUNNEL);
+});
+
+test('Expo Go with no host at all: reallabel://auth with the warning flag', () => {
+  for (const createURL of ['', null, undefined, 'reallabel://auth', 'http://x/--/auth']) {
+    assert.deepEqual(resolveNativeRedirect({ os: 'ios', isRunningInExpoGo: true, createURL }), {
+      url: 'reallabel://auth',
+      expoGo: true,
+      noHost: true,
+    });
+  }
 });
 
 test('native builds (standalone / bare) use reallabel://auth on iOS and Android', () => {
   assert.equal(NATIVE_REDIRECT, 'reallabel://auth');
   for (const os of ['ios', 'android']) {
     for (const executionEnvironment of ['standalone', 'bare']) {
-      // createURL returns the app scheme in native builds; it must not be used as-is.
-      assert.equal(buildNativeRedirect({ os, appOwnership: null, executionEnvironment, expoGoUrl: 'reallabel:///auth' }), 'reallabel://auth');
+      // createURL returns the app scheme in native builds; a dev hostUri must not turn it into exp://.
+      const env = { os, isRunningInExpoGo: false, appOwnership: null, executionEnvironment, hostUri: '192.168.1.5:8081', createURL: 'reallabel:///auth' };
+      assert.deepEqual(resolveNativeRedirect(env), { url: 'reallabel://auth', expoGo: false, noHost: false });
     }
   }
-});
-
-test('Expo Go without a usable exp:// link falls back to reallabel://auth', () => {
-  assert.equal(buildNativeRedirect({ os: 'ios', executionEnvironment: 'storeClient', expoGoUrl: '' }), 'reallabel://auth');
-  assert.equal(buildNativeRedirect({ os: 'ios', executionEnvironment: 'storeClient', expoGoUrl: null }), 'reallabel://auth');
-  assert.equal(buildNativeRedirect({ os: 'android', executionEnvironment: 'storeClient', expoGoUrl: 'http://x/--/auth' }), 'reallabel://auth');
 });
 
 test('closing the sheet is a silent cancel', () => {
