@@ -7,6 +7,7 @@ Factory rules for agents. They come before the sections below; where they overla
 - Checks (all must pass before you hand off): `npx tsc --noEmit`, `npm run test:unit`, `npx expo-doctor`, `npm run build:web` (Expo web build; output goes to git-ignored `dist-web/`).
 - `test:unit` covers the `test:rules` suites, so `test:unit` is the integration gate.
 - Run one command per Bash call; do not chain commands with ; or && or pipes unless every part is on the allow list.
+- Use the Bash tool's working directory; run background checks as single commands.
 - Never deploy Supabase functions, push Supabase config or run `supabase db push`. Never `eas submit` or production builds. Never force-push. README deploy commands are for humans; agents never run them.
 - Evidence (test output, screenshots) goes to `/workspace/evidence/<task>/` on the factory computer, never into git (the repo is public) and never to public hosts. List the paths in the final JSON.
 - "Expo Go on a real phone" stays: during this sprint the user tests on the iPhone via Expo Go; agents verify with tsc, unit tests and the Expo web build. Simulator/Maestro/EAS e2e are out of scope until the Apple account exists.
