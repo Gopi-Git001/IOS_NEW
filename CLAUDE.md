@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # Sugar Hunter
 
 Expo (React Native, TypeScript) app for iOS + Android with a Supabase backend.

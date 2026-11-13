@@ -1,5 +1,50 @@
 {
   "enabledPlugins": {
     "expo@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx expo:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx skills:*)",
+      "Bash(bash .claude/skills/:*)",
+      "Bash(ffmpeg:*)",
+      "Bash(before-and-after:*)",
+      "Bash(eas workflow:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(python3 .claude/skills/greploop/scripts/github_review.py:*)",
+      "Bash(python3 /workspace/repos/IOS_NEW/.claude/skills/greploop/scripts/github_review.py:*)",
+      "Bash(jq:*)",
+      "Bash(npm ci:*)",
+      "Bash(npx expo-doctor:*)",
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(cat:*)",
+      "Bash(npm run test:unit:*)",
+      "Bash(sleep:*)",
+      "Bash(timeout:*)",
+      "Bash(/workspace/factory/integrate.sh:*)",
+      "Read",
+      "Edit",
+      "Write"
+    ],
+    "deny": [
+      "Bash(npx eas-cli:*)",
+      "Bash(npx eas:*)",
+      "Bash(eas build:*)",
+      "Bash(eas submit:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(git push --force:*)",
+      "Bash(npx supabase functions deploy:*)",
+      "Bash(npx supabase config push:*)",
+      "Bash(npx supabase db push:*)",
+      "Bash(git push origin main:*)"
+    ]
   }
 }

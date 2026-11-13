@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "skills": {
+    "before-and-after": {
+      "source": "michaelshimeles/rstack",
+      "sourceType": "github",
+      "skillPath": "before-and-after/SKILL.md",
+      "computedHash": "a5cf2492eeb6a54492f0d50aaf8a1b6fc572a40cf1025259f3b720cd50556b10"
+    },
+    "code-structure": {
+      "source": "michaelshimeles/rstack",
+      "sourceType": "github",
+      "skillPath": "code-structure/SKILL.md",
+      "computedHash": "322e9d71d83dd84a922987de9a04b5175d4370f291f73366b5a63ee76ccd8168"
+    },
+    "evidence-driven-testing": {
+      "source": "michaelshimeles/rstack",
+      "sourceType": "github",
+      "skillPath": "evidence-driven-testing/SKILL.md",
+      "computedHash": "e17e0ea0d57efe5e413de2f43bd2156300dc36dee678929f7e99b3ebaf9c2a33"
+    },
+    "greploop": {
+      "source": "michaelshimeles/rstack",
+      "sourceType": "github",
+      "skillPath": "greploop/SKILL.md",
+      "computedHash": "1242951ebb0f166d84984cb73c73c7826ee858ce1d93e8901b73d50b4eaa1914"
+    },
+    "greploop-apps": {
+      "source": "michaelshimeles/rstack",
+      "sourceType": "github",
+      "skillPath": "greploop-apps/SKILL.md",
+      "computedHash": "dcc84b37b844501b89faf0bea0763ca0a5817f0a3dedfffda9020b70a37faefd"
+    },
+    "new-feature": {
+      "source": "michaelshimeles/rstack",
+      "sourceType": "github",
+      "skillPath": "new-feature/SKILL.md",
+      "computedHash": "4bc61243899a28e2e3b7466d6a623a731d0ec68fa08e4de5f1d7a68f636600e8"
+    },
+    "unslop": {
+      "source": "michaelshimeles/rstack",
+      "sourceType": "github",
+      "skillPath": "unslop/SKILL.md",
+      "computedHash": "be4270cee274ca5e9c3563b2ac1e343080e22ee95bcdeeedc4157e4afae0c31f"
+    }
+  }
+}

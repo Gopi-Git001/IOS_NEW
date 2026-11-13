@@ -1,3 +1,16 @@
+## FAST MODE (iOS sprint)
+
+Factory rules for agents. They come before the sections below; where they overlap, the stricter rule wins.
+
+- Integration branch is `ios-dev`. Never push to `main`, never merge or open PRs into `main`: `main` auto-deploys the live web app to Vercel.
+- Work in your own worktree `/workspace/worktrees/<task>` on branch `agent/<task>`, created from `origin/ios-dev`. Never edit the main checkout.
+- Checks (all must pass before you hand off): `npx tsc --noEmit`, `npm run test:unit`, `npx expo-doctor`.
+- Run one command per Bash call; do not chain commands with ; or && or pipes unless every part is on the allow list.
+- Never deploy Supabase functions, push Supabase config or run `supabase db push`. Never `eas submit` or production builds. Never force-push.
+- Evidence = test output + screenshots in `docs/evidence/<task>/` on your branch, linked in the PR/summary. Never upload evidence to public hosts.
+- Only the integrator (`/workspace/factory/integrate.sh agent/<task>`) merges into `ios-dev`, and only after `npx tsc --noEmit` and `npm run test:unit` pass.
+- `.claude/settings.json` is a guardrail, not a security boundary: these rules apply even where a command is allowed. Don't edit `.claude/`.
+
 ## Learned User Preferences
 
 - Sign out lives only in the Profile screen; do not add it back to the Menu screen.

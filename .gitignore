@@ -56,3 +56,6 @@ dist-web/
 # Eval: label photos are downloaded (tests/eval/fetch-photos.mjs), the report is generated
 tests/eval/photos/*.jpg
 tests/eval/report.md
+
+# Local factory artifacts
+.artifacts/
