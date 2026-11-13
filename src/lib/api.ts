@@ -16,6 +16,7 @@ import { isRunningInExpoGo } from 'expo';
 import { getBundleOrigin } from 'expo/internal/bundle-origin';
 import { parseAuthResult, redactUrl, type RedirectEnv, resolveNativeRedirect } from './authRedirect';
 import { createSingleFlight, describeAuthUrl, flowOutcome, safeMessage } from './authFlow';
+import { confirmDeleted, DELETE_FAILED, DELETE_SLUG, deletedFlag } from './accountDeletion';
 
 // Dev only: one line per JS start, so a reload while the Google sheet is open shows up in the log.
 if (__DEV__) console.log(`[auth] app start ${Platform.OS}`);
@@ -178,11 +179,17 @@ export async function readLabel(image: string, client?: CaptureMeta): Promise<Sc
   }
 }
 
+/**
+ * Asks the server to delete the signed-in account. Resolves only when the server replied 2xx with
+ * `{ deleted: true }`; otherwise throws with a message to show. It does NOT sign out: account.ts signs out
+ * after the local cleanup, and only once this resolved (accountDeletion.ts).
+ */
 export async function deleteAccount() {
-  const { error } = await supabase.functions.invoke('quickgob-delete-account', { method: 'POST' });
-  if (error) throw new Error(await messageFrom(error, 'Could not delete account. Try again.'));
-  // The account is gone; drop the local session too.
-  await supabase.auth.signOut({ scope: 'local' });
+  if (__DEV__) console.log(`[delete] request sent ${DELETE_SLUG}`);
+  const { data, error, response } = await supabase.functions.invoke(DELETE_SLUG, { method: 'POST' });
+  const status = error instanceof FunctionsHttpError || error instanceof FunctionsRelayError ? error.context.status : error ? 0 : (response?.status ?? 200);
+  if (__DEV__) console.log(`[delete] server reply status=${status || 'network'} deleted=${deletedFlag(data)}`);
+  confirmDeleted({ status, data: error ? null : data, message: error ? await messageFrom(error, DELETE_FAILED) : undefined });
 }
 
 /** Testing builds skip phone verification: set EXPO_PUBLIC_GUEST_MODE=1 at build time. */

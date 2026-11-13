@@ -50,6 +50,30 @@ edge-function half of the retry fix only takes effect once a human deploys it.
 - `src/screens/ProfileScreen.tsx`: safer "Delete failed" message. No visual change.
 - `supabase/functions/delete-account/index.ts`: idempotent on an already deleted user. **Repo only, needs deploy by human.**
 
+## Follow-up: user still in Authentication > Users (branch `agent/delete-account-fix`)
+
+The owner deleted an account in the app and the user was still listed in Supabase. Causes found:
+
+- **Wrong deploy slug.** The app calls `quickgob-delete-account` (`supabase/config.toml` maps it to
+  `functions/delete-account/index.ts`). The README deploy line was `functions deploy delete-account`, which publishes a
+  different slug. Following the README never updated the function the app calls, so the G1 fix above was never live.
+  The README line belongs to another owner and is unchanged. Use
+  `npx supabase functions deploy quickgob-delete-account --project-ref <ref> --no-verify-jwt` (humans only).
+- **The client trusted any 2xx.** `deleteAccount` signed out on any non-error reply, so a stale function that replied
+  2xx without deleting looked like a success. Now the client needs HTTP 2xx **and** `{ deleted: true }`
+  (`confirmDeleted` in `src/lib/accountDeletion.ts`). Order: server confirms, then local cleanup, then local sign-out.
+  ProfileScreen shows "Account deleted" only after that. On anything else it shows "Delete failed", touches nothing,
+  and the user stays signed in.
+- **The server never checked its own work.** `delete-account` now verifies the caller's token itself
+  (`auth.getUser`, so `--no-verify-jwt` is safe), hard-deletes (`deleteUser(id, false)`), reads the user back, and
+  returns `{ deleted: true }` only if the user is gone. Otherwise it returns 500 `{ deleted: false }`. A valid token
+  whose user is already gone returns `{ deleted: true, already: true }`, which closes G1 and the R1 caveat. Logic is in
+  `delete-account/handler.ts` and unit tested from `src/lib/accountDeletion.test.ts`.
+- Dev builds log `[delete] tap / confirm / request sent <slug> / server reply status=… deleted=… / local cleanup /
+  signed out` (no tokens, no ids).
+- `supabase/functions/_tests/delete-account.test.ts` ("cannot delete again" expects non-200) contradicts the
+  idempotent retry. It needs updating by its owner.
+
 ## Needs a human
 
 - **R1 (deploy)**: deploy `quickgob-delete-account` from this repo (README deploy command, human only). Then check G1's caveat: after a successful delete, call the function again with the old access token from a test account. It should return `{ deleted: true }` (or 401). If it returns 401, `src/lib/api.ts` `deleteAccount` should treat a 401 *after a delete was attempted* as success. That file belongs to another task and was not edited here.
