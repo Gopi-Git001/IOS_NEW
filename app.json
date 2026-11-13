@@ -44,7 +44,8 @@
           "backgroundColor": "#06080D"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-status-bar"
     ],
     "backgroundColor": "#06080D"
   }
