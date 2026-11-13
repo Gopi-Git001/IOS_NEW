@@ -181,7 +181,7 @@ Python 3 and FFmpeg.
 
 - `report.md` is the report: what was tested, environment + exact commit,
   pass/fail per test, caveats. Extend it rather than rewriting from scratch.
-- Never upload evidence to public hosts. Save screenshots/videos to docs/evidence/<feature>/ on the feature branch and link them in the PR body.
+- Never upload evidence to public hosts and never commit it. Save screenshots/videos to /workspace/evidence/<feature>/ on the factory computer and list the paths in the final report.
 - If the task includes a tracker issue and posting there is authorized, attach
   the same video with a one-line result.
 - Send the report + recording to the requester.
@@ -234,7 +234,7 @@ unchanged; only the input mechanism differs.
 When the agent has no desktop to record, keep the same assertion discipline;
 swap the recorder for scripted capture:
 
-- Never upload evidence to public hosts. Save screenshots/videos to docs/evidence/<feature>/ on the feature branch and link them in the PR body. Keep the capture script beside the captures so the run is repeatable.
+- Never upload evidence to public hosts and never commit it. Save screenshots/videos to /workspace/evidence/<feature>/ on the factory computer and list the paths in the final report. Keep the capture script beside the captures so the run is repeatable.
 - **Screenshots**: the `before-and-after` CLI (`@vercel/before-and-after`)
   captures URLs or elements and its pairs feed PR embeds directly. In
   containers/VMs where Chrome fails with "No usable sandbox", set
@@ -265,7 +265,7 @@ swap the recorder for scripted capture:
   const browser = await chromium.launch();
   try {
     const context = await browser.newContext({
-      recordVideo: { dir: "docs/evidence/<feature>/" },
+      recordVideo: { dir: "/workspace/evidence/<feature>/" },
     });
     try {
       const page = await context.newPage();
@@ -306,4 +306,4 @@ swap the recorder for scripted capture:
   `ps -p <pid> -o args=` to confirm it's yours.
 - Evidence complements the repo's checks (typecheck/build/tests); it never
   replaces them.
-- Never upload evidence to public hosts. Save screenshots/videos to docs/evidence/<feature>/ on the feature branch and link them in the PR body.
+- Never upload evidence to public hosts and never commit it. Save screenshots/videos to /workspace/evidence/<feature>/ on the factory computer and list the paths in the final report.

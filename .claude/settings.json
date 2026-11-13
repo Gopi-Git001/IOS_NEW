@@ -30,6 +30,7 @@
       "Bash(sleep:*)",
       "Bash(timeout:*)",
       "Bash(/workspace/factory/integrate.sh:*)",
+      "Bash(npm run build:web:*)",
       "Read",
       "Edit",
       "Write"

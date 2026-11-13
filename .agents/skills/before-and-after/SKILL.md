@@ -28,7 +28,7 @@ allowed-tools:
 - Use `--full` unless user explicitly asks for full page / full scroll capture
 
 **DO:**
-- Never upload evidence to public hosts. Save screenshots/videos to docs/evidence/<feature>/ on the feature branch and link them in the PR body.
+- Never upload evidence to public hosts and never commit it. Save screenshots/videos to /workspace/evidence/<feature>/ on the factory computer and list the paths in the final report.
 - Use `--mobile` / `--tablet` if user mentions phone, mobile, tablet, responsive, etc.
 - Reuse before captures, baseline URLs, and revision information already
   established in the task. Confirm that they show the relevant behavior and
@@ -44,7 +44,7 @@ allowed-tools:
 2. For remote URLs, check access when needed. A 401/403 indicates protection.
    Existing image pairs do not require a URL or deployment access check.
 3. Capture missing images with `before-and-after "<before-url>" "<after-url>"`.
-4. Never upload evidence to public hosts. Save screenshots/videos to docs/evidence/<feature>/ on the feature branch and link them in the PR body.
+4. Never upload evidence to public hosts and never commit it. Save screenshots/videos to /workspace/evidence/<feature>/ on the factory computer and list the paths in the final report.
 5. When PR evidence is required, link those saved files in the PR body (for
    example with `gh pr edit` and a before/after table of relative paths).
 
@@ -70,7 +70,7 @@ before-and-after url1 url2 --full      # full scroll
 
 # From existing images
 before-and-after before.png after.png
-# Then save the output into docs/evidence/<feature>/ and link it in the PR body.
+# Then save the output into /workspace/evidence/<feature>/ (never commit it) and list the paths in the final report.
 
 # Via npx (use full package name!)
 npx @vercel/before-and-after url1 url2
@@ -87,7 +87,7 @@ npx @vercel/before-and-after url1 url2
 
 ## Image Upload
 
-Never upload evidence to public hosts. Save screenshots/videos to docs/evidence/<feature>/ on the feature branch and link them in the PR body.
+Never upload evidence to public hosts and never commit it. Save screenshots/videos to /workspace/evidence/<feature>/ on the factory computer and list the paths in the final report.
 
 ## Vercel Deployment Protection
 
@@ -106,7 +106,7 @@ which gh
 # Get current PR
 gh pr view --json number,body
 
-# Write the existing body plus links to files under docs/evidence/<feature>/
+# Write the existing body plus the evidence paths under /workspace/evidence/<feature>/ (files stay off the repo)
 # to a temporary file, then:
 gh pr edit <number> --body-file /path/to/pr-body.md
 ```

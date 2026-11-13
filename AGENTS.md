@@ -3,11 +3,14 @@
 Factory rules for agents. They come before the sections below; where they overlap, the stricter rule wins.
 
 - Integration branch is `ios-dev`. Never push to `main`, never merge or open PRs into `main`: `main` auto-deploys the live web app to Vercel.
-- Work in your own worktree `/workspace/worktrees/<task>` on branch `agent/<task>`, created from `origin/ios-dev`. Never edit the main checkout.
-- Checks (all must pass before you hand off): `npx tsc --noEmit`, `npm run test:unit`, `npx expo-doctor`.
+- Work in your own worktree `/workspace/worktrees/<task>` on branch `agent/<task>`, created from `origin/ios-dev`. Never edit the main checkout. `npm ci` is fine.
+- Checks (all must pass before you hand off): `npx tsc --noEmit`, `npm run test:unit`, `npx expo-doctor`, `npm run build:web` (Expo web build; output goes to git-ignored `dist-web/`).
+- `test:unit` covers the `test:rules` suites, so `test:unit` is the integration gate.
 - Run one command per Bash call; do not chain commands with ; or && or pipes unless every part is on the allow list.
-- Never deploy Supabase functions, push Supabase config or run `supabase db push`. Never `eas submit` or production builds. Never force-push.
-- Evidence = test output + screenshots in `docs/evidence/<task>/` on your branch, linked in the PR/summary. Never upload evidence to public hosts.
+- Never deploy Supabase functions, push Supabase config or run `supabase db push`. Never `eas submit` or production builds. Never force-push. README deploy commands are for humans; agents never run them.
+- Evidence (test output, screenshots) goes to `/workspace/evidence/<task>/` on the factory computer, never into git (the repo is public) and never to public hosts. List the paths in the final JSON.
+- "Expo Go on a real phone" stays: during this sprint the user tests on the iPhone via Expo Go; agents verify with tsc, unit tests and the Expo web build. Simulator/Maestro/EAS e2e are out of scope until the Apple account exists.
+- "Work in phases; stop after each phase" applies to interactive human sessions only. In FAST MODE, agents run their task to integration without stopping and report once at the end (the JSON).
 - Only the integrator (`/workspace/factory/integrate.sh agent/<task>`) merges into `ios-dev`, and only after `npx tsc --noEmit` and `npm run test:unit` pass.
 - `.claude/settings.json` is a guardrail, not a security boundary: these rules apply even where a command is allowed. Don't edit `.claude/`.
 
@@ -28,8 +31,8 @@ Factory rules for agents. They come before the sections below; where they overla
 - The app's display name is "Reallabel" and its auth deep-link scheme is `reallabel://auth`; the deployed web app is `https://app.sugardepth.com`.
 - Supabase auth redirect allow-list: `reallabel://auth`, `exp://**`, `http://localhost:8081/**`, `https://app.sugardepth.com/**`.
 - When the user asks to change Supabase auth settings, don't `supabase config push` the repo's full config (it can overwrite site URL and SMS settings); push a minimal temporary config with only the changed keys, after previewing the diff.
-- GitHub repo is `kollaakhil/sugar-depth`; the owner deploys the web app to Vercel from `main`, so changes land via a feature branch and pull request into `main`. Never commit `.env_new` or `.cursor/`.
-- The `gh` CLI isn't installed on this PC; open pull requests with a prefilled GitHub compare link instead.
+- GitHub repo is `Gopi-Git001/IOS_NEW`; the owner deploys the web app to Vercel from `main`, so changes land via a feature branch and pull request into `main`. Never commit `.env_new` or `.cursor/`.
+- The `gh` CLI is installed on the factory computer.
 - Edge Functions are published under `quickgob-*` slugs (`quickgob-scan-label`, `quickgob-quick-verdict`, `quickgob-delete-account`, `quickgob-phone-auth`) mapped in `supabase/config.toml`; a target Supabase project also needs the `quickgob` rate-limit migration and the `ANTHROPIC_API_KEY` / `TYPESAFE_API_KEY` secrets.
 - Local backend testing: `npm run local:functions` serves Edge Functions with the git-ignored `supabase/functions/.env.local` (Claude and Jev keys), `npm run local:user` creates the local test user, and `npm run local:app-env` writes a git-ignored `.env.local` pointing the app at local Supabase on the LAN IP; PowerShell steps are in `tests/README-local-testing.md`.
 - `npm test` runs the unit and backend (pgTAP + Deno, local `supabase start`) tests; `npm run eval` runs `tests/eval/run-eval.mjs` against the real scan pipeline (`EVAL_SUPABASE_URL`, keys from env).

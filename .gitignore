@@ -59,3 +59,15 @@ tests/eval/report.md
 
 # Local factory artifacts
 .artifacts/
+
+# Factory hardening (public repo): env files, logs, keys, evidence never go in git
+.env.*
+!.env.example
+!supabase/functions/.env.example
+!supabase/functions/_tests/.env.test
+*.log
+logs/
+credentials*.json
+google-services*.json
+GoogleService-Info*.plist
+docs/evidence/
