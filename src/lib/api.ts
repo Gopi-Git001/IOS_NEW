@@ -11,7 +11,8 @@ import { requestScanStream, RetryableScanError, type ScanEvent } from './scanStr
 import { normalizeJev, normalizeResult } from './verdicts';
 import { parseGuestQuota } from './guestTrial';
 import Constants from 'expo-constants';
-import { buildNativeRedirect, parseAuthResult } from './authRedirect';
+import * as Linking from 'expo-linking';
+import { buildNativeRedirect, parseAuthResult, redactUrl } from './authRedirect';
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
 async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
@@ -208,12 +209,18 @@ export async function signInAsGuest(): Promise<string | null> {
   return authError ? 'Free scans are unavailable. Sign in with Google.' : null;
 }
 
-/** reallabel://auth everywhere except Android Expo Go (exp://<host>/--/auth); see authRedirect.ts. */
-const NATIVE_REDIRECT = buildNativeRedirect({
-  os: Platform.OS,
-  executionEnvironment: Constants.executionEnvironment,
-  linkingUri: Constants.linkingUri,
-});
+/**
+ * Expo Go (iOS + Android): exp://<host>/--/auth from expo-linking; native builds: reallabel://auth.
+ * Read at sign-in time so a changed LAN / tunnel host is picked up. See authRedirect.ts.
+ */
+function nativeRedirect(): string {
+  return buildNativeRedirect({
+    os: Platform.OS,
+    appOwnership: Constants.appOwnership,
+    executionEnvironment: Constants.executionEnvironment,
+    expoGoUrl: Linking.createURL('auth'),
+  });
+}
 
 /**
  * Google sign-in through Supabase Auth (free; no SMS). Returns an error message, or null when it
@@ -227,21 +234,28 @@ export async function signInWithGoogle(): Promise<string | null> {
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: back } });
     return error ? failed : null;
   }
+  const redirect = nativeRedirect();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: NATIVE_REDIRECT, skipBrowserRedirect: true },
+    options: { redirectTo: redirect, skipBrowserRedirect: true },
   });
   if (error || !data?.url) return failed;
-  const result = await WebBrowser.openAuthSessionAsync(data.url, NATIVE_REDIRECT);
+  if (__DEV__) console.log('[auth] redirect', redirect);
+  const result = await WebBrowser.openAuthSessionAsync(data.url, redirect);
+  if (__DEV__) console.log('[auth] result', result.type);
   const outcome = parseAuthResult(result);
   if (outcome.kind === 'cancel') return null;
   if (outcome.kind === 'error') {
-    console.warn('[auth] Google sign-in redirect error', result.type === 'success' ? result.url : result.type);
+    // Never log the code, tokens or full URL: only the URL without its query / fragment.
+    if (__DEV__) console.warn('[auth] Google sign-in redirect error', result.type === 'success' ? redactUrl(result.url) : result.type);
     return outcome.message;
   }
-  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(outcome.code);
-  if (exchangeError) console.warn('[auth] exchangeCodeForSession failed', exchangeError.message);
-  return exchangeError ? 'Could not sign you in. Try again.' : null;
+  const { error: sessionError } =
+    outcome.kind === 'code'
+      ? await supabase.auth.exchangeCodeForSession(outcome.code)
+      : await supabase.auth.setSession({ access_token: outcome.accessToken, refresh_token: outcome.refreshToken });
+  if (sessionError && __DEV__) console.warn('[auth] setting the session failed', outcome.kind, sessionError.message);
+  return sessionError ? 'Could not sign you in. Try again.' : null;
 }
 
 /** On the web, Google sends people back with ?error=... when they cancel or something fails. */

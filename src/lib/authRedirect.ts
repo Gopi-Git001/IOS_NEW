@@ -1,6 +1,7 @@
 /**
  * Google sign-in redirect for phones: where Supabase sends the browser back to, and how to read
- * what came back. Pure (no React Native imports) so it can be unit-tested.
+ * what came back. Pure (no React Native imports) so it can be unit-tested; api.ts passes in the
+ * real Platform / Constants / expo-linking values.
  */
 
 /** The app's own scheme (app.json "scheme"). Must be in the Supabase redirect allow-list. */
@@ -12,32 +13,38 @@ export const SIGN_IN_FAILED = 'Google sign-in failed. Try again.';
 export type RedirectEnv = {
   /** Platform.OS */
   os: string;
+  /** Constants.appOwnership: 'expo' means Expo Go (older SDKs; null in native builds). */
+  appOwnership?: string | null;
   /** Constants.executionEnvironment: 'storeClient' means Expo Go. */
   executionEnvironment?: string | null;
-  /** Constants.linkingUri, e.g. "exp://192.168.1.5:8081/--/" in Expo Go. */
-  linkingUri?: string | null;
+  /** expo-linking Linking.createURL('auth'), e.g. "exp://192.168.1.5:8081/--/auth" in Expo Go. */
+  expoGoUrl?: string | null;
 };
 
+/** True inside the Expo Go app (either signal is enough). */
+export function isExpoGo(env: Pick<RedirectEnv, 'appOwnership' | 'executionEnvironment'>): boolean {
+  return env.appOwnership === 'expo' || env.executionEnvironment === 'storeClient';
+}
+
 /**
- * iOS (Expo Go and native builds): reallabel://auth. ASWebAuthenticationSession closes on any URL
- * with the callback scheme, even when the scheme isn't registered (Expo Go), so no exp:// is needed
- * and the redirect does not depend on the changing LAN / tunnel host.
- * Android in Expo Go: the browser polyfill waits for a deep link into the app, and Expo Go only
- * opens exp:// links, so use Expo Go's own link + "/--/auth" (allow-listed as exp://**).
- * Android native builds: reallabel://auth (registered by app.json "scheme").
+ * Redirect used for both signInWithOAuth redirectTo and openAuthSessionAsync returnUrl.
+ * - Expo Go (iOS and Android): Expo Go's own link, Linking.createURL('auth') =
+ *   exp://<host>/--/auth (allow-listed in Supabase as exp://**). Expo Go cannot receive
+ *   reallabel:// links, so with that redirect the sheet never came back to the app.
+ * - Native builds (standalone / bare): reallabel://auth (registered by app.json "scheme").
+ * If Expo Go somehow gives no exp:// link, fall back to reallabel://auth.
  */
 export function buildNativeRedirect(env: RedirectEnv): string {
-  if (env.os !== 'android' || env.executionEnvironment !== 'storeClient') return NATIVE_REDIRECT;
-  const base = (env.linkingUri ?? '').trim();
-  if (!/^exps?:\/\//.test(base)) return NATIVE_REDIRECT;
-  const root = base.includes('/--/') ? base.slice(0, base.indexOf('/--/')) : base.replace(/\/+$/, '');
-  return `${root}/--/auth`;
+  if (!isExpoGo(env)) return NATIVE_REDIRECT;
+  const url = (env.expoGoUrl ?? '').trim();
+  return /^exps?:\/\/[^/?#]+/.test(url) ? url : NATIVE_REDIRECT;
 }
 
 export type AuthResult = { type: string; url?: string | null };
 
 export type AuthOutcome =
   | { kind: 'code'; code: string }
+  | { kind: 'tokens'; accessToken: string; refreshToken: string }
   | { kind: 'cancel' }
   | { kind: 'error'; message: string };
 
@@ -53,10 +60,12 @@ function redirectParams(url: string): URLSearchParams {
 
 /**
  * Reads the result of WebBrowser.openAuthSessionAsync.
- * - Sheet closed (Cancel / dismiss): cancel, the app shows nothing.
- * - ?code=...: PKCE code to exchange.
- * - ?error=access_denied: the person declined on Google's page (same wording as the web).
- * - Any other ?error=..., or no code at all: failure.
+ * - Sheet closed (cancel / dismiss / locked): cancel, the app shows nothing.
+ * - ?error= / #error= (or error_code): failure message. access_denied (declined on Google's page)
+ *   uses the same "cancelled" wording as the web; anything else is "failed".
+ * - ?code=...: PKCE code to exchange (exchangeCodeForSession).
+ * - #access_token=...&refresh_token=...: implicit-style tokens (setSession).
+ * - Nothing usable: failure.
  */
 export function parseAuthResult(result: AuthResult): AuthOutcome {
   if (result.type !== 'success') return { kind: 'cancel' };
@@ -65,5 +74,15 @@ export function parseAuthResult(result: AuthResult): AuthOutcome {
   if (error) return { kind: 'error', message: error === 'access_denied' ? SIGN_IN_CANCELLED : SIGN_IN_FAILED };
   const code = params.get('code');
   if (code) return { kind: 'code', code };
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+  if (accessToken && refreshToken) return { kind: 'tokens', accessToken, refreshToken };
   return { kind: 'error', message: SIGN_IN_FAILED };
+}
+
+/** URL safe to log: query and #fragment removed (they can hold the code, tokens or errors). */
+export function redactUrl(url: string | null | undefined): string {
+  if (!url) return '';
+  const cut = url.search(/[?#]/);
+  return cut < 0 ? url : url.slice(0, cut);
 }
