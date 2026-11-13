@@ -6,12 +6,14 @@
 //   Web                   -> CSS backdrop blur + saturation, a bright top rim and a soft inner glow,
 //                            a close imitation of the real thing
 import { BlurView } from 'expo-blur';
-import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
+import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-const nativeGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
+// Both checks: some iOS 26 builds report Liquid Glass but lack the runtime API, and GlassView then crashes
+// (expo/expo#40911). Those phones get the blur fallback.
+const nativeGlass = Platform.OS === 'ios' && isLiquidGlassAvailable() && isGlassEffectAPIAvailable();
 
 type Props = {
   children?: ReactNode;
@@ -44,7 +46,8 @@ export function Glass({ children, style, variant = 'regular', interactive, point
   }
   return (
     <View style={[styles.fallback, light && styles.fallbackLight, style]} pointerEvents={pointerEvents}>
-      <BlurView intensity={variant === 'clear' ? 30 : 50} tint={light ? 'light' : 'dark'} style={StyleSheet.absoluteFill} />
+      {/* The blur is backdrop only: it must never take a tap meant for the buttons or the camera under 'box-none' glass. */}
+      <BlurView pointerEvents="none" intensity={variant === 'clear' ? 30 : 50} tint={light ? 'light' : 'dark'} style={StyleSheet.absoluteFill} />
       {children}
     </View>
   );
