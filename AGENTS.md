@@ -9,6 +9,7 @@ Factory rules for agents. They come before the sections below; where they overla
 - Run one command per Bash call; do not chain commands with ; or && or pipes unless every part is on the allow list.
 - Use the Bash tool's working directory; run background checks as single commands.
 - Interpreter access is allowed for this sprint; the real limits are the pre-push hook, GitHub branch protection and the deny rules; revert after the sprint.
+- The app now talks to the LIVE Supabase backend. Agents must not run destructive or costly calls against it: no account deletion on real accounts, no bulk scans, no edge function deploys, no config/db pushes. Verify backend behavior by code review + unit tests; the user verifies on the phone.
 - Never deploy Supabase functions, push Supabase config or run `supabase db push`. Never `eas submit` or production builds. Never force-push. README deploy commands are for humans; agents never run them.
 - Evidence (test output, screenshots) goes to `/workspace/evidence/<task>/` on the factory computer, never into git (the repo is public) and never to public hosts. List the paths in the final JSON.
 - "Expo Go on a real phone" stays: during this sprint the user tests on the iPhone via Expo Go; agents verify with tsc, unit tests and the Expo web build. Simulator/Maestro/EAS e2e are out of scope until the Apple account exists.
