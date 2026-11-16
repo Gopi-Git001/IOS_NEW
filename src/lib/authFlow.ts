@@ -89,9 +89,12 @@ export function createCodeExchanger(run: (code: string) => Promise<string | null
   const start = async (fingerprint: string, code: string): Promise<ExchangeResult> => {
     try {
       if (store && (await store.has(fingerprint).catch(() => false))) return { status: 'skipped', reason: 'code already used' };
-      await store?.add(fingerprint).catch(() => {});
       const error = await run(code);
-      return error ? { status: 'failed', message: error } : { status: 'ok' };
+      if (error) return { status: 'failed', message: error };
+      // Used only once exchangeCodeForSession succeeded: a failed code can be tried again.
+      used.add(fingerprint);
+      await store?.add(fingerprint).catch(() => {});
+      return { status: 'ok' };
     } catch (e) {
       return { status: 'failed', message: safeMessage(e) };
     }
@@ -108,7 +111,6 @@ export function createCodeExchanger(run: (code: string) => Promise<string | null
         return shared.status === 'skipped' ? shared : { ...shared, duplicate: true };
       }
       if (used.has(fingerprint)) return { status: 'skipped', reason: 'code already used' };
-      used.add(fingerprint);
       const current = { fingerprint, result: start(fingerprint, code) };
       inFlight = current;
       try {

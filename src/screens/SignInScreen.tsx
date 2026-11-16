@@ -1,14 +1,12 @@
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import * as Linking from 'expo-linking';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { CharacterView, MASCOT_FEET_RATIO } from '../components/Character';
 import { Ambient, Footer, useReducedMotion } from '../components/Chrome';
 import { SmallMascot, smallMascotBox, WIDE_FROM } from '../components/SmallMascot';
 import { CrystalSwarm } from '../components/CrystalSwarm';
-import { completeSignInFromLink, isGoogleSignInRunning, signInWithGoogle, takeAuthRedirectError } from '../lib/api';
-import { describeAuthUrl, isAuthLink } from '../lib/authFlow';
+import { isGoogleSignInRunning, signInWithGoogle, subscribeAuthLinks, takeAuthRedirectError } from '../lib/api';
 import { devLog } from '../lib/devLog';
 import { colors, fonts, frost } from '../theme';
 
@@ -78,7 +76,9 @@ function group(nameBottom: number, maxCube: number, slotHeight: number, footerTo
 
 /** Google sign-in only (free through Supabase Auth). Supabase creates the account on first sign-in. */
 export function SignInScreen({ onBack }: { onBack?: () => void }) {
-  const [busy, setBusy] = useState(false);
+  const [tapBusy, setBusy] = useState(false);
+  const [linkBusy, setLinkBusy] = useState(false);
+  const busy = tapBusy || linkBusy;
   const [error, setError] = useState<string | null>(null);
   // The crystal swarm (web) circles the mascot column and keeps sharp crystals off the name, the button block and the footer.
   const content = useRef<ComponentRef<typeof View>>(null);
@@ -106,37 +106,16 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
   // Coming back from Google with an error (for example, the person pressed Cancel).
   useEffect(() => setError(takeAuthRedirectError()), []);
 
-  // The sign-in return link reached the app outside the Google flow: Android Expo Go reloads the app
-  // when exps://<host>/--/auth?code=... arrives (it is then the initial URL), or the Custom Tab's
-  // "dismiss" beat the link. Trade its code for a session once (api.ts); App.tsx's auth listener then
-  // leaves this screen. An error in the link or a failed exchange is shown, never silently dropped.
+  // Sign-in return links are handled app-wide in api.ts (initial URL, every url event, the auth
+  // session result), so none is lost while screens change. This screen shows their state: a spinner
+  // while a code is exchanged, and the error (e.g. "Sign-in expired, please try again"), even one
+  // that arrived before the screen mounted. App.tsx's auth listener leaves this screen on SIGNED_IN.
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    let live = true;
-    const onLink = (url: string | null) => {
-      if (!url || !isAuthLink(url)) return;
-      devLog('auth', `incoming link: ${describeAuthUrl(url)}`);
-      setBusy(true);
-      setError(null);
-      completeSignInFromLink(url)
-        .then((err) => {
-          if (live && err) setError(err);
-        })
-        .catch(() => {
-          if (live) setError('Could not sign you in. Try again.');
-        })
-        .finally(() => {
-          if (live) setBusy(false);
-        });
-    };
-    Linking.getInitialURL()
-      .then(onLink)
-      .catch(() => {});
-    const sub = Linking.addEventListener('url', ({ url }) => onLink(url));
-    return () => {
-      live = false;
-      sub.remove();
-    };
+    return subscribeAuthLinks((state) => {
+      setLinkBusy(state.busy);
+      if (state.error) setError(state.error);
+    });
   }, []);
 
   const start = async () => {
