@@ -17,16 +17,8 @@ import { getBundleOrigin } from 'expo/internal/bundle-origin';
 import { parseAuthResult, redactUrl, type RedirectEnv, resolveNativeRedirect } from './authRedirect';
 import { authBrowserOptions } from './authBrowser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  createCodeExchanger,
-  createSingleFlight,
-  describeAuthUrl,
-  describeIncomingExchange,
-  flowOutcome,
-  incomingLinkAction,
-  safeMessage,
-  type UsedCodeStore,
-} from './authFlow';
+import { createCodeExchanger, createSingleFlight, flowOutcome, safeMessage, type UsedCodeStore } from './authFlow';
+import { type AuthLinkState, createAuthLinkHandler, GOOGLE_QUERY_PARAMS } from './authLinks';
 import { confirmDeleted, DELETE_FAILED, DELETE_SLUG, deletedFlag } from './accountDeletion';
 import { devLog } from './devLog';
 
@@ -58,6 +50,27 @@ const codeExchange = createCodeExchanger(async (code) => {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   return error ? safeMessage(error.message) : null;
 }, usedCodes);
+
+// Every sign-in return link, whichever way it reaches the app: the initial URL (Android Expo Go
+// reloads the app when the link arrives), a Linking 'url' event (the app was running), or the
+// openAuthSessionAsync result. Registered once here, not in a screen, so no link is missed while
+// screens change. Each new code is exchanged once; errors stay in the app (authLinks.ts).
+const authLinks = createAuthLinkHandler({
+  exchange: (code) => codeExchange.exchange(code),
+  hasSession: async () => !!(await supabase.auth.getSession()).data?.session,
+  log: (message) => devLog('auth', message),
+});
+if (Platform.OS !== 'web') {
+  Linking.addEventListener('url', ({ url }) => {
+    void authLinks.handle(url, 'url event');
+  });
+  Linking.getInitialURL()
+    .then((url) => authLinks.handle(url, 'initial'))
+    .catch((e) => devLog('auth', `initial link unavailable: ${safeMessage(e)}`));
+}
+
+/** Busy / error state of incoming sign-in links, for the sign-in screen. Returns an unsubscribe. */
+export const subscribeAuthLinks = (listener: (state: AuthLinkState) => void) => authLinks.subscribe(listener);
 
 /** True while a Google sign-in started by signInWithGoogle() has not finished (for the dev tap log). */
 export const isGoogleSignInRunning = () => googleSignIn.running;
@@ -320,10 +333,11 @@ function nativeRedirect(): string {
 export function signInWithGoogle(): Promise<string | null> {
   // A return link is being traded for a session: a new flow now would replace the stored PKCE
   // verifier that exchange needs (and Google would be opened a second time).
-  if (codeExchange.running) {
+  if (codeExchange.running || authLinks.state.busy) {
     devLog('auth', 'ignored: incoming link exchange in progress');
     return Promise.resolve(null);
   }
+  authLinks.clearError();
   // One sign-in at a time: a second tap while the browser sheet is open does nothing.
   return googleSignIn.run(signInWithGoogleOnce, null, () => {
     devLog('auth', 'ignored: already in progress');
@@ -333,7 +347,10 @@ export function signInWithGoogle(): Promise<string | null> {
 async function signInWithGoogleOnce(): Promise<string | null> {
   if (Platform.OS === 'web') {
     const back = window.location.origin + window.location.pathname;
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: back } });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: back, queryParams: { ...GOOGLE_QUERY_PARAMS } },
+    });
     return error ? GOOGLE_OPEN_FAILED : null;
   }
   const step: { current: 'cancel' | 'error' | 'session-set' } = { current: 'error' };
@@ -355,32 +372,28 @@ async function nativeGoogleSignIn(step: { current: 'cancel' | 'error' | 'session
   const redirect = nativeRedirect();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: redirect, skipBrowserRedirect: true },
+    options: { redirectTo: redirect, skipBrowserRedirect: true, queryParams: { ...GOOGLE_QUERY_PARAMS } },
   });
   if (error || !data?.url) return failed;
   devLog('auth', `redirectTo ${redactUrl(redirect)}`);
   // Android: open the tab in the app's task so each tap loads this new URL (see authBrowser.ts).
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirect, authBrowserOptions(Platform.OS));
   devLog('auth', `result ${result.type}`);
-  // Only whether a code / tokens came back and the error text; never the values or the full URL.
-  if (result.type === 'success') devLog('auth', `return url: ${describeAuthUrl(result.url)}`);
-  const outcome = parseAuthResult(result);
-  if (outcome.kind === 'cancel') {
+  if (result.type !== 'success') {
+    // Closed, or (Android) the app came forward before the link: a link that does arrive is still
+    // handled by the app-wide listener.
     step.current = 'cancel';
     return null;
   }
-  if (outcome.kind === 'error') return outcome.message;
-  if (outcome.kind === 'code') {
-    // Shared with the incoming-link handler: the same code is never sent twice.
-    const exchanged = await codeExchange.exchange(outcome.code);
-    if (exchanged.status === 'failed') {
-      devLog('auth', `exchange failed: ${safeMessage(exchanged.message)}`);
-      return SESSION_FAILED;
-    }
-    devLog('auth', exchanged.status === 'ok' ? `exchange ok${exchanged.duplicate ? ' (shared)' : ''}` : `exchange skipped (${exchanged.reason})`);
+  // The same handler as the Linking listener: a code that also came as a url event is exchanged once.
+  const linked = await authLinks.handle(result.url, 'auth session result');
+  if (linked.kind === 'error' || linked.kind === 'failed') return linked.message;
+  if (linked.kind === 'signed-in' || linked.kind === 'already-signed-in') {
     step.current = 'session-set';
     return null;
   }
+  const outcome = parseAuthResult(result);
+  if (outcome.kind !== 'tokens') return SESSION_FAILED;
   const { error: sessionError } = await supabase.auth.setSession({
     access_token: outcome.accessToken,
     refresh_token: outcome.refreshToken,
@@ -389,41 +402,6 @@ async function nativeGoogleSignIn(step: { current: 'cancel' | 'error' | 'session
   if (sessionError) return SESSION_FAILED;
   step.current = 'session-set';
   return null;
-}
-
-/**
- * The sign-in return link reached the app outside the running flow (Android Expo Go reloads the
- * app when exps://<host>/--/auth?code=... arrives, so openAuthSessionAsync never returns; or the
- * Custom Tab "dismiss" won the race against the link). Trades its code for a session exactly once;
- * onAuthStateChange (App.tsx) then sets the session. Returns an error message to show, or null.
- * Waits for a running Google flow to finish first (it may be exchanging this very code).
- */
-export async function completeSignInFromLink(url: string): Promise<string | null> {
-  if (Platform.OS === 'web') return null;
-  const action = incomingLinkAction(url);
-  if (action.kind === 'ignore') return null;
-  if (action.kind === 'error') {
-    devLog('auth', describeIncomingExchange({ status: 'failed', message: action.detail }));
-    return action.message;
-  }
-  if (action.kind === 'no-code') {
-    devLog('auth', describeIncomingExchange({ status: 'skipped', reason: 'no code in link' }));
-    return null;
-  }
-  try {
-    await googleSignIn.whenIdle();
-    const { data } = await supabase.auth.getSession();
-    if (data?.session) {
-      devLog('auth', describeIncomingExchange({ status: 'skipped', reason: 'already signed in' }));
-      return null;
-    }
-    const result = await codeExchange.exchange(action.code);
-    devLog('auth', describeIncomingExchange(result));
-    return result.status === 'failed' ? SESSION_FAILED : null;
-  } catch (e) {
-    devLog('auth', describeIncomingExchange({ status: 'failed', message: safeMessage(e) }));
-    return SESSION_FAILED;
-  }
 }
 
 /** "[auth] session: yes|no user: yes|no" (presence only, no ids or tokens). Dev only. */
