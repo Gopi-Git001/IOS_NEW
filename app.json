@@ -44,7 +44,8 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.sugardepth.app"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -75,6 +76,12 @@
       ],
       "expo-web-browser"
     ],
-    "backgroundColor": "#06080D"
+    "backgroundColor": "#06080D",
+    "extra": {
+      "eas": {
+        "projectId": "d6e95b27-4067-47ea-9a31-41cd03da2326"
+      }
+    },
+    "owner": "robbin_001"
   }
 }
