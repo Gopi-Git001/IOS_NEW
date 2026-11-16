@@ -15,6 +15,7 @@ import * as Linking from 'expo-linking';
 import { isRunningInExpoGo } from 'expo';
 import { getBundleOrigin } from 'expo/internal/bundle-origin';
 import { parseAuthResult, redactUrl, type RedirectEnv, resolveNativeRedirect } from './authRedirect';
+import { authBrowserOptions } from './authBrowser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   createCodeExchanger,
@@ -358,7 +359,8 @@ async function nativeGoogleSignIn(step: { current: 'cancel' | 'error' | 'session
   });
   if (error || !data?.url) return failed;
   devLog('auth', `redirectTo ${redactUrl(redirect)}`);
-  const result = await WebBrowser.openAuthSessionAsync(data.url, redirect);
+  // Android: open the tab in the app's task so each tap loads this new URL (see authBrowser.ts).
+  const result = await WebBrowser.openAuthSessionAsync(data.url, redirect, authBrowserOptions(Platform.OS));
   devLog('auth', `result ${result.type}`);
   // Only whether a code / tokens came back and the error text; never the values or the full URL.
   if (result.type === 'success') devLog('auth', `return url: ${describeAuthUrl(result.url)}`);
