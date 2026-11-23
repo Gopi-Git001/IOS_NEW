@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import ScanCta from '../components/ScanCta.astro';
+import { breadcrumbs } from '../data/schema';
+import { FAQ } from '../data/faq';
+// After Base and the components, so these rules come last in the page's CSS.
+import '../styles/brief-pages.css';
+const crumbs = [{ name: 'Home', href: '/' }, { name: 'FAQ', href: '/faq' }];
+// Visible HTML only. Deliberately no FAQPage schema. The questions and answers come from src/data/faq.ts.
+---
+<Base title="Sugar Depth FAQ: short answers on verdicts, sweeteners and privacy" description="Short answers about Sugar Depth: barcodes, 0 g sugar labels, stevia, fruit and milk sugar, maltodextrin, allergens, photo privacy and wrong verdicts." path="/faq" jsonLd={[breadcrumbs(crumbs)]}>
+  <div class="wrap page-head">
+    <Breadcrumbs items={crumbs} />
+    <h1>Questions, answered plainly.</h1>
+  </div>
+  <div class="wrap page-body prose faq">
+    {FAQ.map((f) => (
+      <>
+        <h2 id={f.id} set:html={f.q} />
+        <p set:html={f.a} />
+      </>
+    ))}
+
+    <div style="margin-top:48px"><ScanCta text="One photo. One word." /></div>
+  </div>
+</Base>

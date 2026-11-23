@@ -1,0 +1,91 @@
+/* Short pages: the three-section home page, the shorter /how-it-works, /faq and /about. Imported by those pages
+   only, after Base.astro's sheets, so it reads the same paper, ink and glass tokens and adds no colours. */
+
+/* ---------- home, section 2: how it works (steps, verdicts, the try-it demo) ---------- */
+.how { padding-block: clamp(48px, 6vw, 80px); }
+.how > .wrap > h2 { margin-bottom: 28px; }
+.how-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 clamp(20px, 3vw, 40px); }
+.how-steps li { display: flex; align-items: center; gap: 14px; padding: 16px 0; border-top: 2px solid var(--rule-strong); font-weight: 800; font-size: 1.125rem; line-height: 1.25; letter-spacing: -0.01em; }
+.how-icon { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; color: var(--ink); background: linear-gradient(135deg, #fffd, #fff6); border: 1px solid #fff; box-shadow: var(--frost-shadow); }
+.how-icon svg { display: block; }
+
+.how-verdicts { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 clamp(20px, 3vw, 40px); }
+.how-verdict { padding: 16px 0 6px; border-top: 1px solid var(--rule); }
+.how-verdict h3 { display: flex; align-items: center; gap: 12px; margin: 0 0 4px; font-size: 1.5rem; font-weight: 900; letter-spacing: -0.03em; }
+/* A small pane of the verdict's glass: the same slab as the hero's, never a faceted shape. */
+.how-chip { flex: none; width: 18px; height: 23px; border-radius: 5px; border: 1.5px solid color-mix(in srgb, var(--deep), white 25%); background: linear-gradient(143deg, #fff6 0%, transparent 38%), linear-gradient(165deg, var(--tint), var(--deep) 85%); box-shadow: inset 0 0 0 1px #fff3, 2px 3px 0 color-mix(in srgb, var(--deep), transparent 30%); transform: rotate(5deg); }
+.how-verdict > p { margin: 0; }
+
+.how .tryit { margin-top: 28px; padding-top: 28px; border-top: 2px solid var(--rule-strong); }
+.tryit-title { margin: 0 0 20px; font-size: clamp(1.3rem, 2.1vw, 1.7rem); letter-spacing: -0.02em; }
+
+/* ---------- home, section 3: explore (alias tiles, links, one scan button) ---------- */
+/* The left column is one stack (heading, then links, then the button) beside the tiles, with no stretched gap. */
+@media (min-width: 901px) { .explore .disguise-grid { grid-template-rows: auto 1fr; row-gap: 32px; } }
+.explore .disguise-grid .section-head { position: static; margin-bottom: 0; }
+.explore .flip-hint { margin-bottom: 0; }
+.explore-more { grid-column: 1; grid-row: 2; }
+.explore-links { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+.explore-links li { border-bottom: 1px solid var(--hair); }
+.explore-links a { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; padding: 8px 2px; font-weight: 800; font-size: 1.0625rem; text-decoration: none; }
+.explore-links a span { transition: transform 0.3s var(--ease-out); }
+.explore-links a:hover span { transform: translateX(4px); }
+.explore-cta { margin: 28px 0 0; }
+
+/* ---------- a small disclosure: "Sources (8)" ---------- */
+.disclosure > summary { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding-inline: 10px; margin-left: -10px; cursor: pointer; list-style: none; font-weight: 800; font-size: 0.9375rem; text-decoration: underline; text-decoration-color: var(--rule); text-decoration-thickness: 1px; text-underline-offset: 5px; -webkit-tap-highlight-color: transparent; }
+.disclosure > summary::-webkit-details-marker { display: none; }
+.disclosure > summary:hover { text-decoration-color: currentColor; }
+.disclosure > summary::after { content: ''; flex: none; width: 9px; height: 9px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-3px) rotate(45deg); transition: transform 0.3s var(--ease-out); }
+.disclosure[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
+.disclosure > summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 0; border-radius: 6px; }
+.sources-brief ol { margin: 6px 0 0; padding-left: 1.4em; font-size: 0.92rem; line-height: 1.5; }
+.sources-brief li { margin: 0; }
+.sources-brief a { display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
+
+/* ---------- /how-it-works ---------- */
+.after-expanders { margin-top: 28px; }
+.after-expanders > p { margin-bottom: 4px; }
+.expander-body.prose li { margin: 0.5em 0; }
+/* Phone tables: each cell's column name comes from data-label, so the HTML holds every value once. */
+@media (max-width: 600px) {
+  .facts-table td[data-label]::before { content: attr(data-label); content: attr(data-label) / ''; display: block; margin-bottom: 3px; color: var(--muted); font-size: 13px; line-height: 1.5; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+  /* The rule table on a phone: the order number in a narrow column, the condition beside it, the result under
+     the condition. Three short fields need no printed labels; the hidden header row still names them. */
+  .rules-table tbody tr { grid-template-columns: 1.6em minmax(0, 1fr); gap: 4px 10px; padding-block: 14px; }
+  .rules-table td.rid { grid-row: 1 / span 2; }
+  .rules-table td.out { grid-column: 2; }
+  .rules-table td[data-label]::before { content: none; }
+  /* The examples table: the ingredient's name heads its block, so it needs no label of its own. */
+  .examples-table tbody tr { gap: 8px; padding-block: 16px; }
+  .examples-table td.ingr::before { content: none; }
+}
+
+/* ---------- /faq: short questions, short answers ---------- */
+.faq h2 { margin-top: 1.3em; padding-top: 16px; font-size: clamp(1.25rem, 2.1vw, 1.5rem); scroll-margin-top: 84px; }
+.faq h2:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.faq h2 + p { margin-bottom: 0; }
+
+/* ---------- /about ---------- */
+.mission-line { margin: 0 0 0.7em; max-width: 22ch; font-size: clamp(1.6rem, 3.6vw, 2.4rem); font-weight: 800; line-height: 1.12; letter-spacing: -0.02em; text-wrap: balance; }
+.swarm-band .mission-line { text-shadow: 0 1px 14px var(--sd-paper), 0 0 2px var(--sd-paper); }
+.about > h2:first-child { margin-top: 0.4em; padding-top: 0; border-top: 0; }
+.about .sources-brief { margin-top: -4px; }
+
+/* ---------- smaller screens ---------- */
+@media (max-width: 900px) {
+  .explore-more { grid-row: 3; }
+}
+@media (max-width: 760px) {
+  .how-steps, .how-verdicts { grid-template-columns: minmax(0, 1fr); }
+  .how-steps li { padding: 12px 0; border-top: 1px solid var(--rule); font-size: 1.0625rem; }
+  .how-steps li:first-child { border-top: 2px solid var(--rule-strong); }
+  .how-icon { width: 44px; height: 44px; border-radius: 12px; }
+  .how-verdicts { margin-top: 14px; }
+  .how-verdict:first-child { border-top: 2px solid var(--rule-strong); }
+  .how-verdict { padding: 14px 0 4px; }
+  .how-verdict h3 { font-size: 1.375rem; }
+}
+@media (max-width: 480px) {
+  .explore-cta .btn { width: 100%; min-height: 52px; }
+}

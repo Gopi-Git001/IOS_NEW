@@ -1,0 +1,4140 @@
+{
+ "policyVersion": "rules-v3",
+ "registryVersion": "registry-2026.11.10b",
+ "maxOkayAddedG": 4,
+ "addedSugarAliasCount": 180,
+ "pages": [
+  {
+   "id": "sugar",
+   "slug": "sugar",
+   "name": "Sugar",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files sugar under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "sugar",
+    "cane sugar",
+    "raw cane sugar",
+    "evaporated cane sugar",
+    "beet sugar",
+    "granulated sugar",
+    "white sugar",
+    "brown sugar",
+    "brown sugar syrup",
+    "light brown sugar",
+    "dark brown sugar",
+    "raw sugar",
+    "turbinado sugar",
+    "turbinado",
+    "demerara sugar",
+    "demerara",
+    "muscovado sugar",
+    "muscovado",
+    "powdered sugar",
+    "confectioners sugar",
+    "confectioner's sugar",
+    "icing sugar",
+    "caster sugar",
+    "sucrose",
+    "cane juice",
+    "evaporated cane juice",
+    "dried cane syrup",
+    "cane syrup",
+    "cane juice crystals",
+    "rapadura",
+    "panela",
+    "jaggery",
+    "sucanat",
+    "sugar syrup",
+    "simple syrup",
+    "liquid sugar",
+    "invert sugar",
+    "invert cane sugar",
+    "invert syrup",
+    "invert sugar syrup",
+    "coconut sugar",
+    "coconut palm sugar",
+    "palm sugar",
+    "date sugar",
+    "maple sugar",
+    "golden syrup",
+    "treacle",
+    "molasses",
+    "blackstrap molasses",
+    "cane molasses",
+    "caramel",
+    "burnt sugar",
+    "suiker",
+    "rietsuiker",
+    "kristalsuiker",
+    "basterdsuiker",
+    "sucre",
+    "sucre de canne",
+    "sucre roux",
+    "sucre de canne roux",
+    "zucker",
+    "rohrzucker",
+    "rohrohrzucker",
+    "azucar",
+    "azucar de cana",
+    "azucar moreno",
+    "zucchero",
+    "zucchero di canna",
+    "acucar",
+    "acucar de cana",
+    "cukier",
+    "cukier trzcinowy",
+    "socker",
+    "sukker",
+    "sokeri",
+    "saccharose",
+    "sacarosa",
+    "saccarosio"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "dextrose",
+    "fructose",
+    "maltose",
+    "trehalose",
+    "galactose",
+    "lactose"
+   ],
+   "title": "Sugar on food labels: added sugar under 78 names",
+   "description": "Sugar on food labels: added sugar. Also listed as cane sugar and raw cane sugar. All 78 label names and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 78 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "dextrose",
+   "slug": "dextrose",
+   "name": "Dextrose",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files dextrose under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "dextrose",
+    "dextrose monohydrate",
+    "anhydrous dextrose",
+    "glucose",
+    "grape sugar",
+    "dextrosa",
+    "destrosio",
+    "glucosa",
+    "glucosio",
+    "traubenzucker",
+    "druivensuiker"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "fructose",
+    "maltose",
+    "trehalose",
+    "galactose",
+    "lactose",
+    "honey"
+   ],
+   "title": "Dextrose on food labels: added sugar under 11 names",
+   "description": "Dextrose on food labels: added sugar. Also listed as dextrose monohydrate and anhydrous dextrose. All 11 label names and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 11 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "fructose",
+   "slug": "fructose",
+   "name": "Fructose",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files fructose under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "fructose",
+    "crystalline fructose",
+    "fruit sugar",
+    "fructosa",
+    "fruttosio",
+    "fruchtzucker",
+    "vruchtensuiker"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "maltose",
+    "trehalose",
+    "galactose",
+    "lactose",
+    "honey",
+    "maple-syrup"
+   ],
+   "title": "Fructose on food labels: added sugar under 7 names",
+   "description": "Fructose on food labels: added sugar. Also listed as crystalline fructose and fruit sugar. All 7 label names and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 7 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "maltose",
+   "slug": "maltose",
+   "name": "Maltose",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files maltose under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "maltose",
+    "malt sugar"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "trehalose",
+    "galactose",
+    "lactose",
+    "honey",
+    "maple-syrup",
+    "agave-syrup"
+   ],
+   "title": "Maltose on food labels: added sugar under 2 names",
+   "description": "Maltose on food labels: added sugar. Also listed as malt sugar. The US label treatment and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 2 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "trehalose",
+   "slug": "trehalose",
+   "name": "Trehalose",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files trehalose under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "trehalose"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "galactose",
+    "lactose",
+    "honey",
+    "maple-syrup",
+    "agave-syrup",
+    "corn-syrup"
+   ],
+   "title": "Trehalose on food labels: added sugar",
+   "description": "Trehalose on food labels: added sugar. The US label treatment and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 1 label name for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "galactose",
+   "slug": "galactose",
+   "name": "Galactose",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files galactose under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "galactose"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "lactose",
+    "honey",
+    "maple-syrup",
+    "agave-syrup",
+    "corn-syrup",
+    "high-fructose-corn-syrup"
+   ],
+   "title": "Galactose on food labels: added sugar",
+   "description": "Galactose on food labels: added sugar. The US label treatment and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 1 label name for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "lactose_added",
+   "slug": "lactose",
+   "name": "Lactose (added)",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files lactose (added) under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "lactose"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "Lactose listed as its own ingredient is added sugar (FDA). Lactose that comes with milk is not.",
+   "sources": [
+    "addedSugarsRule",
+    "addedSugarsQA"
+   ],
+   "related": [
+    "honey",
+    "maple-syrup",
+    "agave-syrup",
+    "corn-syrup",
+    "high-fructose-corn-syrup",
+    "rice-syrup"
+   ],
+   "title": "Lactose (added) on food labels: added sugar",
+   "description": "Lactose (added) on food labels: added sugar. Also listed as lactose. The US label treatment and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 1 label name for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "honey",
+   "slug": "honey",
+   "name": "Honey",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files honey under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "honey",
+    "raw honey",
+    "clover honey",
+    "wildflower honey",
+    "manuka honey",
+    "honey powder",
+    "dried honey",
+    "miel",
+    "honig",
+    "honing",
+    "miele",
+    "mel",
+    "miod"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "maple-syrup",
+    "agave-syrup",
+    "corn-syrup",
+    "high-fructose-corn-syrup",
+    "rice-syrup",
+    "malt-syrup"
+   ],
+   "title": "Honey on food labels: added sugar under 13 names",
+   "description": "Honey on food labels: added sugar. Also listed as raw honey and clover honey. All 13 label names and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 13 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "maple_syrup",
+   "slug": "maple-syrup",
+   "name": "Maple syrup",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files maple syrup under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "maple syrup",
+    "pure maple syrup"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "agave-syrup",
+    "corn-syrup",
+    "high-fructose-corn-syrup",
+    "rice-syrup",
+    "malt-syrup",
+    "juice-concentrate"
+   ],
+   "title": "Maple syrup on food labels: added sugar under 2 names",
+   "description": "Maple syrup on food labels: added sugar. Also listed as pure maple syrup. The US label treatment and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 2 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "agave",
+   "slug": "agave-syrup",
+   "name": "Agave syrup",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files agave syrup under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "agave",
+    "agave syrup",
+    "agave nectar",
+    "blue agave",
+    "blue agave syrup",
+    "agave inulin syrup"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "corn-syrup",
+    "high-fructose-corn-syrup",
+    "rice-syrup",
+    "malt-syrup",
+    "juice-concentrate",
+    "isomaltooligosaccharides"
+   ],
+   "title": "Agave syrup on food labels: added sugar under 6 names",
+   "description": "Agave syrup on food labels: added sugar. Also listed as agave and agave nectar. All 6 label names and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 6 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "corn_syrup",
+   "slug": "corn-syrup",
+   "name": "Corn syrup",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files corn syrup under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "corn syrup",
+    "corn syrup solids",
+    "glucose syrup",
+    "glucose syrup solids",
+    "dried glucose syrup",
+    "corn sweetener",
+    "sirop de glucose",
+    "glukosesirup",
+    "glucosesirup",
+    "glucosestroop",
+    "jarabe de glucosa",
+    "sciroppo di glucosio",
+    "xarope de glicose",
+    "syrop glukozowy"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "high-fructose-corn-syrup",
+    "rice-syrup",
+    "malt-syrup",
+    "juice-concentrate",
+    "isomaltooligosaccharides",
+    "tagatose"
+   ],
+   "title": "Corn syrup on food labels: added sugar under 14 names",
+   "description": "Corn syrup on food labels: added sugar. Also listed as corn syrup solids and glucose syrup. All 14 label names and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 14 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "hfcs",
+   "slug": "high-fructose-corn-syrup",
+   "name": "High fructose corn syrup",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files high fructose corn syrup under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "high fructose corn syrup",
+    "hfcs",
+    "glucose-fructose syrup",
+    "glucose fructose syrup",
+    "glucose-fructose",
+    "fructose syrup",
+    "fructose-glucose syrup",
+    "isoglucose",
+    "sirop de glucose-fructose",
+    "glukose-fruktose-sirup",
+    "glucose-fructose-sirup",
+    "glucose-fructosestroop",
+    "jarabe de glucosa y fructosa",
+    "jarabe de glucosa-fructosa",
+    "sciroppo di glucosio-fruttosio",
+    "syrop glukozowo-fruktozowy"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "rice-syrup",
+    "malt-syrup",
+    "juice-concentrate",
+    "isomaltooligosaccharides",
+    "tagatose",
+    "isomaltulose"
+   ],
+   "title": "High fructose corn syrup on food labels: added sugar under 16 names",
+   "description": "High fructose corn syrup on food labels: added sugar. Also listed as hfcs and glucose-fructose syrup. All 16 label names and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 16 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "rice_syrup",
+   "slug": "rice-syrup",
+   "name": "Rice syrup",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files rice syrup under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "rice syrup",
+    "brown rice syrup",
+    "rice malt syrup",
+    "tapioca syrup",
+    "oat syrup",
+    "sorghum syrup",
+    "carob syrup",
+    "date syrup",
+    "fig syrup"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "malt-syrup",
+    "juice-concentrate",
+    "isomaltooligosaccharides",
+    "tagatose",
+    "isomaltulose",
+    "sugar"
+   ],
+   "title": "Rice syrup on food labels: added sugar under 9 names",
+   "description": "Rice syrup on food labels: added sugar. Also listed as brown rice syrup and rice malt syrup. All 9 label names and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 9 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "malt_syrup",
+   "slug": "malt-syrup",
+   "name": "Malt syrup",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files malt syrup under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "malt syrup",
+    "barley malt syrup",
+    "barley malt extract",
+    "malt extract",
+    "malted barley extract"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "juice-concentrate",
+    "isomaltooligosaccharides",
+    "tagatose",
+    "isomaltulose",
+    "sugar",
+    "dextrose"
+   ],
+   "title": "Malt syrup on food labels: added sugar under 5 names",
+   "description": "Malt syrup on food labels: added sugar. Also listed as barley malt syrup and barley malt extract. All 5 label names and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 5 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "juice_concentrate",
+   "slug": "juice-concentrate",
+   "name": "Fruit juice concentrate",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files fruit juice concentrate under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It sweetens another food, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It sweetens another food, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It sweetens another food, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    },
+    {
+     "when": "The product is made only of fruit or vegetable juice or puree (water, acids, vitamins, flavors and similar extras are fine)",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "fruit juice concentrate",
+    "juice concentrate",
+    "concentrated fruit juice",
+    "concentrated juice",
+    "fruit juice concentrates"
+   ],
+   "codes": [],
+   "patterns": [
+    {
+     "pattern": "[fruit] juice concentrate",
+     "example": "apple juice concentrate"
+    },
+    {
+     "pattern": "concentrated [fruit] juice",
+     "example": "concentrated white grape juice"
+    }
+   ],
+   "note": "FDA counts juice concentrate used to sweeten as added sugar. Exception: 100% juice products.",
+   "sources": [
+    "addedSugarsRule",
+    "addedSugarsQA"
+   ],
+   "related": [
+    "isomaltooligosaccharides",
+    "tagatose",
+    "isomaltulose",
+    "sugar",
+    "dextrose",
+    "fructose"
+   ],
+   "title": "Fruit juice concentrate on food labels: added sugar under 5 names",
+   "description": "Fruit juice concentrate on food labels: added sugar. Also listed as juice concentrate and concentrated fruit juice. All 5 label names and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 5 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "imo",
+   "slug": "isomaltooligosaccharides",
+   "name": "Isomaltooligosaccharides (IMO)",
+   "cls": "added_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Added sugar",
+   "classSentence": "Sugar Depth's registry files isomaltooligosaccharides (IMO) under added sugars: sugars, syrups, honey and juice concentrates used to sweeten.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "isomaltooligosaccharide",
+    "isomaltooligosaccharides",
+    "isomalto-oligosaccharide",
+    "isomalto-oligosaccharides",
+    "imo"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "Often sold as a fiber; counted here as added sugar.",
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "tagatose",
+    "isomaltulose",
+    "sugar",
+    "dextrose",
+    "fructose",
+    "maltose"
+   ],
+   "title": "Isomaltooligosaccharides (IMO) on food labels: added sugar under 5 names",
+   "description": "Isomaltooligosaccharides (IMO) on food labels: added sugar. Also listed as isomaltooligosaccharide and isomaltooligosaccharides. All 5 label names and the rule that applies.",
+   "summary": "Added sugar. Sugar Depth knows 5 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "tagatose",
+   "slug": "tagatose",
+   "name": "Tagatose",
+   "cls": "rare_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Rare sugar",
+   "classSentence": "Sugar Depth's registry files tagatose under rare sugars.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "tagatose",
+    "d-tagatose"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "A rare sugar that FDA still counts as added sugar.",
+   "sources": [
+    "addedSugarsRule",
+    "rareSugars"
+   ],
+   "related": [
+    "isomaltulose",
+    "sugar",
+    "dextrose",
+    "fructose",
+    "maltose",
+    "trehalose"
+   ],
+   "title": "Tagatose on food labels: added sugar under 2 names",
+   "description": "Tagatose on food labels: a rare sugar that US labels count as added sugar. Also listed as d-tagatose. The US label treatment and the rule that applies.",
+   "summary": "A rare sugar that US labels count as added sugar. Sugar Depth knows 2 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "isomaltulose",
+   "slug": "isomaltulose",
+   "name": "Isomaltulose",
+   "cls": "rare_sugar",
+   "labeling": "counted_as_added_sugar",
+   "treatment": "added_sugar",
+   "group": "added_sugar",
+   "classLabel": "Rare sugar",
+   "classSentence": "Sugar Depth's registry files isomaltulose under rare sugars.",
+   "labelingLabel": "Counted as added sugar",
+   "labelingSentence": "US labels count it as added sugar, on the Added Sugars line of the Nutrition Facts panel.",
+   "verdict": {
+    "word": "BAD or OKAY",
+    "tone": "mixed",
+    "label": "Added sugar: the grams per serving decide"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It is listed, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It is listed, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    }
+   ],
+   "aliases": [
+    "isomaltulose",
+    "palatinose"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "A rare sugar that FDA still counts as added sugar.",
+   "sources": [
+    "addedSugarsRule",
+    "rareSugars"
+   ],
+   "related": [
+    "sugar",
+    "dextrose",
+    "fructose",
+    "maltose",
+    "trehalose",
+    "galactose"
+   ],
+   "title": "Isomaltulose on food labels: added sugar under 2 names",
+   "description": "Isomaltulose on food labels: a rare sugar that US labels count as added sugar. Also listed as palatinose. The US label treatment and the rule that applies.",
+   "summary": "A rare sugar that US labels count as added sugar. Sugar Depth knows 2 label names for it, and the grams of added sugar per serving decide between OKAY and BAD."
+  },
+  {
+   "id": "allulose",
+   "slug": "allulose",
+   "name": "Allulose",
+   "cls": "rare_sugar",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Rare sugar",
+   "classSentence": "Sugar Depth's registry files allulose under rare sugars.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O2-sugar-alcohol"
+    }
+   ],
+   "aliases": [
+    "allulose",
+    "d-allulose",
+    "psicose",
+    "d-psicose"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "Chemically a sugar, but FDA lets labels leave it out of Total and Added Sugars.",
+   "sources": [
+    "addedSugarsRule",
+    "allulose",
+    "rareSugars"
+   ],
+   "related": [
+    "stevia",
+    "monk-fruit",
+    "thaumatin",
+    "erythritol",
+    "xylitol",
+    "sorbitol"
+   ],
+   "title": "Allulose on food labels: a rare sugar, OKAY on Sugar Depth",
+   "description": "Allulose on food labels: a rare sugar, OKAY on Sugar Depth. Also listed as d-allulose and psicose. All 4 label names and the rule that applies.",
+   "summary": "A rare sugar. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "sucralose",
+   "slug": "sucralose",
+   "name": "Sucralose",
+   "cls": "non_sugar_sweetener",
+   "subtype": "artificial",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "bad",
+   "group": "bad",
+   "classLabel": "Non-sugar sweetener (artificial)",
+   "classSentence": "Sugar Depth's registry files sucralose under non-sugar sweeteners, artificial.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "BAD",
+    "tone": "bad",
+    "label": "BAD"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed anywhere in the ingredients",
+     "verdict": "BAD",
+     "rule": "X3-artificial-sweetener"
+    }
+   ],
+   "aliases": [
+    "sucralose",
+    "splenda"
+   ],
+   "codes": [
+    "E955"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "aspartame",
+    "acesulfame-k",
+    "saccharin",
+    "cyclamate",
+    "neotame",
+    "advantame"
+   ],
+   "title": "Sucralose (E955) on food labels: an artificial sweetener, BAD on Sugar Depth",
+   "description": "Sucralose on food labels: an artificial sweetener, BAD on Sugar Depth. Also listed as splenda. The US label treatment and the rule that applies.",
+   "summary": "An artificial sweetener. Not counted as sugar on US labels, and BAD on Sugar Depth."
+  },
+  {
+   "id": "aspartame",
+   "slug": "aspartame",
+   "name": "Aspartame",
+   "cls": "non_sugar_sweetener",
+   "subtype": "artificial",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "bad",
+   "group": "bad",
+   "classLabel": "Non-sugar sweetener (artificial)",
+   "classSentence": "Sugar Depth's registry files aspartame under non-sugar sweeteners, artificial.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "BAD",
+    "tone": "bad",
+    "label": "BAD"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed anywhere in the ingredients",
+     "verdict": "BAD",
+     "rule": "X3-artificial-sweetener"
+    }
+   ],
+   "aliases": [
+    "aspartame"
+   ],
+   "codes": [
+    "E951"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "acesulfame-k",
+    "saccharin",
+    "cyclamate",
+    "neotame",
+    "advantame",
+    "aspartame-acesulfame-salt"
+   ],
+   "title": "Aspartame (E951) on food labels: an artificial sweetener, BAD on Sugar Depth",
+   "description": "Aspartame on food labels: an artificial sweetener, BAD on Sugar Depth. The US label treatment and the rule that applies.",
+   "summary": "An artificial sweetener. Not counted as sugar on US labels, and BAD on Sugar Depth."
+  },
+  {
+   "id": "acesulfame_k",
+   "slug": "acesulfame-k",
+   "name": "Acesulfame K",
+   "cls": "non_sugar_sweetener",
+   "subtype": "artificial",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "bad",
+   "group": "bad",
+   "classLabel": "Non-sugar sweetener (artificial)",
+   "classSentence": "Sugar Depth's registry files acesulfame K under non-sugar sweeteners, artificial.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "BAD",
+    "tone": "bad",
+    "label": "BAD"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed anywhere in the ingredients",
+     "verdict": "BAD",
+     "rule": "X3-artificial-sweetener"
+    }
+   ],
+   "aliases": [
+    "acesulfame k",
+    "acesulfame-k",
+    "acesulfame potassium",
+    "acesulfame",
+    "ace-k",
+    "ace k"
+   ],
+   "codes": [
+    "E950"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "saccharin",
+    "cyclamate",
+    "neotame",
+    "advantame",
+    "aspartame-acesulfame-salt",
+    "neohesperidin-dc"
+   ],
+   "title": "Acesulfame K (E950) on food labels: an artificial sweetener, BAD on Sugar Depth",
+   "description": "Acesulfame K on food labels: an artificial sweetener, BAD on Sugar Depth. Also listed as acesulfame-k and acesulfame potassium. All 6 label names and the rule that applies.",
+   "summary": "An artificial sweetener. Not counted as sugar on US labels, and BAD on Sugar Depth."
+  },
+  {
+   "id": "saccharin",
+   "slug": "saccharin",
+   "name": "Saccharin",
+   "cls": "non_sugar_sweetener",
+   "subtype": "artificial",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "bad",
+   "group": "bad",
+   "classLabel": "Non-sugar sweetener (artificial)",
+   "classSentence": "Sugar Depth's registry files saccharin under non-sugar sweeteners, artificial.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "BAD",
+    "tone": "bad",
+    "label": "BAD"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed anywhere in the ingredients",
+     "verdict": "BAD",
+     "rule": "X3-artificial-sweetener"
+    }
+   ],
+   "aliases": [
+    "saccharin",
+    "sodium saccharin",
+    "calcium saccharin"
+   ],
+   "codes": [
+    "E954"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "cyclamate",
+    "neotame",
+    "advantame",
+    "aspartame-acesulfame-salt",
+    "neohesperidin-dc",
+    "alcohol"
+   ],
+   "title": "Saccharin (E954) on food labels: an artificial sweetener, BAD on Sugar Depth",
+   "description": "Saccharin on food labels: an artificial sweetener, BAD on Sugar Depth. Also listed as sodium saccharin and calcium saccharin. All 3 label names and the rule that applies.",
+   "summary": "An artificial sweetener. Not counted as sugar on US labels, and BAD on Sugar Depth."
+  },
+  {
+   "id": "cyclamate",
+   "slug": "cyclamate",
+   "name": "Cyclamate",
+   "cls": "non_sugar_sweetener",
+   "subtype": "artificial",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "bad",
+   "group": "bad",
+   "classLabel": "Non-sugar sweetener (artificial)",
+   "classSentence": "Sugar Depth's registry files cyclamate under non-sugar sweeteners, artificial.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "BAD",
+    "tone": "bad",
+    "label": "BAD"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed anywhere in the ingredients",
+     "verdict": "BAD",
+     "rule": "X3-artificial-sweetener"
+    }
+   ],
+   "aliases": [
+    "cyclamate",
+    "sodium cyclamate",
+    "calcium cyclamate"
+   ],
+   "codes": [
+    "E952"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "neotame",
+    "advantame",
+    "aspartame-acesulfame-salt",
+    "neohesperidin-dc",
+    "alcohol",
+    "sucralose"
+   ],
+   "title": "Cyclamate (E952) on food labels: an artificial sweetener, BAD on Sugar Depth",
+   "description": "Cyclamate on food labels: an artificial sweetener, BAD on Sugar Depth. Also listed as sodium cyclamate and calcium cyclamate. All 3 label names and the rule that applies.",
+   "summary": "An artificial sweetener. Not counted as sugar on US labels, and BAD on Sugar Depth."
+  },
+  {
+   "id": "neotame",
+   "slug": "neotame",
+   "name": "Neotame",
+   "cls": "non_sugar_sweetener",
+   "subtype": "artificial",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "bad",
+   "group": "bad",
+   "classLabel": "Non-sugar sweetener (artificial)",
+   "classSentence": "Sugar Depth's registry files neotame under non-sugar sweeteners, artificial.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "BAD",
+    "tone": "bad",
+    "label": "BAD"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed anywhere in the ingredients",
+     "verdict": "BAD",
+     "rule": "X3-artificial-sweetener"
+    }
+   ],
+   "aliases": [
+    "neotame"
+   ],
+   "codes": [
+    "E961"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "advantame",
+    "aspartame-acesulfame-salt",
+    "neohesperidin-dc",
+    "alcohol",
+    "sucralose",
+    "aspartame"
+   ],
+   "title": "Neotame (E961) on food labels: an artificial sweetener, BAD on Sugar Depth",
+   "description": "Neotame on food labels: an artificial sweetener, BAD on Sugar Depth. The US label treatment and the rule that applies.",
+   "summary": "An artificial sweetener. Not counted as sugar on US labels, and BAD on Sugar Depth."
+  },
+  {
+   "id": "advantame",
+   "slug": "advantame",
+   "name": "Advantame",
+   "cls": "non_sugar_sweetener",
+   "subtype": "artificial",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "bad",
+   "group": "bad",
+   "classLabel": "Non-sugar sweetener (artificial)",
+   "classSentence": "Sugar Depth's registry files advantame under non-sugar sweeteners, artificial.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "BAD",
+    "tone": "bad",
+    "label": "BAD"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed anywhere in the ingredients",
+     "verdict": "BAD",
+     "rule": "X3-artificial-sweetener"
+    }
+   ],
+   "aliases": [
+    "advantame"
+   ],
+   "codes": [
+    "E969"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "aspartame-acesulfame-salt",
+    "neohesperidin-dc",
+    "alcohol",
+    "sucralose",
+    "aspartame",
+    "acesulfame-k"
+   ],
+   "title": "Advantame (E969) on food labels: an artificial sweetener, BAD on Sugar Depth",
+   "description": "Advantame on food labels: an artificial sweetener, BAD on Sugar Depth. The US label treatment and the rule that applies.",
+   "summary": "An artificial sweetener. Not counted as sugar on US labels, and BAD on Sugar Depth."
+  },
+  {
+   "id": "aspartame_acesulfame",
+   "slug": "aspartame-acesulfame-salt",
+   "name": "Aspartame-acesulfame salt",
+   "cls": "non_sugar_sweetener",
+   "subtype": "artificial",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "bad",
+   "group": "bad",
+   "classLabel": "Non-sugar sweetener (artificial)",
+   "classSentence": "Sugar Depth's registry files aspartame-acesulfame salt under non-sugar sweeteners, artificial.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "BAD",
+    "tone": "bad",
+    "label": "BAD"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed anywhere in the ingredients",
+     "verdict": "BAD",
+     "rule": "X3-artificial-sweetener"
+    }
+   ],
+   "aliases": [
+    "aspartame-acesulfame salt",
+    "aspartame acesulfame salt"
+   ],
+   "codes": [
+    "E962"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "neohesperidin-dc",
+    "alcohol",
+    "sucralose",
+    "aspartame",
+    "acesulfame-k",
+    "saccharin"
+   ],
+   "title": "Aspartame-acesulfame salt (E962) on food labels: an artificial sweetener, BAD on Sugar Depth",
+   "description": "Aspartame-acesulfame salt on food labels: an artificial sweetener, BAD on Sugar Depth. Also listed as aspartame acesulfame salt. The US label treatment and the rule that applies.",
+   "summary": "An artificial sweetener. Not counted as sugar on US labels, and BAD on Sugar Depth."
+  },
+  {
+   "id": "nhdc",
+   "slug": "neohesperidin-dc",
+   "name": "Neohesperidin DC",
+   "cls": "non_sugar_sweetener",
+   "subtype": "artificial",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "bad",
+   "group": "bad",
+   "classLabel": "Non-sugar sweetener (artificial)",
+   "classSentence": "Sugar Depth's registry files neohesperidin DC under non-sugar sweeteners, artificial.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "BAD",
+    "tone": "bad",
+    "label": "BAD"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed anywhere in the ingredients",
+     "verdict": "BAD",
+     "rule": "X3-artificial-sweetener"
+    }
+   ],
+   "aliases": [
+    "neohesperidin dc",
+    "neohesperidine dc",
+    "neohesperidin dihydrochalcone",
+    "nhdc"
+   ],
+   "codes": [
+    "E959"
+   ],
+   "patterns": [],
+   "note": "Chemically modified from citrus; grouped with artificial sweeteners (an assumption in Sugar Depth's rules, not a regulatory class).",
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "alcohol",
+    "sucralose",
+    "aspartame",
+    "acesulfame-k",
+    "saccharin",
+    "cyclamate"
+   ],
+   "title": "Neohesperidin DC (E959) on food labels: an artificial sweetener, BAD on Sugar Depth",
+   "description": "Neohesperidin DC on food labels: an artificial sweetener, BAD on Sugar Depth. Also listed as neohesperidine dc. All 4 label names and the rule that applies.",
+   "summary": "An artificial sweetener. Not counted as sugar on US labels, and BAD on Sugar Depth."
+  },
+  {
+   "id": "stevia",
+   "slug": "stevia",
+   "name": "Stevia",
+   "cls": "non_sugar_sweetener",
+   "subtype": "plant",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Non-sugar sweetener (plant-derived)",
+   "classSentence": "Sugar Depth's registry files stevia under non-sugar sweeteners, plant-derived.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O3-plant-sweetener"
+    }
+   ],
+   "aliases": [
+    "stevia",
+    "stevia extract",
+    "stevia leaf extract",
+    "purified stevia leaf extract",
+    "stevia leaf",
+    "stevia rebaudiana",
+    "stevia rebaudiana leaf extract",
+    "steviol glycosides",
+    "steviol glycoside",
+    "steviol glycosides from stevia",
+    "rebaudioside a",
+    "reb a",
+    "rebaudioside m",
+    "reb m",
+    "rebaudioside d",
+    "reb d",
+    "rebiana",
+    "enzyme modified stevia",
+    "glucosylated steviol glycosides"
+   ],
+   "codes": [
+    "E960",
+    "E960a",
+    "E960b",
+    "E960c",
+    "E960d"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "monk-fruit",
+    "thaumatin",
+    "erythritol",
+    "xylitol",
+    "sorbitol",
+    "mannitol"
+   ],
+   "title": "Stevia (E960) on food labels: a plant sweetener, OKAY on Sugar Depth",
+   "description": "Stevia on food labels: a plant sweetener, OKAY on Sugar Depth. Also listed as stevia extract and stevia leaf extract. All 19 label names and the rule that applies.",
+   "summary": "A plant sweetener. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "monk_fruit",
+   "slug": "monk-fruit",
+   "name": "Monk fruit",
+   "cls": "non_sugar_sweetener",
+   "subtype": "plant",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Non-sugar sweetener (plant-derived)",
+   "classSentence": "Sugar Depth's registry files monk fruit under non-sugar sweeteners, plant-derived.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O3-plant-sweetener"
+    }
+   ],
+   "aliases": [
+    "monk fruit",
+    "monk fruit extract",
+    "monkfruit",
+    "monkfruit extract",
+    "monk fruit sweetener",
+    "luo han guo",
+    "luo han guo extract",
+    "luo han guo fruit extract",
+    "lo han guo",
+    "siraitia grosvenorii",
+    "siraitia grosvenorii fruit extract",
+    "mogroside",
+    "mogrosides",
+    "mogroside v",
+    "swingle fruit extract"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "thaumatin",
+    "erythritol",
+    "xylitol",
+    "sorbitol",
+    "mannitol",
+    "isomalt"
+   ],
+   "title": "Monk fruit on food labels: a plant sweetener, OKAY on Sugar Depth",
+   "description": "Monk fruit on food labels: a plant sweetener, OKAY on Sugar Depth. Also listed as monk fruit extract and monkfruit. All 15 label names and the rule that applies.",
+   "summary": "A plant sweetener. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "thaumatin",
+   "slug": "thaumatin",
+   "name": "Thaumatin",
+   "cls": "non_sugar_sweetener",
+   "subtype": "plant",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Non-sugar sweetener (plant-derived)",
+   "classSentence": "Sugar Depth's registry files thaumatin under non-sugar sweeteners, plant-derived.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O3-plant-sweetener"
+    }
+   ],
+   "aliases": [
+    "thaumatin"
+   ],
+   "codes": [
+    "E957"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "erythritol",
+    "xylitol",
+    "sorbitol",
+    "mannitol",
+    "isomalt",
+    "maltitol"
+   ],
+   "title": "Thaumatin (E957) on food labels: a plant sweetener, OKAY on Sugar Depth",
+   "description": "Thaumatin on food labels: a plant sweetener, OKAY on Sugar Depth. The US label treatment and the rule that applies.",
+   "summary": "A plant sweetener. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "erythritol",
+   "slug": "erythritol",
+   "name": "Erythritol",
+   "cls": "sugar_alcohol",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Sugar alcohol (polyol). Not drinking alcohol.",
+   "classSentence": "Sugar Depth's registry files erythritol under sugar alcohols (polyols), which are not drinking alcohol.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O2-sugar-alcohol"
+    }
+   ],
+   "aliases": [
+    "erythritol",
+    "non-gmo erythritol"
+   ],
+   "codes": [
+    "E968"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "xylitol",
+    "sorbitol",
+    "mannitol",
+    "isomalt",
+    "maltitol",
+    "lactitol"
+   ],
+   "title": "Erythritol (E968) on food labels: a sugar alcohol, OKAY on Sugar Depth",
+   "description": "Erythritol on food labels: a sugar alcohol, OKAY on Sugar Depth. Also listed as non-gmo erythritol. The US label treatment and the rule that applies.",
+   "summary": "A sugar alcohol, not drinking alcohol. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "xylitol",
+   "slug": "xylitol",
+   "name": "Xylitol",
+   "cls": "sugar_alcohol",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Sugar alcohol (polyol). Not drinking alcohol.",
+   "classSentence": "Sugar Depth's registry files xylitol under sugar alcohols (polyols), which are not drinking alcohol.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O2-sugar-alcohol"
+    }
+   ],
+   "aliases": [
+    "xylitol",
+    "birch xylitol"
+   ],
+   "codes": [
+    "E967"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "sorbitol",
+    "mannitol",
+    "isomalt",
+    "maltitol",
+    "lactitol",
+    "polyglycitol-syrup"
+   ],
+   "title": "Xylitol (E967) on food labels: a sugar alcohol, OKAY on Sugar Depth",
+   "description": "Xylitol on food labels: a sugar alcohol, OKAY on Sugar Depth. Also listed as birch xylitol. The US label treatment and the rule that applies.",
+   "summary": "A sugar alcohol, not drinking alcohol. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "sorbitol",
+   "slug": "sorbitol",
+   "name": "Sorbitol",
+   "cls": "sugar_alcohol",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Sugar alcohol (polyol). Not drinking alcohol.",
+   "classSentence": "Sugar Depth's registry files sorbitol under sugar alcohols (polyols), which are not drinking alcohol.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O2-sugar-alcohol"
+    }
+   ],
+   "aliases": [
+    "sorbitol",
+    "sorbitol syrup",
+    "sorbitol solution"
+   ],
+   "codes": [
+    "E420"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "mannitol",
+    "isomalt",
+    "maltitol",
+    "lactitol",
+    "polyglycitol-syrup",
+    "allulose"
+   ],
+   "title": "Sorbitol (E420) on food labels: a sugar alcohol, OKAY on Sugar Depth",
+   "description": "Sorbitol on food labels: a sugar alcohol, OKAY on Sugar Depth. Also listed as sorbitol syrup and sorbitol solution. All 3 label names and the rule that applies.",
+   "summary": "A sugar alcohol, not drinking alcohol. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "mannitol",
+   "slug": "mannitol",
+   "name": "Mannitol",
+   "cls": "sugar_alcohol",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Sugar alcohol (polyol). Not drinking alcohol.",
+   "classSentence": "Sugar Depth's registry files mannitol under sugar alcohols (polyols), which are not drinking alcohol.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O2-sugar-alcohol"
+    }
+   ],
+   "aliases": [
+    "mannitol"
+   ],
+   "codes": [
+    "E421"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "isomalt",
+    "maltitol",
+    "lactitol",
+    "polyglycitol-syrup",
+    "allulose",
+    "stevia"
+   ],
+   "title": "Mannitol (E421) on food labels: a sugar alcohol, OKAY on Sugar Depth",
+   "description": "Mannitol on food labels: a sugar alcohol, OKAY on Sugar Depth. The US label treatment and the rule that applies.",
+   "summary": "A sugar alcohol, not drinking alcohol. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "isomalt",
+   "slug": "isomalt",
+   "name": "Isomalt",
+   "cls": "sugar_alcohol",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Sugar alcohol (polyol). Not drinking alcohol.",
+   "classSentence": "Sugar Depth's registry files isomalt under sugar alcohols (polyols), which are not drinking alcohol.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O2-sugar-alcohol"
+    }
+   ],
+   "aliases": [
+    "isomalt"
+   ],
+   "codes": [
+    "E953"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "maltitol",
+    "lactitol",
+    "polyglycitol-syrup",
+    "allulose",
+    "stevia",
+    "monk-fruit"
+   ],
+   "title": "Isomalt (E953) on food labels: a sugar alcohol, OKAY on Sugar Depth",
+   "description": "Isomalt on food labels: a sugar alcohol, OKAY on Sugar Depth. The US label treatment and the rule that applies.",
+   "summary": "A sugar alcohol, not drinking alcohol. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "maltitol",
+   "slug": "maltitol",
+   "name": "Maltitol",
+   "cls": "sugar_alcohol",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Sugar alcohol (polyol). Not drinking alcohol.",
+   "classSentence": "Sugar Depth's registry files maltitol under sugar alcohols (polyols), which are not drinking alcohol.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O2-sugar-alcohol"
+    }
+   ],
+   "aliases": [
+    "maltitol",
+    "maltitol syrup"
+   ],
+   "codes": [
+    "E965"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "lactitol",
+    "polyglycitol-syrup",
+    "allulose",
+    "stevia",
+    "monk-fruit",
+    "thaumatin"
+   ],
+   "title": "Maltitol (E965) on food labels: a sugar alcohol, OKAY on Sugar Depth",
+   "description": "Maltitol on food labels: a sugar alcohol, OKAY on Sugar Depth. Also listed as maltitol syrup. The US label treatment and the rule that applies.",
+   "summary": "A sugar alcohol, not drinking alcohol. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "lactitol",
+   "slug": "lactitol",
+   "name": "Lactitol",
+   "cls": "sugar_alcohol",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Sugar alcohol (polyol). Not drinking alcohol.",
+   "classSentence": "Sugar Depth's registry files lactitol under sugar alcohols (polyols), which are not drinking alcohol.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O2-sugar-alcohol"
+    }
+   ],
+   "aliases": [
+    "lactitol"
+   ],
+   "codes": [
+    "E966"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "polyglycitol-syrup",
+    "allulose",
+    "stevia",
+    "monk-fruit",
+    "thaumatin",
+    "erythritol"
+   ],
+   "title": "Lactitol (E966) on food labels: a sugar alcohol, OKAY on Sugar Depth",
+   "description": "Lactitol on food labels: a sugar alcohol, OKAY on Sugar Depth. The US label treatment and the rule that applies.",
+   "summary": "A sugar alcohol, not drinking alcohol. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "polyglycitol",
+   "slug": "polyglycitol-syrup",
+   "name": "Polyglycitol syrup",
+   "cls": "sugar_alcohol",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "okay",
+   "group": "okay",
+   "classLabel": "Sugar alcohol (polyol). Not drinking alcohol.",
+   "classSentence": "Sugar Depth's registry files polyglycitol syrup under sugar alcohols (polyols), which are not drinking alcohol.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "OKAY",
+    "tone": "okay",
+    "label": "OKAY"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed, and nothing on the label earns a stricter verdict",
+     "verdict": "OKAY",
+     "rule": "O2-sugar-alcohol"
+    }
+   ],
+   "aliases": [
+    "polyglycitol",
+    "polyglycitol syrup",
+    "hydrogenated starch hydrolysate",
+    "hydrogenated starch hydrolysates"
+   ],
+   "codes": [
+    "E964"
+   ],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule",
+    "euAdditives"
+   ],
+   "related": [
+    "allulose",
+    "stevia",
+    "monk-fruit",
+    "thaumatin",
+    "erythritol",
+    "xylitol"
+   ],
+   "title": "Polyglycitol syrup (E964) on food labels: a sugar alcohol, OKAY on Sugar Depth",
+   "description": "Polyglycitol syrup on food labels: a sugar alcohol, OKAY on Sugar Depth. Also listed as polyglycitol. All 4 label names and the rule that applies.",
+   "summary": "A sugar alcohol, not drinking alcohol. Not counted as sugar on US labels, and OKAY on Sugar Depth."
+  },
+  {
+   "id": "maltodextrin",
+   "slug": "maltodextrin",
+   "name": "Maltodextrin",
+   "cls": "other_carbohydrate",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_sweet",
+   "classLabel": "Other carbohydrate. Not sugar.",
+   "classSentence": "Sugar Depth's registry files maltodextrin under other carbohydrates (starches, maltodextrin and fibers), which are not sugar.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "maltodextrin",
+    "corn maltodextrin",
+    "tapioca maltodextrin",
+    "rice maltodextrin",
+    "potato maltodextrin",
+    "dextrin"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "A starch polymer, not a sugar (FDA: nonsweet, DE under 20). Listed for transparency.",
+   "sources": [
+    "addedSugarsRule",
+    "maltodextrin"
+   ],
+   "related": [
+    "resistant-maltodextrin",
+    "added-fiber",
+    "starch",
+    "milk",
+    "fruit",
+    "fruit-puree"
+   ],
+   "title": "Maltodextrin on food labels: a carbohydrate, not sugar, allowed in CLEAN",
+   "description": "Maltodextrin on food labels: a carbohydrate, not sugar, allowed in CLEAN on Sugar Depth. Also listed as corn maltodextrin. All 6 label names and the rule that applies.",
+   "summary": "A carbohydrate, not sugar. Sugar Depth knows 6 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "resistant_maltodextrin",
+   "slug": "resistant-maltodextrin",
+   "name": "Resistant maltodextrin",
+   "cls": "other_carbohydrate",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_sweet",
+   "classLabel": "Other carbohydrate. Not sugar.",
+   "classSentence": "Sugar Depth's registry files resistant maltodextrin under other carbohydrates (starches, maltodextrin and fibers), which are not sugar.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "resistant maltodextrin",
+    "resistant dextrin",
+    "soluble corn fiber",
+    "soluble wheat fiber",
+    "wheat dextrin",
+    "resistant wheat dextrin"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "A fiber (FDA 2018), different from ordinary maltodextrin.",
+   "sources": [
+    "addedSugarsRule",
+    "fiber"
+   ],
+   "related": [
+    "added-fiber",
+    "starch",
+    "milk",
+    "fruit",
+    "fruit-puree",
+    "vegetables"
+   ],
+   "title": "Resistant maltodextrin on food labels: a carbohydrate, not sugar, allowed in CLEAN",
+   "description": "Resistant maltodextrin on food labels: a carbohydrate, not sugar, allowed in CLEAN on Sugar Depth. Also listed as resistant dextrin. All 6 label names and the rule that applies.",
+   "summary": "A carbohydrate, not sugar. Sugar Depth knows 6 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "fiber_other",
+   "slug": "added-fiber",
+   "name": "Added fiber",
+   "cls": "other_carbohydrate",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_sweet",
+   "classLabel": "Other carbohydrate. Not sugar.",
+   "classSentence": "Sugar Depth's registry files added fiber under other carbohydrates (starches, maltodextrin and fibers), which are not sugar.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "polydextrose",
+    "inulin",
+    "chicory root fiber",
+    "chicory root inulin",
+    "chicory root extract",
+    "oligofructose",
+    "fructooligosaccharides",
+    "fos",
+    "galactooligosaccharides",
+    "gos",
+    "acacia fiber",
+    "oat fiber",
+    "psyllium husk",
+    "citrus fiber",
+    "soluble tapioca fiber",
+    "short-chain fructooligosaccharides",
+    "prebiotic fiber",
+    "prebiotic fibre",
+    "sugarcane fiber",
+    "bamboo fiber",
+    "pea fiber",
+    "apple fiber"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "starch",
+    "milk",
+    "fruit",
+    "fruit-puree",
+    "vegetables",
+    "malted-barley"
+   ],
+   "title": "Added fiber on food labels: a carbohydrate, not sugar, allowed in CLEAN",
+   "description": "Added fiber on food labels: a carbohydrate, not sugar, allowed in CLEAN on Sugar Depth. Also listed as polydextrose and inulin. All 22 label names and the rule that applies.",
+   "summary": "A carbohydrate, not sugar. Sugar Depth knows 22 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "starch",
+   "slug": "starch",
+   "name": "Starch",
+   "cls": "other_carbohydrate",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_sweet",
+   "classLabel": "Other carbohydrate. Not sugar.",
+   "classSentence": "Sugar Depth's registry files starch under other carbohydrates (starches, maltodextrin and fibers), which are not sugar.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "corn starch",
+    "cornstarch",
+    "tapioca starch",
+    "potato starch",
+    "rice starch",
+    "wheat starch",
+    "modified food starch",
+    "modified corn starch",
+    "modified tapioca starch",
+    "tapioca",
+    "arrowroot",
+    "pea starch"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "milk",
+    "fruit",
+    "fruit-puree",
+    "vegetables",
+    "malted-barley",
+    "fruit-or-vegetable-juice"
+   ],
+   "title": "Starch on food labels: a carbohydrate, not sugar, allowed in CLEAN",
+   "description": "Starch on food labels: a carbohydrate, not sugar, allowed in CLEAN on Sugar Depth. Also listed as corn starch and cornstarch. All 12 label names and the rule that applies.",
+   "summary": "A carbohydrate, not sugar. Sugar Depth knows 12 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "milk",
+   "slug": "milk",
+   "name": "Milk",
+   "cls": "naturally_occurring_sugar",
+   "labeling": "counted_as_total_sugar_only",
+   "treatment": "clean_ok",
+   "group": "clean_sweet",
+   "classLabel": "Naturally occurring sugar (comes with a whole food)",
+   "classSentence": "Sugar Depth's registry files milk under naturally occurring sugar: sugar that comes with a whole food such as milk or fruit.",
+   "labelingLabel": "Counted as total sugar only, not as added sugar",
+   "labelingSentence": "US labels count its sugar in Total Sugars, but not as added sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "milk",
+    "whole milk",
+    "skim milk",
+    "nonfat milk",
+    "low fat milk",
+    "lowfat milk",
+    "reduced fat milk",
+    "fat free milk",
+    "cultured milk",
+    "cultured pasteurized milk",
+    "cultured pasteurized grade a milk",
+    "pasteurized milk",
+    "grade a milk",
+    "milk powder",
+    "whole milk powder",
+    "skim milk powder",
+    "nonfat dry milk",
+    "dry milk",
+    "condensed skim milk",
+    "ultra-filtered milk",
+    "ultrafiltered milk",
+    "yogurt",
+    "plain yogurt",
+    "whey",
+    "sweet whey",
+    "whey powder",
+    "buttermilk",
+    "kefir",
+    "goat milk",
+    "skimmed milk",
+    "skimmed milk powder",
+    "semi-skimmed milk",
+    "reduced minerals whey",
+    "part-skim milk",
+    "part skim milk",
+    "pasteurized part-skim milk",
+    "cultured nonfat milk",
+    "cultured skim milk",
+    "cultured whole milk",
+    "cultured lowfat milk",
+    "cultured low fat milk",
+    "cultured reduced fat milk",
+    "nonfat milk powder",
+    "nonfat dry milk powder",
+    "milk solids",
+    "nonfat milk solids",
+    "greek yogurt",
+    "nonfat yogurt",
+    "whole milk yogurt",
+    "sour cream",
+    "cream cheese",
+    "cottage cheese",
+    "lait",
+    "lait ecreme",
+    "lait ecreme en poudre",
+    "lait en poudre",
+    "lait entier",
+    "melk",
+    "magere melk",
+    "melkpoeder",
+    "mageremelkpoeder",
+    "milch",
+    "magermilch",
+    "magermilchpulver",
+    "vollmilchpulver",
+    "milchpulver",
+    "leche",
+    "leche desnatada",
+    "leche en polvo",
+    "leche desnatada en polvo",
+    "latte",
+    "latte scremato",
+    "latte in polvere",
+    "latte scremato in polvere",
+    "leite",
+    "leite em po"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "Lactose that comes with milk is naturally occurring, not added.",
+   "sources": [
+    "addedSugarsRule",
+    "addedSugarsQA"
+   ],
+   "related": [
+    "fruit",
+    "fruit-puree",
+    "vegetables",
+    "malted-barley",
+    "fruit-or-vegetable-juice",
+    "maltodextrin"
+   ],
+   "title": "Milk on food labels: natural sugar, not added sugar, allowed in CLEAN",
+   "description": "Milk on food labels: natural sugar, not added sugar, allowed in CLEAN on Sugar Depth. Also listed as whole milk and skim milk. All 76 label names and the rule that applies.",
+   "summary": "Natural sugar, not added sugar. Sugar Depth knows 76 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "fruit",
+   "slug": "fruit",
+   "name": "Fruit",
+   "cls": "naturally_occurring_sugar",
+   "labeling": "counted_as_total_sugar_only",
+   "treatment": "clean_ok",
+   "group": "clean_sweet",
+   "classLabel": "Naturally occurring sugar (comes with a whole food)",
+   "classSentence": "Sugar Depth's registry files fruit under naturally occurring sugar: sugar that comes with a whole food such as milk or fruit.",
+   "labelingLabel": "Counted as total sugar only, not as added sugar",
+   "labelingSentence": "US labels count its sugar in Total Sugars, but not as added sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "apple",
+    "apples",
+    "banana",
+    "bananas",
+    "strawberries",
+    "strawberry",
+    "blueberries",
+    "blueberry",
+    "raspberries",
+    "raspberry",
+    "blackberries",
+    "cherries",
+    "cherry",
+    "mango",
+    "pineapple",
+    "peach",
+    "peaches",
+    "pear",
+    "pears",
+    "grapes",
+    "orange",
+    "oranges",
+    "lemon",
+    "lime",
+    "cranberries",
+    "pomegranate",
+    "kiwi",
+    "coconut",
+    "raisins",
+    "dates",
+    "date",
+    "medjool dates",
+    "figs",
+    "dried figs",
+    "prunes",
+    "apricots",
+    "dried apricots",
+    "dried cranberries",
+    "dried fruit",
+    "fruit",
+    "mixed fruit",
+    "currants",
+    "goji berries"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "Whole and dried fruit carry their own sugar. Dried fruit with added sugar lists the sugar separately.",
+   "sources": [
+    "addedSugarsRule",
+    "addedSugarsQA"
+   ],
+   "related": [
+    "fruit-puree",
+    "vegetables",
+    "malted-barley",
+    "fruit-or-vegetable-juice",
+    "maltodextrin",
+    "resistant-maltodextrin"
+   ],
+   "title": "Fruit on food labels: natural sugar, not added sugar, allowed in CLEAN",
+   "description": "Fruit on food labels: natural sugar, not added sugar, allowed in CLEAN on Sugar Depth. Also listed as apple and apples. All 43 label names and the rule that applies.",
+   "summary": "Natural sugar, not added sugar. Sugar Depth knows 43 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "fruit_puree",
+   "slug": "fruit-puree",
+   "name": "Fruit puree",
+   "cls": "naturally_occurring_sugar",
+   "labeling": "counted_as_total_sugar_only",
+   "treatment": "clean_ok",
+   "group": "clean_sweet",
+   "classLabel": "Naturally occurring sugar (comes with a whole food)",
+   "classSentence": "Sugar Depth's registry files fruit puree under naturally occurring sugar: sugar that comes with a whole food such as milk or fruit.",
+   "labelingLabel": "Counted as total sugar only, not as added sugar",
+   "labelingSentence": "US labels count its sugar in Total Sugars, but not as added sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "fruit puree",
+    "apple puree",
+    "banana puree",
+    "mango puree",
+    "pear puree",
+    "strawberry puree",
+    "peach puree",
+    "pumpkin puree",
+    "applesauce",
+    "unsweetened applesauce",
+    "date paste",
+    "fig paste",
+    "fruit paste",
+    "fruit powder"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "FDA does not count single-strength fruit puree or paste as added sugar.",
+   "sources": [
+    "addedSugarsRule",
+    "addedSugarsQA"
+   ],
+   "related": [
+    "vegetables",
+    "malted-barley",
+    "fruit-or-vegetable-juice",
+    "maltodextrin",
+    "resistant-maltodextrin",
+    "added-fiber"
+   ],
+   "title": "Fruit puree on food labels: natural sugar, not added sugar, allowed in CLEAN",
+   "description": "Fruit puree on food labels: natural sugar, not added sugar, allowed in CLEAN on Sugar Depth. Also listed as apple puree. All 14 label names and the rule that applies.",
+   "summary": "Natural sugar, not added sugar. Sugar Depth knows 14 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "vegetable",
+   "slug": "vegetables",
+   "name": "Vegetables",
+   "cls": "naturally_occurring_sugar",
+   "labeling": "counted_as_total_sugar_only",
+   "treatment": "clean_ok",
+   "group": "clean_sweet",
+   "classLabel": "Naturally occurring sugar (comes with a whole food)",
+   "classSentence": "Sugar Depth's registry files vegetables under naturally occurring sugar: sugar that comes with a whole food such as milk or fruit.",
+   "labelingLabel": "Counted as total sugar only, not as added sugar",
+   "labelingSentence": "US labels count its sugar in Total Sugars, but not as added sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "carrots",
+    "carrot",
+    "tomatoes",
+    "tomato",
+    "tomato paste",
+    "tomato puree",
+    "sweet potato",
+    "sweet potatoes",
+    "beets",
+    "pumpkin",
+    "onion",
+    "onions",
+    "garlic",
+    "celery",
+    "spinach",
+    "peppers",
+    "red peppers",
+    "corn",
+    "peas",
+    "potatoes",
+    "potato",
+    "potato flakes",
+    "dehydrated potatoes",
+    "green peppers",
+    "bell peppers",
+    "jalapeno peppers",
+    "chili peppers",
+    "cucumbers",
+    "cucumber",
+    "cabbage",
+    "kale",
+    "broccoli",
+    "cauliflower",
+    "zucchini",
+    "mushrooms",
+    "olives",
+    "black olives",
+    "green olives",
+    "basil",
+    "parsley",
+    "cilantro",
+    "oregano",
+    "thyme",
+    "rosemary",
+    "dill",
+    "mint",
+    "chives",
+    "shallots",
+    "leeks",
+    "horseradish",
+    "ginger",
+    "onion powder",
+    "garlic powder",
+    "dehydrated onion",
+    "dehydrated garlic",
+    "dried onion",
+    "dried garlic",
+    "tomato powder",
+    "diced tomatoes",
+    "crushed tomatoes",
+    "whole peeled tomatoes",
+    "italian tomatoes",
+    "plum tomatoes",
+    "peeled tomatoes"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "malted-barley",
+    "fruit-or-vegetable-juice",
+    "maltodextrin",
+    "resistant-maltodextrin",
+    "added-fiber",
+    "starch"
+   ],
+   "title": "Vegetables on food labels: natural sugar, not added sugar, allowed in CLEAN",
+   "description": "Vegetables on food labels: natural sugar, not added sugar, allowed in CLEAN on Sugar Depth. Also listed as carrots and carrot. All 64 label names and the rule that applies.",
+   "summary": "Natural sugar, not added sugar. Sugar Depth knows 64 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "puree_concentrate",
+   "slug": "fruit-puree-concentrate",
+   "name": "Fruit puree concentrate",
+   "cls": "context_dependent",
+   "labeling": "depends",
+   "treatment": "needs_context",
+   "group": "depends",
+   "classLabel": "Depends on how it is used",
+   "classSentence": "Sugar Depth's registry files fruit puree concentrate under ingredients that depend on their form and on the rest of the product.",
+   "labelingLabel": "Depends on how it is used",
+   "labelingSentence": "How US labels count it depends on how it is used.",
+   "verdict": {
+    "word": "Depends",
+    "tone": "mixed",
+    "label": "Depends on the rest of the label"
+   },
+   "outcomes": [
+    {
+     "when": "It sweetens another food, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It sweetens another food, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It sweetens another food, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    },
+    {
+     "when": "The product is made only of fruit or vegetable juice or puree (water, acids, vitamins, flavors and similar extras are fine)",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "fruit puree concentrate",
+    "puree concentrate",
+    "apple puree concentrate",
+    "strawberry puree concentrate",
+    "pear puree concentrate",
+    "banana puree concentrate"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "Counts as added sugar when it sweetens another food; in a product made only of fruit it does not (Sugar Depth decides from the rest of the ingredient list).",
+   "sources": [
+    "addedSugarsRule",
+    "addedSugarsQA"
+   ],
+   "related": [
+    "juice-from-concentrate"
+   ],
+   "title": "Fruit puree concentrate on food labels: when it counts as added sugar",
+   "description": "Fruit puree concentrate on food labels: added sugar when it sweetens another food, natural sugar in a product made only of fruit or juice. All 6 label names and the rule that applies.",
+   "summary": "Added sugar when it sweetens another food. Natural sugar in a product made only of fruit or juice."
+  },
+  {
+   "id": "drinking_alcohol",
+   "slug": "alcohol",
+   "name": "Alcohol",
+   "cls": "drinking_alcohol",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "bad",
+   "group": "bad",
+   "classLabel": "Drinking alcohol",
+   "classSentence": "Sugar Depth's registry files alcohol under drinking alcohol: the ethanol in beer, wine and spirits.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "BAD",
+    "tone": "bad",
+    "label": "BAD"
+   },
+   "outcomes": [
+    {
+     "when": "It is listed and the label has no \"0.5% ABV or less\" or non-alcoholic statement",
+     "verdict": "BAD",
+     "rule": "X4-alcohol"
+    },
+    {
+     "when": "It is listed, but the label says non-alcoholic or 0.5% ABV or less",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "alcohol",
+    "ethanol",
+    "ethyl alcohol",
+    "beer",
+    "wine",
+    "red wine",
+    "white wine",
+    "rum",
+    "vodka",
+    "whiskey",
+    "whisky",
+    "bourbon",
+    "brandy",
+    "gin",
+    "tequila",
+    "sake",
+    "liqueur",
+    "malt beverage",
+    "cider",
+    "hard cider"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "sucralose",
+    "aspartame",
+    "acesulfame-k",
+    "saccharin",
+    "cyclamate",
+    "neotame"
+   ],
+   "title": "Alcohol on food and drink labels: BAD on Sugar Depth above 0.5% ABV",
+   "description": "Alcohol on food labels: drinking alcohol, BAD on Sugar Depth above 0.5% ABV. Also listed as ethanol and ethyl alcohol. All 20 label names and the rule that applies.",
+   "summary": "Drinking alcohol. BAD on Sugar Depth unless the label says non-alcoholic or 0.5% ABV or less."
+  },
+  {
+   "id": "water",
+   "slug": "water",
+   "name": "Water",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files water under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "water",
+    "filtered water",
+    "purified water",
+    "carbonated water",
+    "sparkling water",
+    "spring water",
+    "mineral water",
+    "coconut water",
+    "vapor distilled water",
+    "distilled water",
+    "reverse osmosis water",
+    "purified carbonated water",
+    "carbonated filtered water",
+    "carbonated purified water",
+    "sparkling mineral water",
+    "natural mineral water",
+    "natural spring water",
+    "artesian water",
+    "alkaline water",
+    "carbonated mineral water",
+    "ice",
+    "carbon dioxide",
+    "carbonation",
+    "nitrogen"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "salt",
+    "food-acids",
+    "flavors",
+    "thickeners-and-emulsifiers",
+    "preservatives",
+    "vitamins-and-minerals"
+   ],
+   "title": "Water on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Water on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as filtered water and purified water. All 24 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 24 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "salt",
+   "slug": "salt",
+   "name": "Salt",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files salt under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "salt",
+    "sea salt",
+    "kosher salt",
+    "himalayan pink salt",
+    "pink salt",
+    "iodized salt"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "food-acids",
+    "flavors",
+    "thickeners-and-emulsifiers",
+    "preservatives",
+    "vitamins-and-minerals",
+    "colors"
+   ],
+   "title": "Salt on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Salt on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as sea salt and kosher salt. All 6 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 6 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "acids",
+   "slug": "food-acids",
+   "name": "Food acids",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files food acids under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "citric acid",
+    "malic acid",
+    "lactic acid",
+    "tartaric acid",
+    "phosphoric acid",
+    "fumaric acid",
+    "ascorbic acid",
+    "acetic acid",
+    "vinegar",
+    "apple cider vinegar",
+    "distilled vinegar",
+    "white vinegar",
+    "wine vinegar",
+    "red wine vinegar",
+    "rice vinegar",
+    "balsamic vinegar"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "flavors",
+    "thickeners-and-emulsifiers",
+    "preservatives",
+    "vitamins-and-minerals",
+    "colors",
+    "fats-and-oils"
+   ],
+   "title": "Food acids on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Food acids on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as citric acid and malic acid. All 16 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 16 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "flavors",
+   "slug": "flavors",
+   "name": "Flavors",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files flavors under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "natural flavor",
+    "natural flavors",
+    "natural flavour",
+    "natural flavours",
+    "artificial flavor",
+    "artificial flavors",
+    "flavor",
+    "flavors",
+    "flavoring",
+    "natural flavoring",
+    "natural and artificial flavors",
+    "natural and artificial flavor",
+    "naturally essenced",
+    "natural essence",
+    "natural essences",
+    "other natural flavors",
+    "vanilla flavor",
+    "natural vanilla flavor",
+    "natural vanilla flavor with other natural flavors",
+    "vanilla extract",
+    "vanilla",
+    "vanilla bean",
+    "cinnamon",
+    "spices",
+    "spice",
+    "herbs",
+    "cocoa",
+    "cocoa powder",
+    "cocoa butter",
+    "cacao",
+    "unsweetened chocolate",
+    "chocolate liquor",
+    "coffee",
+    "tea",
+    "green tea",
+    "black tea",
+    "caffeine"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "thickeners-and-emulsifiers",
+    "preservatives",
+    "vitamins-and-minerals",
+    "colors",
+    "fats-and-oils",
+    "proteins"
+   ],
+   "title": "Flavors on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Flavors on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as natural flavor and natural flavors. All 37 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 37 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "gums",
+   "slug": "thickeners-and-emulsifiers",
+   "name": "Thickeners and emulsifiers",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files thickeners and emulsifiers under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "xanthan gum",
+    "guar gum",
+    "gellan gum",
+    "gum arabic",
+    "acacia gum",
+    "locust bean gum",
+    "carrageenan",
+    "pectin",
+    "agar",
+    "gelatin",
+    "cellulose",
+    "cellulose gum",
+    "microcrystalline cellulose",
+    "methylcellulose",
+    "lecithin",
+    "soy lecithin",
+    "sunflower lecithin",
+    "mono and diglycerides",
+    "mono- and diglycerides"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "preservatives",
+    "vitamins-and-minerals",
+    "colors",
+    "fats-and-oils",
+    "proteins",
+    "grains-nuts-and-seeds"
+   ],
+   "title": "Thickeners and emulsifiers on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Thickeners and emulsifiers on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as xanthan gum. All 19 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 19 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "preservatives",
+   "slug": "preservatives",
+   "name": "Preservatives",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files preservatives under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "potassium sorbate",
+    "potassium benzoate",
+    "sodium phosphate",
+    "disodium phosphate",
+    "calcium chloride",
+    "calcium lactate",
+    "d-alpha-tocopherol",
+    "calcium disodium edta",
+    "edta",
+    "sodium benzoate",
+    "calcium propionate",
+    "sorbic acid",
+    "rosemary extract",
+    "tocopherols",
+    "mixed tocopherols",
+    "vitamin e",
+    "nisin"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "vitamins-and-minerals",
+    "colors",
+    "fats-and-oils",
+    "proteins",
+    "grains-nuts-and-seeds",
+    "spices-and-seasonings"
+   ],
+   "title": "Preservatives on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Preservatives on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as potassium sorbate. All 17 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 17 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "minerals_vitamins",
+   "slug": "vitamins-and-minerals",
+   "name": "Vitamins and minerals",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files vitamins and minerals under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "calcium carbonate",
+    "tricalcium phosphate",
+    "calcium phosphate",
+    "dipotassium phosphate",
+    "potassium citrate",
+    "sodium citrate",
+    "magnesium citrate",
+    "sodium bicarbonate",
+    "baking soda",
+    "baking powder",
+    "potassium chloride",
+    "magnesium oxide",
+    "zinc oxide",
+    "reduced iron",
+    "iron",
+    "ferrous sulfate",
+    "niacin",
+    "niacinamide",
+    "thiamine",
+    "thiamine mononitrate",
+    "riboflavin",
+    "folic acid",
+    "vitamin a",
+    "vitamin a palmitate",
+    "vitamin c",
+    "vitamin d",
+    "vitamin d2",
+    "vitamin d3",
+    "vitamin b6",
+    "vitamin b12",
+    "pyridoxine hydrochloride",
+    "cyanocobalamin",
+    "biotin",
+    "zinc",
+    "calcium",
+    "potassium",
+    "magnesium",
+    "sodium",
+    "magnesium chloride",
+    "potassium bicarbonate",
+    "electrolytes",
+    "electrolyte sources",
+    "monopotassium phosphate",
+    "tripotassium phosphate",
+    "magnesium lactate",
+    "potassium phosphate",
+    "zinc gluconate",
+    "calcium pantothenate",
+    "d-calcium pantothenate",
+    "ferric orthophosphate",
+    "thiamin mononitrate",
+    "vitamin b1",
+    "vitamin b2",
+    "vitamin b3",
+    "vitamin b5"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "colors",
+    "fats-and-oils",
+    "proteins",
+    "grains-nuts-and-seeds",
+    "spices-and-seasonings",
+    "cheese-eggs-and-cultures"
+   ],
+   "title": "Vitamins and minerals on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Vitamins and minerals on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as calcium carbonate. All 55 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 55 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "colors",
+   "slug": "colors",
+   "name": "Colors",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files colors under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "caramel color",
+    "annatto",
+    "turmeric",
+    "paprika",
+    "paprika extract",
+    "beta carotene",
+    "beet juice color",
+    "vegetable juice color",
+    "fruit and vegetable juice color",
+    "spirulina extract",
+    "titanium dioxide",
+    "red 40",
+    "yellow 5",
+    "yellow 6",
+    "blue 1"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "fats-and-oils",
+    "proteins",
+    "grains-nuts-and-seeds",
+    "spices-and-seasonings",
+    "cheese-eggs-and-cultures",
+    "other-additives"
+   ],
+   "title": "Colors on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Colors on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as caramel color and annatto. All 15 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 15 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "fats",
+   "slug": "fats-and-oils",
+   "name": "Fats and oils",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files fats and oils under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "olive oil",
+    "extra virgin olive oil",
+    "canola oil",
+    "sunflower oil",
+    "high oleic sunflower oil",
+    "safflower oil",
+    "palm oil",
+    "palm kernel oil",
+    "coconut oil",
+    "vegetable oil",
+    "soybean oil",
+    "avocado oil",
+    "butter",
+    "cream",
+    "heavy cream",
+    "ghee",
+    "shortening"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "proteins",
+    "grains-nuts-and-seeds",
+    "spices-and-seasonings",
+    "cheese-eggs-and-cultures",
+    "other-additives",
+    "water"
+   ],
+   "title": "Fats and oils on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Fats and oils on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as olive oil. All 17 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 17 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "proteins",
+   "slug": "proteins",
+   "name": "Proteins",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files proteins under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "egg",
+    "eggs",
+    "egg whites",
+    "egg yolks",
+    "whey protein isolate",
+    "whey protein concentrate",
+    "milk protein concentrate",
+    "milk protein isolate",
+    "casein",
+    "sodium caseinate",
+    "soy protein isolate",
+    "pea protein",
+    "pea protein isolate",
+    "rice protein",
+    "collagen",
+    "cheese",
+    "cheddar cheese",
+    "cultures",
+    "live and active cultures",
+    "live cultures",
+    "live active cultures",
+    "active cultures",
+    "live active yogurt cultures",
+    "yogurt cultures",
+    "enzymes",
+    "rennet",
+    "yeast",
+    "nutritional yeast"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "grains-nuts-and-seeds",
+    "spices-and-seasonings",
+    "cheese-eggs-and-cultures",
+    "other-additives",
+    "water",
+    "salt"
+   ],
+   "title": "Proteins on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Proteins on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as egg and eggs. All 28 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 28 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "grains_nuts",
+   "slug": "grains-nuts-and-seeds",
+   "name": "Grains, nuts and seeds",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files grains, nuts and seeds under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "oats",
+    "rolled oats",
+    "whole grain oats",
+    "whole grain rolled oats",
+    "oat flour",
+    "milled corn",
+    "wheat flour",
+    "enriched flour",
+    "enriched wheat flour",
+    "whole wheat flour",
+    "whole grain wheat",
+    "bleached flour",
+    "unbleached flour",
+    "rice",
+    "brown rice",
+    "rice flour",
+    "brown rice flour",
+    "corn flour",
+    "cornmeal",
+    "quinoa",
+    "barley",
+    "rye",
+    "wheat",
+    "hops",
+    "almonds",
+    "almond butter",
+    "almond flour",
+    "peanuts",
+    "peanut butter",
+    "cashews",
+    "cashew butter",
+    "walnuts",
+    "pecans",
+    "hazelnuts",
+    "pistachios",
+    "sunflower seeds",
+    "pumpkin seeds",
+    "chia seeds",
+    "flax seeds",
+    "flaxseed",
+    "sesame seeds",
+    "hemp seeds",
+    "soybeans",
+    "chickpeas",
+    "black beans",
+    "lentils"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "spices-and-seasonings",
+    "cheese-eggs-and-cultures",
+    "other-additives",
+    "water",
+    "salt",
+    "food-acids"
+   ],
+   "title": "Grains, nuts and seeds on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Grains, nuts and seeds on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as oats and rolled oats. All 46 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 46 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "seasonings",
+   "slug": "spices-and-seasonings",
+   "name": "Spices and seasonings",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files spices and seasonings under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "black pepper",
+    "white pepper",
+    "ground black pepper",
+    "cracked black pepper",
+    "red pepper",
+    "red pepper flakes",
+    "crushed red pepper",
+    "cayenne pepper",
+    "chili powder",
+    "cumin",
+    "coriander",
+    "nutmeg",
+    "cloves",
+    "allspice",
+    "cardamom",
+    "mustard",
+    "mustard seed",
+    "mustard flour",
+    "celery seed",
+    "fennel",
+    "bay leaves",
+    "sage",
+    "smoked paprika",
+    "spice extracts",
+    "spice and spice extracts",
+    "spices and spice extracts",
+    "natural spices",
+    "dried herbs",
+    "herbs and spices",
+    "yeast extract",
+    "autolyzed yeast extract",
+    "soy sauce",
+    "tamari",
+    "disodium guanylate",
+    "disodium inosinate",
+    "monosodium glutamate",
+    "msg",
+    "smoke flavor",
+    "natural smoke flavor"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "cheese-eggs-and-cultures",
+    "other-additives",
+    "water",
+    "salt",
+    "food-acids",
+    "flavors"
+   ],
+   "title": "Spices and seasonings on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Spices and seasonings on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as black pepper. All 39 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 39 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "dairy_proteins",
+   "slug": "cheese-eggs-and-cultures",
+   "name": "Cheese, eggs and cultures",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files cheese, eggs and cultures under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "cheese cultures",
+    "bacterial cultures",
+    "probiotic cultures",
+    "parmesan cheese",
+    "romano cheese",
+    "mozzarella cheese",
+    "swiss cheese",
+    "cheddar",
+    "aged cheddar cheese",
+    "blue cheese",
+    "feta cheese",
+    "goat cheese",
+    "microbial enzymes",
+    "microbial rennet",
+    "animal rennet",
+    "enzyme modified egg yolks",
+    "egg yolk",
+    "whole eggs",
+    "whole egg",
+    "liquid egg whites",
+    "dried egg whites",
+    "chicken eggs",
+    "free-range eggs",
+    "cage-free eggs",
+    "large eggs",
+    "whey protein",
+    "milk protein",
+    "soy protein",
+    "beef",
+    "chicken",
+    "pork",
+    "turkey",
+    "tuna",
+    "salmon",
+    "anchovies",
+    "gelatin capsules",
+    "l-theanine",
+    "theanine",
+    "taurine",
+    "inositol",
+    "l-carnitine",
+    "l-carnitine l-tartrate",
+    "glucuronolactone",
+    "d-glucuronolactone",
+    "creatine",
+    "creatine monohydrate",
+    "electrolyte blend"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "other-additives",
+    "water",
+    "salt",
+    "food-acids",
+    "flavors",
+    "thickeners-and-emulsifiers"
+   ],
+   "title": "Cheese, eggs and cultures on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Cheese, eggs and cultures on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as cheese cultures. All 47 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 47 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "additives",
+   "slug": "other-additives",
+   "name": "Other additives",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_plain",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files other additives under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "modified cornstarch",
+    "carob bean gum",
+    "fruit pectin",
+    "sodium alginate",
+    "alginate",
+    "konjac",
+    "konjac gum",
+    "tara gum",
+    "thickener",
+    "stabilizer",
+    "emulsifier",
+    "polysorbate 80",
+    "calcium silicate",
+    "silicon dioxide",
+    "anticaking agent",
+    "sodium hexametaphosphate",
+    "sodium sorbate",
+    "calcium sorbate",
+    "sodium nitrite",
+    "sodium erythorbate",
+    "potassium lactate",
+    "sodium diacetate",
+    "sodium acid pyrophosphate",
+    "monocalcium phosphate",
+    "sodium aluminum phosphate",
+    "ammonium bicarbonate",
+    "glycerol ester of rosin",
+    "ester gum",
+    "gum acacia",
+    "sucrose acetate isobutyrate",
+    "brominated vegetable oil",
+    "vitamin e acetate",
+    "dl-alpha tocopheryl acetate",
+    "tocopheryl acetate",
+    "beta-carotene",
+    "manganese citrate",
+    "sodium selenate",
+    "magnesium malate",
+    "chromium picolinate",
+    "pyridoxine",
+    "vitamin b6 hydrochloride",
+    "zinc citrate",
+    "calcium citrate",
+    "potassium sorbate and sodium benzoate",
+    "cocoa processed with alkali",
+    "alkalized cocoa",
+    "dutch processed cocoa",
+    "cocoa powder processed with alkali",
+    "natural cocoa",
+    "cocoa nibs",
+    "cacao nibs",
+    "cacao butter",
+    "guarana extract",
+    "guarana seed extract",
+    "panax ginseng extract",
+    "ginseng extract",
+    "green tea extract",
+    "coffee extract",
+    "decaffeinated coffee",
+    "brewed coffee",
+    "brewed tea",
+    "brewed green tea",
+    "brewed black tea",
+    "matcha",
+    "yerba mate"
+   ],
+   "codes": [],
+   "patterns": [],
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "water",
+    "salt",
+    "food-acids",
+    "flavors",
+    "thickeners-and-emulsifiers",
+    "preservatives"
+   ],
+   "title": "Other additives on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Other additives on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as modified cornstarch. All 65 label names and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 65 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "malted_barley",
+   "slug": "malted-barley",
+   "name": "Malted barley",
+   "cls": "non_sweet",
+   "labeling": "not_counted_as_sugar",
+   "treatment": "clean_ok",
+   "group": "clean_sweet",
+   "classLabel": "Common ingredient with no sweetening role",
+   "classSentence": "Sugar Depth's registry files malted barley under common ingredients with no sweetening role.",
+   "labelingLabel": "Not counted as sugar",
+   "labelingSentence": "US labels do not count it as sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [
+    "malted barley",
+    "barley malt"
+   ],
+   "codes": [],
+   "patterns": [],
+   "note": "The brewing grain, not a sugar. Malt syrup and malt extract made from it are added sugar.",
+   "sources": [
+    "addedSugarsRule"
+   ],
+   "related": [
+    "fruit-or-vegetable-juice",
+    "maltodextrin",
+    "resistant-maltodextrin",
+    "added-fiber",
+    "starch",
+    "milk"
+   ],
+   "title": "Malted barley on food labels: no sweetening role, allowed in CLEAN",
+   "description": "Malted barley on food labels: no sweetening role, allowed in CLEAN on Sugar Depth. Also listed as barley malt. The US label treatment and the rule that applies.",
+   "summary": "No sweetening role. Sugar Depth knows 2 label names for it and allows it in CLEAN."
+  },
+  {
+   "id": "juice_from_concentrate",
+   "slug": "juice-from-concentrate",
+   "name": "Juice from concentrate",
+   "cls": "context_dependent",
+   "labeling": "depends",
+   "treatment": "needs_context",
+   "group": "depends",
+   "classLabel": "Depends on how it is used",
+   "classSentence": "Sugar Depth's registry files juice from concentrate under ingredients that depend on their form and on the rest of the product.",
+   "labelingLabel": "Depends on how it is used",
+   "labelingSentence": "How US labels count it depends on how it is used.",
+   "verdict": {
+    "word": "Depends",
+    "tone": "mixed",
+    "label": "Depends on the rest of the label"
+   },
+   "outcomes": [
+    {
+     "when": "It sweetens another food, and the panel shows more than 4 g of added sugar per serving",
+     "verdict": "BAD",
+     "rule": "X1-added-sugar-over-4g"
+    },
+    {
+     "when": "It sweetens another food, and the grams of added sugar per serving can't be read, or are printed only per 100 g or 100 ml",
+     "verdict": "BAD",
+     "rule": "X2-added-sugar-no-grams"
+    },
+    {
+     "when": "It sweetens another food, and the panel shows 4 g or less of added sugar per serving, including a printed 0 g",
+     "verdict": "OKAY",
+     "rule": "O1-added-sugar-up-to-4g"
+    },
+    {
+     "when": "The product is made only of fruit or vegetable juice or puree (water, acids, vitamins, flavors and similar extras are fine)",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [],
+   "codes": [],
+   "patterns": [
+    {
+     "pattern": "[fruit] juice from concentrate",
+     "example": "apple juice from concentrate"
+    }
+   ],
+   "note": "Reconstituted to normal strength it is not added sugar; used to sweeten another food it is (Sugar Depth decides from the rest of the ingredient list).",
+   "sources": [
+    "addedSugarsRule",
+    "addedSugarsQA"
+   ],
+   "related": [
+    "fruit-puree-concentrate"
+   ],
+   "title": "Juice from concentrate on food labels: when it counts as added sugar",
+   "description": "Juice from concentrate on food labels: added sugar when it sweetens another food, natural sugar in a product made only of fruit or juice. The US label treatment and the rule that applies.",
+   "summary": "Added sugar when it sweetens another food. Natural sugar in a product made only of fruit or juice."
+  },
+  {
+   "id": "single_strength_juice",
+   "slug": "fruit-or-vegetable-juice",
+   "name": "Fruit or vegetable juice",
+   "cls": "naturally_occurring_sugar",
+   "labeling": "counted_as_total_sugar_only",
+   "treatment": "clean_ok",
+   "group": "clean_sweet",
+   "classLabel": "Naturally occurring sugar (comes with a whole food)",
+   "classSentence": "Sugar Depth's registry files fruit or vegetable juice under naturally occurring sugar: sugar that comes with a whole food such as milk or fruit.",
+   "labelingLabel": "Counted as total sugar only, not as added sugar",
+   "labelingSentence": "US labels count its sugar in Total Sugars, but not as added sugar.",
+   "verdict": {
+    "word": "CLEAN",
+    "tone": "clean",
+    "label": "Allowed in CLEAN"
+   },
+   "outcomes": [
+    {
+     "when": "It is on a complete ingredient list with no added sugar, sweetener or alcohol",
+     "verdict": "CLEAN",
+     "rule": "C1-clean"
+    }
+   ],
+   "aliases": [],
+   "codes": [],
+   "patterns": [
+    {
+     "pattern": "[fruit] juice",
+     "example": "apple juice"
+    },
+    {
+     "pattern": "[fruit] juice not from concentrate",
+     "example": "orange juice not from concentrate"
+    }
+   ],
+   "note": "FDA does not count single-strength juice as added sugar.",
+   "sources": [
+    "addedSugarsRule",
+    "addedSugarsQA"
+   ],
+   "related": [
+    "maltodextrin",
+    "resistant-maltodextrin",
+    "added-fiber",
+    "starch",
+    "milk",
+    "fruit"
+   ],
+   "title": "Fruit or vegetable juice on food labels: natural sugar, not added sugar, allowed in CLEAN",
+   "description": "Fruit or vegetable juice on food labels: natural sugar, not added sugar, allowed in CLEAN on Sugar Depth. The US label treatment and the rule that applies.",
+   "summary": "Natural sugar, not added sugar. Sugar Depth allows it in CLEAN."
+  }
+ ]
+}

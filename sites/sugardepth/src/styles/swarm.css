@@ -1,0 +1,107 @@
+/* Crystal swarm: the dark glass bands that carry the sugar crystals (home hero, the alias tiles, the heads of
+   /how-it-works and /about) and the alias flip tiles. Loaded by components/CrystalSwarm.astro. Inside a band the
+   paper tokens are swapped for the app's dark-glass ones (DESIGN.md), so the usual type, buttons and rules read
+   light on dark without new colours. The canvas is drawn by src/lib/swarm.ts. */
+
+.swarm-band {
+  --paper: var(--sd-paper);
+  --ink: var(--sd-ink);
+  --muted: var(--sd-ink-muted);
+  --faint: var(--sd-ink-faint);
+  --rule: var(--sd-rule);
+  --hair: var(--sd-hairline);
+  --rule-strong: rgba(244, 246, 251, 0.82);
+  --glass: var(--sd-pressed-fill);
+  --on-ink: var(--sd-on-ink);
+  --clean: var(--sd-clean);
+  --bad: var(--sd-bad);
+  --ugly: var(--sd-ugly);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--ink);
+  background:
+    radial-gradient(62% 64% at 32% 46%, var(--sd-glow-indigo), transparent 72%),
+    radial-gradient(42% 46% at 88% 96%, color-mix(in srgb, var(--sd-glow-teal), transparent 45%), transparent 70%),
+    linear-gradient(180deg, var(--sd-ambient-0), var(--sd-paper) 70%),
+    var(--sd-paper);
+}
+/* Decoration only: behind the copy, and a click goes straight through it. */
+.swarm-canvas { position: absolute; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; pointer-events: none; }
+.swarm-band > .wrap { position: relative; z-index: 1; }
+/* A dark halo keeps every letter's edge crisp when a dimmed crystal drifts behind it. */
+.swarm-band :is(h1, h2, .kicker, .lead, .voice, .plain-note, .verdict-keys, .breadcrumbs, .flip-hint, .section-head p) { text-shadow: 0 1px 14px var(--sd-paper), 0 0 2px var(--sd-paper); }
+.swarm-band a { text-decoration-color: var(--rule); }
+.swarm-band .btn.primary { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.4); }
+.swarm-band .btn.primary:hover { background: #fff; color: var(--on-ink); box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5), 0 0 28px rgba(244, 246, 251, 0.25); }
+
+/* ---------- home hero ---------- */
+.hero.swarm-band { display: grid; align-items: center; min-height: clamp(560px, 80vh, 760px); min-height: clamp(560px, 80svh, 760px); touch-action: pan-y pinch-zoom; }
+.swarm-band .crystal-dot { background: var(--tint); }
+.swarm-band .crystal-stage:has(#preview-CLEAN:checked) label[for='preview-CLEAN'],
+.swarm-band .crystal-stage:has(#preview-OKAY:checked) label[for='preview-OKAY'],
+.swarm-band .crystal-stage:has(#preview-BAD:checked) label[for='preview-BAD'] { border-color: var(--rule); background: rgba(6, 8, 13, 0.55); color: var(--ink); }
+
+/* ---------- page heads (/how-it-works, /about) ---------- */
+.page-band .page-head { padding-block: clamp(40px, 6vw, 72px); margin-bottom: 0; border-bottom: 0; }
+.page-band .page-head > :last-child { margin-bottom: 0; }
+/* The band is the divider now, so the first block under it doesn't need a section's worth of air and a rule. */
+.page-band + .page-body > section:first-child { padding-top: 0; }
+.page-band + .page-body > section:first-child > h2:first-child { margin-top: 0.4em; padding-top: 0; border-top: 0; }
+.page-band + .wrap > .label-figure { margin-top: clamp(28px, 4vw, 48px); }
+
+/* ---------- alias tiles ---------- */
+.disguise-grid .tiles-stage { grid-column: 2; grid-row: 1 / 3; }
+.tiles-stage { position: relative; }
+/* The burst canvas reaches 140px past the grid (FX_MARGIN in swarm.ts); the band clips what is left over. */
+.tiles-fx { position: absolute; inset: -140px; z-index: 2; display: block; width: calc(100% + 280px); height: calc(100% + 280px); pointer-events: none; }
+.tiles { position: relative; z-index: 1; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.tile { position: relative; display: block; width: 100%; height: clamp(136px, 13.5vw, 172px); margin: 0; padding: 0; border: 0; border-radius: 20px; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; perspective: 900px; -webkit-tap-highlight-color: transparent; }
+.tile:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+.tile-face { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; padding: 18px 20px; border: 1px solid var(--sd-glass-border); border-radius: 20px; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: transform 0.7s var(--ease-out), opacity 0.7s var(--ease-out); }
+.tile-front { background: linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02) 60%), var(--sd-ambient-0); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 20px 40px rgba(0, 0, 0, 0.35); }
+/* A small sugar cube in the corner of each label. */
+.tile-front::after { content: ''; position: absolute; top: 18px; right: 18px; width: 16px; height: 16px; border-radius: 4px; background: linear-gradient(135deg, #fff, #c9d4ea 55%, #8fa0c4); opacity: 0.85; transform: rotate(12deg); box-shadow: 0 0 18px rgba(255, 255, 255, 0.25); }
+.tile-alias { font-weight: 900; font-size: clamp(1.15rem, 1.9vw, 1.55rem); line-height: 1.08; letter-spacing: -0.025em; text-wrap: balance; }
+.tile-back { justify-content: space-between; transform: rotateY(180deg); border-color: #fff; background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), #dfe6f5), #fff; color: var(--sd-on-ink); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px color-mix(in srgb, var(--sd-ugly), transparent 85%); }
+.tile-tag { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sd-ugly-ink); }
+.tile-reveal { font-weight: 900; font-size: clamp(1.4rem, 2.4vw, 2rem); line-height: 1.08; letter-spacing: -0.025em; }
+.tile[aria-pressed='true'] .tile-front { transform: rotateY(-180deg); }
+.tile[aria-pressed='true'] .tile-back { transform: rotateY(0); }
+/* Without the script nothing turns: one dark label with the name on top and the answer under it. */
+.tiles:not([data-ready]) .tile { cursor: default; }
+.tiles:not([data-ready]) .tile-front { justify-content: flex-start; padding-right: 48px; }
+.tiles:not([data-ready]) .tile-back { inset: auto 0 0; flex-direction: row; flex-wrap: wrap; align-items: baseline; justify-content: flex-start; gap: 2px 10px; padding-top: 0; transform: none; border-color: transparent; background: none; box-shadow: none; color: var(--ink); }
+.tiles:not([data-ready]) .tile-tag { color: var(--ugly); }
+.tiles:not([data-ready]) .tile-reveal { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 1.2rem; letter-spacing: 0; }
+
+@media (max-width: 900px) {
+  .disguise-grid .tiles-stage { grid-column: 1; grid-row: 2; }
+}
+@media (max-width: 760px) {
+  /* Phone hero: room above and below the copy for the crystals to pass; the try-it widget is still one scroll away. */
+  .hero.swarm-band { min-height: 0; padding: 64px 0 88px; }
+  .page-band .page-head { padding-block: 44px 52px; }
+  .tiles { gap: 12px; }
+  .tile, .tile-face { border-radius: 16px; }
+  .tile { height: 148px; }
+  .tile-face { padding: 14px; }
+  .tile-front::after { top: 14px; right: 14px; width: 12px; height: 12px; }
+  .tile-alias { font-size: 1.12rem; }
+  .tile-reveal { font-size: 1.22rem; }
+  .tile-tag { font-size: 0.75rem; }
+  .tiles:not([data-ready]) .tile-front { padding-right: 34px; }
+  .tiles:not([data-ready]) .tile-reveal { font-size: 1.1rem; }
+}
+@media (max-width: 340px) {
+  .tiles { grid-template-columns: minmax(0, 1fr); }
+  .tile { height: 120px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No turn, no burst: the two faces cross-fade. */
+  .tiles[data-ready] .tile-face { transform: none !important; transition: opacity 0.3s linear !important; }
+  .tiles[data-ready] .tile-back { opacity: 0; }
+  .tiles[data-ready] .tile[aria-pressed='true'] .tile-front { opacity: 0; }
+  .tiles[data-ready] .tile[aria-pressed='true'] .tile-back { opacity: 1; }
+  .hero.swarm-band { touch-action: auto; }
+}

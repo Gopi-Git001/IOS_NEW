@@ -1,0 +1,12 @@
+---
+// The crystal swarm's canvas. Put it first inside a band marked `class="swarm-band" data-swarm="hero"` (the home
+// hero) or `data-swarm="accent"` (page heads: far fewer crystals), and mark the band's copy with `data-swarm-copy`.
+// The canvas is decoration: hidden from assistive tech, behind the copy and never in the way of a click. Without
+// JavaScript, or before the script runs, the band is just its dark backdrop. See src/lib/swarm.ts.
+import '../styles/swarm.css';
+---
+<canvas class="swarm-canvas" data-swarm-canvas aria-hidden="true"></canvas>
+
+<script>
+  import '../lib/swarm';
+</script>

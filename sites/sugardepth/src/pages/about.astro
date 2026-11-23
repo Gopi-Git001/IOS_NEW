@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import SourcesBrief from '../components/SourcesBrief.astro';
+import CrystalSwarm from '../components/CrystalSwarm.astro';
+import { ORG } from '../config';
+import { MISSION } from '../data/mission';
+import { breadcrumbs, organization } from '../data/schema';
+// After Base and the components, so these rules come last in the page's CSS.
+import '../styles/brief-pages.css';
+const crumbs = [{ name: 'Home', href: '/' }, { name: 'About', href: '/about' }];
+---
+<Base title="About Sugar Depth and Martian Dynamics" description="Sugar Depth is a food-label scanner made by Martian Dynamics LLC in Leander, Texas. Its mission, what it does not claim, and its sources." path="/about" jsonLd={[organization, breadcrumbs(crumbs)]}>
+  <div class="page-band swarm-band" data-swarm="accent">
+    <CrystalSwarm />
+    <div class="wrap page-head" data-swarm-copy>
+      <Breadcrumbs items={crumbs} />
+      <h1>About Sugar Depth</h1>
+      <p class="voice mission-line">{MISSION}</p>
+      <p class="lead">Sugar Depth is a food-label scanner made by {ORG.name} in {ORG.locality}, Texas.</p>
+    </div>
+  </div>
+  <div class="wrap page-body prose about">
+    <h2>Why it exists</h2>
+    <p>Sugar goes by dozens of names on labels, and sweeteners that aren't sugar can sit behind a "0 g sugar" panel. We read the fine print and name each one. No scores, no lectures: what you eat is your call.</p>
+
+    <h2>What it does not claim</h2>
+    <ul>
+      <li>Not medical or nutrition advice.</li>
+      <li>Verdicts are preferences, not safety findings.</li>
+      <li>No allergen checks, calorie counts or product database.</li>
+    </ul>
+    <p>The full rules are on <a href="/how-it-works">how it works</a>.</p>
+    <SourcesBrief keys={['addedSugarsRule', 'addedSugarsQA', 'allulose', 'rareSugars', 'maltodextrin', 'fiber', 'nutritionLabel', 'sweeteners', 'ecj']} />
+
+    <h2>Company</h2>
+    <p>{ORG.name}<br />{ORG.locality}, Texas, United States<br /><a href={`mailto:${ORG.email}`}>{ORG.email}</a></p>
+  </div>
+</Base>

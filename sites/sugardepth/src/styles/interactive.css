@@ -1,0 +1,124 @@
+/* Round 1: less text, more to touch. The home hero, icon steps, verdict disclosures, the short guide
+   row, the /how-it-works expanders and the phone "Scan a label" bar. Loaded after crystal.css, so it reads the same
+   paper, ink and glass tokens. Nothing here moves layout when it animates: only transform, opacity and colour. */
+
+/* ---------- home hero: one headline, one line, one button, one footnote ---------- */
+.hero { padding: clamp(28px, 4vw, 56px) 0 clamp(44px, 6vw, 80px); }
+.hero-split { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr); gap: clamp(32px, 6vw, 96px); align-items: center; }
+.hero .kicker { margin-bottom: 16px; }
+.hero h1 { font-size: clamp(2.7rem, 5.7vw, 5rem); max-width: 11.5ch; margin-bottom: 0.4em; }
+.hero .lead { max-width: 31em; margin-bottom: 28px; }
+.hero .plain-note { margin: 18px 0 0; max-width: none; font-size: 0.875rem; color: var(--muted); }
+
+/* The glass slab on its own (CrystalVerdict compact). */
+.crystal-compact { display: flex; flex-direction: column; align-items: center; gap: 14px; min-height: 0; padding: 0; margin: 0; border: 0; }
+.crystal-compact .crystal-object { justify-content: center; width: min(100%, 320px); padding: 10px 24px 36px; }
+.crystal-compact .crystal-slab { max-width: 272px; }
+.crystal-compact .crystal-caustic { bottom: 2px; }
+.crystal-compact .crystal-controls { position: static; }
+
+/* ---------- verdict cards: one line, the rules behind a disclosure ---------- */
+.verdict-card h3.word { margin-top: 0; }
+.verdict-line { margin: 0 0 10px; font-size: 1.08rem; line-height: 1.4; }
+.verdict-more summary,
+.expander > summary { cursor: pointer; list-style: none; -webkit-tap-highlight-color: transparent; }
+.verdict-more summary::-webkit-details-marker,
+.expander > summary::-webkit-details-marker { display: none; }
+.verdict-more summary { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding-inline: 10px; margin-left: -10px; font-weight: 800; font-size: 0.9375rem; color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule); text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.verdict-more summary:hover { text-decoration-color: currentColor; }
+.verdict-more summary::after,
+.expander > summary::after { content: ''; flex: none; width: 9px; height: 9px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-3px) rotate(45deg); transition: transform 0.3s var(--ease-out); }
+.verdict-more[open] summary::after,
+.expander[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
+.verdict-more summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 0; border-radius: 6px; }
+.expander > summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 4px; }
+.verdict-more ul { margin: 6px 0 0; }
+.verdict-more[open] ul,
+.expander[open] > .expander-body { animation: disclose 0.35s var(--ease-out); }
+@keyframes disclose { from { opacity: 0; transform: translateY(-6px); } }
+.verdicts-link { margin: 36px 0 0; }
+
+/* ---------- name the disguise: the hint above the alias tiles (the tiles are in swarm.css) ---------- */
+.flip-hint { margin: 0 0 14px; font-family: var(--serif); font-style: italic; font-size: 1.25rem; }
+
+/* ---------- ingredient guides: four, then the rest ---------- */
+.cards-four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.see-all { margin: 32px 0 0; }
+.cta-section { padding-top: 0; }
+
+/* ---------- /how-it-works: a short top, the details in expanders ---------- */
+.verdict-keys { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; max-width: 44em; font-size: clamp(1.05rem, 1.5vw, 1.2rem); }
+.verdict-keys li { display: grid; grid-template-columns: 4.6em minmax(0, 1fr); gap: 12px; align-items: baseline; }
+.verdict-keys strong { font-weight: 900; letter-spacing: -0.01em; }
+.expander-hint { margin: 0 0 12px; font-family: var(--serif); font-style: italic; font-size: 1.15rem; }
+.expanders { border-bottom: 1px solid var(--rule); }
+.expander { border-top: 1px solid var(--rule); }
+.expander:first-child { border-top: 2px solid var(--rule-strong); }
+.expander > summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 68px; padding: 14px 6px 14px 0; }
+.expander > summary h2 { margin: 0; font-size: clamp(1.35rem, 2.6vw, 2rem); scroll-margin-top: 84px; }
+.expander > summary:hover h2 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.expander-body { padding: 4px 0 32px; }
+.expander-body > :first-child { margin-top: 0; }
+.expander-body tr[id] { scroll-margin-top: 84px; }
+
+/* ---------- footer: the versions line, small and out of the way ---------- */
+.footer-legal { margin: 32px 0 0; }
+.footer-version { display: block; margin-top: 6px; font-size: 0.75rem; letter-spacing: 0.02em; opacity: 0.85; }
+
+/* ---------- the phone "Scan a label" bar ---------- */
+.sticky-scan { display: none; }
+@media (max-width: 759.98px) {
+  .sticky-scan { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; justify-content: center; padding: 30px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to top, rgba(244, 242, 235, 0.98) 0%, rgba(244, 242, 235, 0.92) 52%, rgba(244, 242, 235, 0)); pointer-events: none; transition: transform 0.4s var(--ease-out), opacity 0.3s var(--ease-out), visibility 0s; }
+  .sticky-scan .btn { pointer-events: auto; width: min(100%, 420px); min-height: 52px; box-shadow: inset 0 1px 0 #fff4, 0 10px 24px #14161330; }
+  /* Stepped aside (see the script in Base.astro): out of sight and out of the tab order. */
+  .sticky-scan.is-away { transform: translateY(100%); opacity: 0; visibility: hidden; transition: transform 0.4s var(--ease-out), opacity 0.3s var(--ease-out), visibility 0s 0.4s; }
+  /* One scan button at a time: the bar replaces the header's on phones. */
+  body:has(.sticky-scan) .header-cta { display: none; }
+  /* When a sample tap scrolls the result into view, it stops clear of the bar. */
+  body:has(.sticky-scan) .tryit-out { scroll-margin-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  /* Without the script the bar never steps aside, so the footer leaves room to scroll its links clear of it. */
+  html:not([data-sticky-scan]) body:has(.sticky-scan) .site-footer { padding-bottom: calc(60px + 96px + env(safe-area-inset-bottom, 0px)); }
+}
+@media print { .sticky-scan { display: none; } }
+
+/* ---------- smaller screens ---------- */
+@media (max-width: 900px) {
+  .cards-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  /* Phone hero: the slab sits beside the headline, and the try-it widget is one thumb-scroll away. */
+  .hero { padding: 24px 0 40px; }
+  .hero-split { grid-template-columns: minmax(0, 1fr) 104px; gap: 0 14px; align-items: start; }
+  .hero-copy { display: contents; }
+  .hero .kicker { grid-column: 1 / -1; grid-row: 1; justify-self: start; margin-bottom: 14px; }
+  .hero h1 { grid-column: 1; grid-row: 2; align-self: center; max-width: none; margin-bottom: 0; font-size: clamp(2.05rem, 9.6vw, 2.7rem); }
+  .hero .lead { grid-column: 1 / -1; grid-row: 3; margin: 20px 0 24px; font-size: 1.08rem; }
+  .hero .cta-row { grid-column: 1 / -1; grid-row: 4; }
+  .hero .plain-note { grid-column: 1 / -1; grid-row: 5; margin-top: 16px; }
+  .crystal-compact { grid-column: 2; grid-row: 2; align-self: center; }
+  .crystal-compact .crystal-object { width: 104px; padding: 4px 8px 14px 0; }
+  .crystal-compact .crystal-slab { min-height: 0; padding: 9px; border-radius: 9px; }
+  .crystal-compact .crystal-slab-word { font-size: 1.3rem; }
+  .crystal-compact .crystal-caustic { bottom: 0; height: 30px; }
+  .crystal-compact .crystal-controls,
+  .crystal-compact .crystal-choice { display: none; }
+  .hero .cta-row .btn { min-height: 52px; }
+  .verdict-line { font-size: 1.05rem; }
+  .verdict-keys li { grid-template-columns: 1fr; gap: 0; }
+}
+@media (max-width: 480px) {
+  .cards-four { grid-template-columns: minmax(0, 1fr); }
+  .hero .cta-row .btn { width: 100%; }
+  .see-all .btn { width: 100%; }
+}
+@media (max-width: 340px) {
+  .hero-split { grid-template-columns: minmax(0, 1fr); }
+  .crystal-compact { display: none; }
+}
+
+/* Home hero verdict carousel (CrystalVerdict rotate): each verdict word eases in as the slab changes. */
+@media (prefers-reduced-motion: no-preference) {
+  .crystal-rotate .crystal-slab-word { animation: crystal-swap 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .crystal-rotate .crystal-slab, .crystal-rotate .crystal-caustic { transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease; }
+}
+@keyframes crystal-swap { from { opacity: 0; transform: translateY(0.35em); } to { opacity: 1; transform: none; } }

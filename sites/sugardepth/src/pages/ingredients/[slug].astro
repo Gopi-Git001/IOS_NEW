@@ -1,0 +1,148 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Sources from '../../components/Sources.astro';
+import ScanCta from '../../components/ScanCta.astro';
+import { breadcrumbs, ORG_ID, SITE_ID } from '../../data/schema';
+import { abs, CONTENT_UPDATED, SITE_NAME } from '../../config';
+import { getGuides, type Guide } from '../../data/guides';
+import { POLICY_VERSION, REGISTRY_VERSION, shortWhen, toneClass } from '../../data/ingredients';
+import { ruleHref } from '../../data/rules';
+import '../../styles/brief.css';
+
+// One page per registry entry (see src/data/guides.ts), plus the hand-written guides about a single alias.
+// Answer first: the H1, one sentence and the facts panel. Names past the first few and the sources sit in
+// native <details>, so they stay in the HTML and need no script.
+export async function getStaticPaths() {
+  const all = await getGuides();
+  return all.map((guide) => ({ params: { slug: guide.slug }, props: { guide, all } }));
+}
+const { guide, all } = Astro.props as { guide: Guide; all: Guide[] };
+const { page } = guide;
+const Content = guide.doc ? (await render(guide.doc)).Content : null;
+const path = `/ingredients/${guide.slug}`;
+const crumbs = [
+  { name: 'Home', href: '/' },
+  { name: 'Ingredients', href: '/ingredients' },
+  { name: guide.name, href: path },
+];
+// Hand-written guides about one name on this entry's list, and the entry page a name guide belongs to.
+const nameGuides = guide.aliasGuide ? [] : all.filter((g) => g.aliasGuide && g.page.id === page.id);
+const parent = guide.aliasGuide ? all.find((g) => !g.aliasGuide && g.page.id === page.id)! : null;
+
+// Names first, then codes. The first few show; the rest wait in a <details>.
+const SHOWN = 8;
+const names = [...guide.aliases.map((text) => ({ text, code: false })), ...guide.codes.map((text) => ({ text, code: true }))];
+const shown = names.slice(0, SHOWN);
+const rest = names.slice(SHOWN);
+const count = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
+const allNames = `All ${count(guide.aliases.length, guide.aliasGuide ? 'related name' : 'name')}${guide.codes.length ? ` and ${count(guide.codes.length, 'code')}` : ''}`;
+const patterns = guide.aliasGuide ? [] : page.patterns;
+
+// Four links at most: name guides and neighbours, then one way back up.
+const hub = page.treatment === 'added_sugar' ? { href: '/hidden-sugar-names', name: 'All hidden sugar names' } : { href: '/ingredients', name: 'All ingredients' };
+const related = [
+  ...[...nameGuides, ...guide.related.map((slug) => all.find((g) => g.slug === slug)!)].slice(0, 3).map((g) => ({ href: `/ingredients/${g.slug}`, name: g.name })),
+  hub,
+];
+
+const article = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: guide.title,
+  // The sentence shown under the H1.
+  description: guide.answer,
+  url: abs(path),
+  mainEntityOfPage: abs(path),
+  inLanguage: 'en-US',
+  dateModified: CONTENT_UPDATED,
+  datePublished: CONTENT_UPDATED,
+  image: abs('/og/default.png'),
+  author: { '@id': ORG_ID },
+  publisher: { '@id': ORG_ID },
+  isPartOf: { '@id': SITE_ID },
+  about: { '@type': 'Thing', name: guide.name },
+};
+---
+<Base title={guide.title} description={guide.description} path={path} ogType="article" jsonLd={[article, breadcrumbs(crumbs)]}>
+  <div class="wrap brief">
+    <header class="brief-head">
+      <Breadcrumbs items={crumbs} />
+      <h1>{guide.name}</h1>
+      <p class="lead brief-answer">{guide.answer}</p>
+    </header>
+
+    <aside class="sheet brief-facts" aria-label={`${SITE_NAME} verdict`}>
+      <span class="kicker">{SITE_NAME} verdict</span>
+      <p class:list={['facts-word', toneClass(page.verdict.tone), { long: page.verdict.word.length > 5 }]}>{page.verdict.word}</p>
+      {page.verdict.label !== page.verdict.word && <p class="brief-facts-label">{page.verdict.label}</p>}
+      <hr class="rule-5" />
+      <dl>
+        <div><dt>What it is</dt><dd>{page.classLabel}</dd></div>
+        <div><dt>US label treatment</dt><dd>{page.labelingLabel}</dd></div>
+      </dl>
+    </aside>
+
+    <article class="brief-body">
+      {Content && <div class="prose brief-guide"><Content /></div>}
+      {!Content && page.note && <p class="brief-note">{page.note}</p>}
+
+      <section aria-labelledby="names">
+        <h2 id="names">On labels</h2>
+        {parent && <p class="brief-line">One of the {parent.aliases.length} names for <a href={`/ingredients/${parent.slug}`}>{parent.name.toLowerCase()}</a>.</p>}
+        {shown.length > 0 && (
+          <ul class="alias-list">
+            {shown.map((n) => <li class:list={{ mono: n.code }}>{n.text}</li>)}
+          </ul>
+        )}
+        {rest.length > 0 && (
+          <details class="brief-more">
+            <summary>{allNames}</summary>
+            <ul class="alias-list">
+              {rest.map((n) => <li class:list={{ mono: n.code }}>{n.text}</li>)}
+            </ul>
+          </details>
+        )}
+        {patterns.length > 0 && (
+          <ul class="brief-patterns">
+            {patterns.map((p) => <li>Any "{p.pattern}", such as {p.example}</li>)}
+          </ul>
+        )}
+        {guide.codes.length > 0 && <p class="brief-line">E numbers are EU codes. US labels usually print the name.</p>}
+      </section>
+
+      <section aria-labelledby="rules">
+        <h2 id="rules">Verdict rules</h2>
+        <div class="table-wrap">
+          <table class="facts-table outcomes" role="table" aria-labelledby="rules">
+            <caption>The worst ingredient on a label decides.</caption>
+            <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">When</th><th scope="col" role="columnheader">Verdict</th><th scope="col" role="columnheader">Rule</th></tr></thead>
+            <tbody role="rowgroup">
+              {page.outcomes.map((o) => (
+                <tr role="row">
+                  <td role="cell">{shortWhen(o.when).replace(/(\d) (g|ml)\b/g, '$1\u00a0$2')}.</td>
+                  <td class={`out ${toneClass(o.verdict)}`} role="cell">{o.verdict}</td>
+                  <td role="cell"><a href={ruleHref(o.rule)} aria-label={`See the rule: ${o.verdict}, ${o.when}`}>See the rule</a></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <nav class="brief-related" aria-labelledby="related">
+        <h2 id="related">Related</h2>
+        <ul>
+          {related.map((r) => <li><a href={r.href}>{r.name}</a></li>)}
+        </ul>
+      </nav>
+
+      <Sources keys={guide.sources} collapsed>
+        <p class="brief-line">Names, class and rules from the {SITE_NAME} ingredient registry {REGISTRY_VERSION} and {POLICY_VERSION}.</p>
+      </Sources>
+      <p class="brief-line brief-disclaimer">Verdicts are product preferences, not medical advice. {SITE_NAME} does not check allergens.</p>
+    </article>
+  </div>
+  <div class="wrap brief-cta"><ScanCta /></div>
+</Base>
