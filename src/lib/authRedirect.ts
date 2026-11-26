@@ -10,9 +10,11 @@ type ExpoConstants = {
 /**
  * Expo Go can't own the app's `reallabel://` scheme (an installed Sugar Depth build would catch it instead),
  * so testing in Expo Go returns to `exp://<dev server>/--/auth`. Dev and production builds keep `reallabel://auth`.
+ * Pass `isRunningInExpoGo()` from `expo`: Expo Go 58 on Android reports `executionEnvironment: 'bare'` and
+ * `appOwnership: null`, so the Constants fields alone miss it.
  */
-export function nativeAuthRedirect(constants: ExpoConstants): string {
-  const inExpoGo = constants.executionEnvironment === 'storeClient' || constants.appOwnership === 'expo';
+export function nativeAuthRedirect(constants: ExpoConstants, runningInExpoGo = false): string {
+  const inExpoGo = runningInExpoGo || constants.executionEnvironment === 'storeClient' || constants.appOwnership === 'expo';
   const host = constants.expoConfig?.hostUri?.replace(/\/+$/, '');
   return inExpoGo && host ? `exp://${host}/--/auth` : NATIVE_REDIRECT;
 }

@@ -10,6 +10,12 @@ test('Expo Go returns to the dev server, not the app scheme', () => {
   assert.equal(nativeAuthRedirect({ executionEnvironment: 'storeClient', expoConfig: { hostUri: '192.168.1.5:8081' } }), 'exp://192.168.1.5:8081/--/auth');
 });
 
+test('Expo Go on Android (reports bare, no ownership) still returns to the dev server', () => {
+  const android = { executionEnvironment: 'bare', appOwnership: null, expoConfig: { hostUri: host } };
+  assert.equal(nativeAuthRedirect(android, true), `exp://${host}/--/auth`);
+  assert.equal(nativeAuthRedirect(android, false), NATIVE_REDIRECT);
+});
+
 test('dev and production builds keep reallabel://auth', () => {
   assert.equal(NATIVE_REDIRECT, 'reallabel://auth');
   assert.equal(nativeAuthRedirect({ executionEnvironment: 'standalone', expoConfig: { hostUri: host } }), NATIVE_REDIRECT);

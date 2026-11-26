@@ -1,4 +1,5 @@
 import { Linking, Platform } from 'react-native';
+import { isRunningInExpoGo } from 'expo';
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
@@ -204,7 +205,7 @@ export async function signInWithGoogle(): Promise<string | null> {
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: back } });
     return error ? failed : null;
   }
-  const redirect = nativeAuthRedirect(Constants);
+  const redirect = nativeAuthRedirect(Constants, isRunningInExpoGo());
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: redirect, skipBrowserRedirect: true },
