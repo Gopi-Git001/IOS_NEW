@@ -60,7 +60,7 @@ describe("the site's rule table", () => {
 
   // The short verdict lines printed on the home page, at the top of /how-it-works and in /llms.txt.
   test('the three verdict summaries are BAD, OKAY, CLEAN and carry the limits in policy.ts', () => {
-    assert.deepEqual(VERDICTS.map((v) => v.word), ['BAD', 'OKAY', 'CLEAN']);
+    assert.deepEqual(VERDICTS.map((v) => v.word), ['CLEAN', 'OKAY', 'BAD']);
     const text = (word: string) => {
       const v = VERDICTS.find((x) => x.word === word)!;
       return [v.line, ...v.rules].join(' | ').replace(/\u00a0/g, ' ');

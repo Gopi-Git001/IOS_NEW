@@ -1,0 +1,63 @@
+---
+// "Jade Sky" — the 21st.dev Gradient Builder recipe (four radial soft-light pools over a pale jade
+// base, blurred and bled past the edges so no seam shows), rebuilt as a dependency-free Astro
+// component. The React original needed no packages either; this drops the JSX for one <div>.
+//
+// Page background:
+//   <JadeSky fixed />
+// Inside a section:
+//   <div class="relative"><JadeSky /></div>
+//
+// Source recipe: https://21st.dev/community/gradients/editor?from=85ea2692-591f-4b2b-928f-de88da3d1a88
+interface Props {
+  class?: string;
+  /** Pin to the viewport instead of filling the nearest positioned ancestor. */
+  fixed?: boolean;
+  /** Blur radius in cqmin. Set 0 to keep the pools crisp. */
+  blur?: number;
+  /** How far the wash bleeds past its box, in cqmin. Hides the blurred edge. */
+  bleed?: number;
+}
+
+const { class: className = '', fixed = false, blur = 0.4, bleed = 0.8 } = Astro.props;
+---
+
+<div
+  class:list={['jade-sky', { 'is-fixed': fixed }, className]}
+  aria-hidden="true"
+  style={`--js-blur:${blur}cqmin;--js-bleed:-${bleed}cqmin`}
+>
+  <div class="js-wash"></div>
+</div>
+
+<style>
+  .jade-sky {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    container-type: size;
+  }
+  /* Page mode: stays put while the document scrolls. */
+  .jade-sky.is-fixed {
+    position: fixed;
+    z-index: -2;
+  }
+
+  /* The builder's own Copy-CSS: a pale jade base with four soft light pools, bled past the
+     box and blurred by a size-relative amount so it scales with the viewport. */
+  .js-wash {
+    position: absolute;
+    inset: var(--js-bleed);
+    filter: blur(var(--js-blur));
+    background-color: #CFE9F0;
+    background-image:
+      radial-gradient(circle at 65.34% 44.62%, rgba(238, 246, 227, 1) 0%, rgba(238, 246, 227, 0) 34.1%),
+      radial-gradient(circle at 28.07% 74.48%, rgba(183, 217, 142, 1) 0%, rgba(183, 217, 142, 0) 45.65%),
+      radial-gradient(circle at 52.42% 19.94%, rgba(127, 191, 154, 1) 0%, rgba(127, 191, 154, 0) 57.55%),
+      radial-gradient(circle at 80.31% 84.47%, rgba(207, 233, 240, 1) 0%, rgba(207, 233, 240, 0) 69.1%);
+  }
+</style>

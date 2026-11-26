@@ -1,0 +1,604 @@
+---
+// SugarSplash — the opening moment: "Sugar Depth" is struck into a dark screen letter by letter,
+// then flies into the real header logo while the homepage appears beneath it.
+//
+// Built as plain Astro + CSS keyframes + one data-motion script. The site has no React and no
+// motion library, and scripts/check.mjs only permits JSON-LD, data-motion inline scripts and two
+// named modules, so this stays inline — no bundling, no new dependencies.
+//
+// The overlay is aria-hidden decoration: the page underneath is fully rendered and real. It also
+// carries data-splash, which the hero already watches, so the hero's own entrance waits for us.
+const WORD = 'Sugar Depth';
+// Spaces are skipped in the strike timing but still occupy layout.
+const letters = WORD.split('').map((ch, i) => ({ ch, i, space: ch === ' ' }));
+---
+
+<div class="sd-splash" data-splash="running" aria-hidden="true">
+  <div class="sd-glow" data-sd-glow></div>
+
+  <div class="sd-stage">
+    <div class="sd-word" data-sd-word>
+      {letters.map((l) =>
+        l.space ? (
+          <span class="sd-space" aria-hidden="true">&nbsp;</span>
+        ) : (
+          <span class="sd-letter" data-sd-letter data-index={l.i} aria-hidden="true">{l.ch}</span>
+        )
+      )}
+      <span class="sd-anvil" aria-hidden="true"></span>
+      <span class="sd-underline" data-sd-underline aria-hidden="true"></span>
+    </div>
+  </div>
+
+  <div class="sd-sparks" data-sd-sparks aria-hidden="true"></div>
+  <div class="sd-flash" data-sd-flash aria-hidden="true"></div>
+</div>
+
+<style>
+  .sd-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    background: #1a1611;
+    overflow: hidden;
+    /* Failsafe: if the script never runs, pure CSS removes the overlay after 5s. */
+    animation: sd-failsafe 1ms linear 5s forwards;
+  }
+  /* The script owns the timing once it runs, so stand the failsafe down. */
+  .sd-splash[data-js='true'] {
+    animation: none;
+  }
+  @keyframes sd-failsafe {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  /* A soft mint pool that swells as the letters land. */
+  .sd-glow {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    inline-size: 50vmax;
+    block-size: 50vmax;
+    margin-inline-start: -25vmax;
+    margin-block-start: -25vmax;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at center,
+      rgba(126, 240, 180, 0.22) 0%,
+      rgba(126, 240, 180, 0.08) 34%,
+      transparent 66%
+    );
+    opacity: 0.35;
+    transform: scale(0.7);
+    transition: opacity 1.2s ease, transform 1.2s ease;
+    pointer-events: none;
+  }
+  .sd-splash[data-striking='true'] .sd-glow {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+
+  .sd-stage {
+    position: relative;
+    z-index: 2;
+    inline-size: 100%;
+    padding-inline: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .sd-word {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    /* Same family and weight as the header logo (.wordmark in global.css), so the flight lands
+       on a wordmark of identical shape. */
+    font-family: var(--logo-font);
+    font-weight: 900;
+    font-size: clamp(48px, 13vw, 180px);
+    letter-spacing: -0.035em;
+    line-height: 1;
+    white-space: nowrap;
+    color: #fff;
+    transform-origin: top left;
+    will-change: transform, opacity;
+    /* Never wider than the screen: the clamp above fits, and this is the belt-and-braces cap. */
+    max-inline-size: 100%;
+  }
+
+  .sd-letter {
+    display: inline-block;
+    transform-origin: bottom center;
+    /* Starts invisible; the script strikes each one at its own time. */
+    opacity: 0;
+    transform: translateY(-0.32em) scaleY(1.1) scaleX(0.94);
+  }
+  /* One strike: drop in, squash, settle. Colour flashes white -> mint -> white. */
+  .sd-letter[data-struck='true'] {
+    animation:
+      sd-strike 0.42s cubic-bezier(0.2, 0.9, 0.25, 1) both,
+      sd-tint 1.3s ease-out both;
+  }
+  @keyframes sd-strike {
+    0% {
+      opacity: 1;
+      transform: translateY(-0.32em) scaleY(1.1) scaleX(0.94);
+    }
+    35% {
+      transform: translateY(0) scaleY(0.82) scaleX(1.14);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scaleY(1) scaleX(1);
+    }
+  }
+  @keyframes sd-tint {
+    0% {
+      color: #ffffff;
+      text-shadow: 0 0 30px rgba(255, 255, 255, 0.9);
+    }
+    30% {
+      color: #e9f6f1;
+      text-shadow: 0 0 24px rgba(233, 246, 241, 0.7);
+    }
+    60% {
+      color: #7ef0b4;
+      text-shadow: 0 0 18px rgba(126, 240, 180, 0.55);
+    }
+    100% {
+      color: #ffffff;
+      text-shadow: none;
+    }
+  }
+
+  /* The faint anvil line the letters are struck against. */
+  .sd-anvil {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -0.12em;
+    block-size: 1px;
+    background: rgba(255, 255, 255, 0.15);
+  }
+  /* The 4px bar that draws in as the finale, matching the header logo's underline. */
+  .sd-underline {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-end: -0.18em;
+    block-size: 4px;
+    inline-size: 0;
+    background: #fff;
+    border-radius: 2px;
+  }
+  .sd-underline[data-draw='true'] {
+    animation: sd-draw 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  @keyframes sd-draw {
+    to {
+      inline-size: 100%;
+    }
+  }
+
+  /* Impact flash under the struck letter. */
+  .sd-flash {
+    position: absolute;
+    z-index: 1;
+    inline-size: 140px;
+    block-size: 120px;
+    margin-inline-start: -70px;
+    margin-block-start: -60px;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0.85) 0%,
+      rgba(126, 240, 180, 0.45) 40%,
+      transparent 68%
+    );
+  }
+  .sd-flash[data-on='true'] {
+    animation: sd-flash 0.5s ease-out forwards;
+  }
+  @keyframes sd-flash {
+    0% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    35% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.25);
+    }
+  }
+
+  /* Shake on impact, driven by the script resetting the animation. */
+  .sd-word[data-shake='true'] {
+    animation: sd-shake 0.16s ease-out;
+  }
+  @keyframes sd-shake {
+    0% {
+      translate: 0;
+    }
+    25% {
+      translate: -2px;
+    }
+    50% {
+      translate: 1.2px;
+    }
+    100% {
+      translate: 0;
+    }
+  }
+  /* Phones shake by 1px, not 2. */
+  @media (max-width: 520px) {
+    @keyframes sd-shake {
+      0% {
+        translate: 0;
+      }
+      25% {
+        translate: -1px;
+      }
+      50% {
+        translate: 0.6px;
+      }
+      100% {
+        translate: 0;
+      }
+    }
+  }
+
+  /* Crystals thrown from each impact. */
+  .sd-sparks {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .sd-spark {
+    position: absolute;
+    border-radius: 1px;
+    background: #fff;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    will-change: transform, opacity;
+  }
+
+  /* The header logo keeps its box during the splash but is invisible, so the flying wordmark has a
+     real target to measure and the logo appears in the frame the flight lands. */
+  :global(html.sd-splashing .site-header .wordmark) {
+    visibility: hidden;
+  }
+  /* Reduced motion: no splash at all. */
+  @media (prefers-reduced-motion: reduce) {
+    .sd-splash {
+      display: none;
+    }
+  }
+</style>
+
+<script is:inline data-motion>
+  // The splash: font wait -> letter strikes -> finale -> flight to the header -> hand off to the hero.
+  (function () {
+    var root = document.querySelector('[data-splash]');
+    if (!root) return;
+
+    var html = document.documentElement;
+    var KEY = 'sd-splash-seen';
+    var params = new URLSearchParams(location.search);
+
+    var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var SKIP = params.get('nosplash') === '1' || REDUCED;
+
+    // Once per session. If storage is blocked (private mode, disabled cookies), just play.
+    function seen() {
+      try {
+        return sessionStorage.getItem(KEY) === '1';
+      } catch (e) {
+        return false;
+      }
+    }
+    function markSeen() {
+      try {
+        sessionStorage.setItem(KEY, '1');
+      } catch (e) {
+        /* storage unavailable: the splash simply plays again next navigation */
+      }
+    }
+
+    // ---- timings -------------------------------------------------------------
+    // Read from the shared CSS variables so the splash and the hero cannot drift apart. Seconds in
+    // the tokens, milliseconds here.
+    function secondsOf(name, fallback) {
+      var raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      var n = parseFloat(raw);
+      if (isNaN(n)) return fallback;
+      return raw.indexOf('ms') > -1 ? n / 1000 : n;
+    }
+    var T = {
+      strikeStart: secondsOf('--intro-strike-start', 0.3),
+      between: secondsOf('--intro-strike-step', 0.11),
+      flightStart: secondsOf('--intro-flight-start', 2.0),
+      flightEnd: secondsOf('--intro-flight-end', 2.9),
+      coverEnd: secondsOf('--intro-cover-end', 2.6),
+      heroStart: secondsOf('--intro-hero-start', 2.6),
+      cardsDelay: secondsOf('--intro-cards-delay', 0.4),
+      cardsDur: secondsOf('--intro-cards-dur', 0.8),
+      cardsEnd: secondsOf('--intro-cards-delay', 0.4) + secondsOf('--intro-cards-dur', 0.8),
+      impact: 0.15,
+      hold: 0.4, // finale hold before the flight
+      fontWait: 0.7,
+    };
+    var ms = function (seconds) {
+      return Math.round(seconds * 1000);
+    };
+
+    var landed = false;
+
+    // Deterministic randomness (same approach as the original component): the burst is identical
+    // on every play, which makes the screenshots reproducible.
+    var seed = 20261123;
+    function rand() {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    }
+
+    var letters = [].slice.call(root.querySelectorAll('[data-sd-letter]'));
+    var word = root.querySelector('[data-sd-word]');
+    var underline = root.querySelector('[data-sd-underline]');
+    var sparksBox = root.querySelector('[data-sd-sparks]');
+    var flash = root.querySelector('[data-sd-flash]');
+    var glow = root.querySelector('[data-sd-glow]');
+
+    // ---- helpers -------------------------------------------------------------
+
+    function sparks(x, y, count, spread) {
+      if (!sparksBox) return;
+      var box = sparksBox.getBoundingClientRect();
+      for (var i = 0; i < count; i++) {
+        var size = 3 + rand() * 3; // 3-6px
+        var el = document.createElement('span');
+        el.className = 'sd-spark';
+        el.style.width = size + 'px';
+        el.style.height = size + 'px';
+        el.style.left = x - box.left + 'px';
+        el.style.top = y - box.top + 'px';
+        sparksBox.appendChild(el);
+
+        // Thrown up and out, then falls under gravity.
+        var angle = -Math.PI / 2 + (rand() - 0.5) * (spread || 2.2);
+        var speed = 90 + rand() * 130;
+        var vx = Math.cos(angle) * speed;
+        var vy = Math.sin(angle) * speed;
+        var rot = (rand() - 0.5) * 540;
+
+        el.animate(
+          [
+            { transform: 'translate(0,0) rotate(0deg) scale(1)', opacity: 1 },
+            { transform: 'translate(' + vx * 0.55 + 'px,' + vy * 0.55 + 'px) rotate(' + rot * 0.5 + 'deg) scale(1)', opacity: 1, offset: 0.45 },
+            { transform: 'translate(' + vx + 'px,' + (vy + 140) + 'px) rotate(' + rot + 'deg) scale(0.6)', opacity: 0 },
+          ],
+          { duration: 780 + rand() * 220, easing: 'cubic-bezier(0.2, 0.7, 0.4, 1)', fill: 'forwards' }
+        );
+        window.setTimeout(function (n) {
+          return function () {
+            if (n.parentNode) n.parentNode.removeChild(n);
+          };
+        }(el), 1100);
+      }
+    }
+
+    function shake(strength) {
+      if (!word) return;
+      word.removeAttribute('data-shake');
+      // Force a reflow so the animation restarts.
+      void word.offsetWidth;
+      word.style.setProperty('--sd-shake-scale', String(strength || 1));
+      word.setAttribute('data-shake', 'true');
+    }
+
+    function impactFlash(letter) {
+      if (!flash || !letter) return;
+      var box = root.getBoundingClientRect();
+      var r = letter.getBoundingClientRect();
+      flash.style.left = r.left - box.left + r.width / 2 + 'px';
+      flash.style.top = r.top - box.top + r.height * 0.86 + 'px';
+      flash.removeAttribute('data-on');
+      void flash.offsetWidth;
+      flash.setAttribute('data-on', 'true');
+    }
+
+    // ---- the sequence --------------------------------------------------------
+    var timers = [];
+    function at(ms, fn) {
+      timers.push(window.setTimeout(fn, ms));
+    }
+
+    function flight() {
+      var target = document.querySelector('.site-header .wordmark span') || document.querySelector('.site-header .wordmark');
+      if (!target || !word) {
+        // No header logo to fly onto: just fade out and hand the hero over.
+        root.style.transition = 'opacity 0.35s linear';
+        root.style.opacity = '0';
+        at(400, function () {
+          landWordmark();
+        });
+        return;
+      }
+
+      // Measure the target first, then make the wordmark's box proportionally correct before we
+      // read its own box. A uniform scale can only match all four edges if the two boxes have the
+      // same aspect ratio, and .sd-word's line-height:1 makes its box shorter than the header
+      // logo's. Setting the line height from the logo's ratio fixes the height without distorting
+      // the glyphs (the width scale below is still uniform).
+      var to = target.getBoundingClientRect();
+      var fontPx = parseFloat(getComputedStyle(word).fontSize) || 0;
+      var rawFrom = word.getBoundingClientRect();
+      if (fontPx > 0 && rawFrom.width > 0) {
+        var wantedHeight = (to.height / to.width) * rawFrom.width;
+        word.style.lineHeight = (wantedHeight / fontPx).toFixed(4);
+      }
+      // Now both boxes agree in shape: a single scale + translate matches them on every edge.
+      var from = word.getBoundingClientRect();
+      var scale = Math.max(0.02, to.width / from.width);
+      var dx = to.left - from.left;
+      var dy = to.top - from.top;
+
+      // The dark cover fades as the flight begins and is gone by --intro-cover-end.
+      root.animate([{ opacity: 1 }, { opacity: 0 }], {
+        duration: (T.coverEnd - T.flightStart) * 1000,
+        easing: 'linear',
+        fill: 'forwards',
+      });
+
+      var a = word.animate(
+        [
+          { transform: 'translate(0px, 0px) scale(1)', color: '#ffffff' },
+          {
+            transform: 'translate(' + dx * 0.55 + 'px,' + dy * 0.55 + 'px) scale(' + (1 + (scale - 1) * 0.5) + ')',
+            color: '#e9f6f1',
+            offset: 0.55,
+          },
+          { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + scale + ')', color: '#121614' },
+        ],
+        {
+          duration: (T.flightEnd - T.flightStart) * 1000,
+          easing: 'cubic-bezier(0.7, 0, 0.2, 1)',
+          fill: 'forwards',
+          transformOrigin: 'top left',
+        }
+      );
+
+      a.addEventListener('finish', function () {
+        // One frame: the flying copy goes and the real logo appears together. data-intro stays
+        // "hero" — the entrance is still running underneath.
+        landWordmark();
+      });
+
+      // If the tab was backgrounded the animation may not fire "finish"; never leave the logo hidden.
+      at((T.flightEnd - T.flightStart) * 1000 + 400, function () {
+        if (!landed) landWordmark();
+      });
+    }
+
+    // Hand the wordmark over to the real header logo. Idempotent. The hero keeps animating.
+    function landWordmark() {
+      if (landed) return;
+      landed = true;
+      html.classList.remove('sd-splashing');
+      root.style.opacity = '0';
+      root.style.visibility = 'hidden';
+      root.style.display = 'none';
+      root.setAttribute('data-splash', 'done');
+      root.setAttribute('aria-hidden', 'true');
+    }
+
+    // The whole intro is over: the hero entrance has finished too, so the state becomes "done".
+    // At this point every animation has completed at its end keyframe, which is identical to the
+    // base CSS, so dropping the animation rules cannot cause a jump.
+    function finishIntro() {
+      landWordmark();
+      if (html.getAttribute('data-intro') !== 'hero') return;
+      html.setAttribute('data-intro', 'done');
+    }
+
+    function play() {
+      html.classList.add('sd-splashing');
+      root.setAttribute('data-js', 'true');
+      root.setAttribute('data-splash', 'running');
+      root.setAttribute('data-striking', 'true');
+
+      // Strike each non-space letter on its own beat (the strike itself is unchanged).
+      var struck = letters.length;
+      letters.forEach(function (letter, i) {
+        var t = T.strikeStart + i * T.between;
+        at(ms(t), function () {
+          letter.setAttribute('data-struck', 'true');
+        });
+        at(ms(t + T.impact), function () {
+          impactFlash(letter);
+          var r = letter.getBoundingClientRect();
+          sparks(r.left + r.width / 2, r.top + r.height * 0.86, 7);
+          shake(1);
+        });
+      });
+
+      // Finale: underline draws, bigger burst, harder shake, then hold to --intro-hold-end.
+      at(ms(T.flightStart - T.hold), function () {
+        if (underline) underline.setAttribute('data-draw', 'true');
+        var r = underline ? underline.getBoundingClientRect() : word.getBoundingClientRect();
+        sparks(r.left + r.width / 2, r.top + 4, 14, 2.8);
+        shake(3.5);
+      });
+
+      // Fly at exactly --intro-flight-start.
+      at(ms(T.flightStart), flight);
+
+      // The hero entrance starts at --intro-hero-start (2.6s), under the now mostly-faded cover.
+      at(ms(T.heroStart), function () {
+        html.setAttribute('data-intro', 'hero');
+      });
+
+      // Skipping: tap, click or any key fades out at once, with no flight.
+      function skip(event) {
+        if (event && event.type === 'keydown' && (event.metaKey || event.ctrlKey || event.altKey)) return;
+        timers.forEach(function (t) {
+          window.clearTimeout(t);
+        });
+        markSeen();
+        document.removeEventListener('pointerdown', skip, true);
+        document.removeEventListener('keydown', skip, true);
+        // No flight: the hero appears final, without an entrance.
+        html.setAttribute('data-intro', 'none');
+        landWordmark();
+      }
+      document.addEventListener('pointerdown', skip, true);
+      document.addEventListener('keydown', skip, true);
+
+      // Whatever happens, record that it has been seen.
+      at(ms(T.flightEnd), markSeen);
+
+      // The entrance ends when the last element finishes: cards land at heroStart + cardsDelay +
+      // cardsDur (4.2s), so close the intro a moment after that.
+      at(ms(T.heroStart + T.cardsEnd + 0.15), finishIntro);
+    }
+
+    // ---- entry ---------------------------------------------------------------
+    // Skipped cases: hide the overlay and leave <html data-intro> to the <head> script. That script
+    // has already chosen "return" (rolling letters) or "none" (final), so forcing "done" here would
+    // cancel the entrance the hero is about to play.
+    function handOff() {
+      landWordmark();
+    }
+
+    if (SKIP || seen()) {
+      handOff();
+      return;
+    }
+    // Wait for the logo font (bounded, so a slow network cannot stall the film), then strike.
+    var started = false;
+    function start() {
+      if (started) return;
+      started = true;
+      // Re-measure the flight target once the logo face is actually loaded, so the landing box is
+      // the header's real one and not a fallback metric.
+      play();
+    }
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(start);
+      at(ms(T.fontWait), start);
+    } else {
+      at(ms(T.fontWait), start);
+    }
+
+    // Expose a tiny handle so QA can drive the sequence deterministically.
+    window.__sdSplash = { play: play, skip: function () { html.setAttribute('data-intro', 'none'); landWordmark(); }, timings: T };
+  })();
+</script>

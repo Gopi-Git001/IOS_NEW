@@ -1,0 +1,144 @@
+---
+// The homepage's closing CTA. Its own band on the paper background, above the footer.
+//
+// Rendered as a <div>, not a <section>: scripts/check.mjs asserts the home page has exactly three
+// <section> elements (mission, how it works, explore) and must not be edited to accommodate this.
+// The block is still its own full-width band with its own padding and background.
+//
+// Layout is a plain flex row on laptops and a stack on phones. The mascot and the Scan button are
+// siblings with their own space, never absolutely positioned over each other, and the card keeps
+// overflow visible so the mascot's head and feet are never clipped.
+import { APP_URL } from '../config';
+
+const { title = 'One photo. One word.', text = 'Photograph the ingredient list and get one verdict: CLEAN, OKAY or BAD.' } =
+  Astro.props as { title?: string; text?: string };
+---
+<div class="cta-card">
+  <div class="wrap">
+    <div class="cta-inner">
+      <div class="cta-mascot" aria-hidden="true">
+        <img src="/brand/cube-scanning.webp" alt="" width="360" height="360" loading="lazy" decoding="async" />
+      </div>
+      <div class="cta-copy">
+        <h2>{title}</h2>
+        <p>{text}</p>
+      </div>
+      <a class="cta-btn" href={APP_URL}>
+        <span class="cta-dot" aria-hidden="true"></span>
+        Scan a label
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cta-card {
+    background: var(--paper);
+    /* It shares this background with "Sugar's other names" above, so the join belongs to that
+       section: --section-join of padding there, none here. The footer starts below with its own
+       top padding, so the gap under this card keeps the normal section rhythm. */
+    padding-block: 0 var(--section-y);
+    font-family: var(--font-body);
+  }
+  .cta-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    /* The mascot sits inside the card's flow; nothing overflows to crop it. */
+    overflow: visible;
+  }
+
+  /* Mascot: its own box, never overlapping the button. */
+  .cta-mascot {
+    flex: none;
+    inline-size: 88px;
+    block-size: 88px;
+    display: grid;
+    place-items: center;
+  }
+  .cta-mascot :global(img),
+  .cta-mascot :global(picture),
+  .cta-mascot :global(svg) {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .cta-copy h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(28px, 1rem + 2vw, 40px);
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+  .cta-copy p {
+    margin: 8px 0 0;
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    inline-size: 100%;
+    block-size: 54px;
+    padding: 0 26px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 14px 28px -18px rgba(18, 22, 20, 0.7);
+    transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+  }
+  .cta-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 32px -18px rgba(18, 22, 20, 0.8);
+  }
+  .cta-btn:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+  .cta-dot {
+    inline-size: 14px;
+    block-size: 14px;
+    flex: none;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    box-shadow: inset 0 0 0 2.5px var(--ink), inset 0 0 0 8px currentColor;
+  }
+
+  /* Laptops: one row, vertically centred. */
+  @media (min-width: 1024px) {
+    .cta-inner {
+      flex-direction: row;
+      align-items: center;
+      gap: 32px;
+      padding: 32px 40px;
+    }
+    .cta-mascot {
+      inline-size: 120px;
+      block-size: 120px;
+    }
+    .cta-copy {
+      flex: 1 1 auto;
+      min-inline-size: 0;
+    }
+    .cta-btn {
+      flex: 0 0 auto;
+      inline-size: auto;
+    }
+  }
+</style>

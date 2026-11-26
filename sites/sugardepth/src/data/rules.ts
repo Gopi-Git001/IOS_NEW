@@ -40,15 +40,19 @@ export const RULES: Rule[] = [
  * against policy.ts.
  */
 export type VerdictSummary = { word: Exclude<Outcome, 'RETAKE'>; line: string; rules: string[] };
+/**
+ * Listed CLEAN -> OKAY -> BAD, the order readers meet them on the homepage and the top of
+ * /how-it-works. Display order only: nothing in the rules engine reads this array, and the rule
+ * table on /how-it-works keeps its own evaluated order (RULES).
+ */
 export const VERDICTS: VerdictSummary[] = [
   {
-    word: 'BAD',
-    line: `Over ${G}\u00a0g added sugar, any artificial sweetener, or alcohol.`,
+    word: 'CLEAN',
+    line: "Nothing sweet added. Milk and fruit sugars don't count.",
     rules: [
-      `More than ${G}\u00a0g of added sugar per serving, under any name`,
-      "Added sugar whose grams per serving can't be read",
-      'Any artificial sweetener: sucralose, aspartame, acesulfame K and others',
-      'Drinking alcohol above 0.5% ABV',
+      'A complete ingredient list with nothing sweet added',
+      'Sugar that comes with milk or fruit is fine',
+      'Maltodextrin and starches are fine',
     ],
   },
   {
@@ -61,12 +65,13 @@ export const VERDICTS: VerdictSummary[] = [
     ],
   },
   {
-    word: 'CLEAN',
-    line: "Nothing sweet added. Milk and fruit sugars don't count.",
+    word: 'BAD',
+    line: `Over ${G}\u00a0g added sugar, any artificial sweetener, or alcohol over 0.5% ABV.`,
     rules: [
-      'A complete ingredient list with nothing sweet added',
-      'Sugar that comes with milk or fruit is fine',
-      'Maltodextrin and starches are fine',
+      `More than ${G}\u00a0g of added sugar per serving, under any name`,
+      "Added sugar whose grams per serving can't be read",
+      'Any artificial sweetener: sucralose, aspartame, acesulfame K and others',
+      'Drinking alcohol above 0.5% ABV',
     ],
   },
 ];

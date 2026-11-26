@@ -1,0 +1,159 @@
+/* Sugar paper design tokens — the single source of truth for the light look.
+   Imported once in src/layouts/Base.astro, after tokens.css so these win.
+
+   NOTE: src/styles/tokens.css is generated from brand/tokens.json by `npm run tokens`
+   and must not be hand-edited. This file is hand-written and sits alongside it. */
+
+:root {
+  /* ---------- surfaces and ink ---------- */
+  --paper: #f2f7f3; /* page background */
+  --surface: #ffffff; /* cards and raised panels */
+  --ink: #121614; /* primary text */
+  --muted: #4a5650; /* secondary text */
+  --line: rgba(18, 22, 20, 0.12); /* hairlines */
+  --accent: #13804b; /* brand green, links and emphasis */
+
+  /* ---------- the mint badge and the headline highlighter ---------- */
+  --badge-bg: #ddf3e6;
+  --badge-ink: #0f6b3e;
+  --highlight: #bdefd2;
+
+  /* ---------- verdict colours ----------
+     RULE: these three (and their -ink partners) are ONLY for verdicts. Never use red,
+     amber or green to mean anything else: not for "added sugar", not for errors, not
+     for emphasis. The pair exists so text can use the darker ink for contrast. */
+  --v-clean: #1c8e52;
+  --v-clean-ink: #17643e;
+  --v-okay: #c98e2a;
+  --v-okay-ink: #7a4e00;
+  --v-bad: #c93a31;
+  --v-bad-ink: #a3271e;
+
+  /* ---------- type ---------- */
+  --font-display: "Bricolage Grotesque Variable", system-ui, sans-serif;
+  --font-body: "Inter Variable", system-ui, sans-serif;
+  /* The wordmark keeps its original face: it is a logo, not body copy. */
+  --logo-font: "Sugar Depth Wordmark", "Libre Franklin", system-ui, sans-serif;
+
+  /* ---------- the one page container ----------
+     .wrap (header, footer, every section) and the hero's .paper-inner both read these, so no
+     section can drift out of alignment with another. */
+  --container-max: 1200px;
+  --container-pad: clamp(20px, 4vw, 40px);
+
+  /* ---------- rhythm (phone values; overridden at 1024px below) ---------- */
+  --section-y: 56px;
+  /* The space between two neighbouring sections that share the same background. One gap, not two:
+     the upper section's padding-block-end takes this and the lower one starts at 0. */
+  --section-join: 48px;
+  --gap: 10px;
+  --card-pad: 16px;
+  --radius: 18px;
+
+  /* ---------- the opening timeline ----------
+     ONE place for the whole intro: the splash's letter strikes, its flight, and the hero entrance
+     all read these. Seconds from the moment the splash starts. SugarSplash.astro applies them and
+     <html data-intro> carries the state (splash -> flight -> hero); no component keeps its own
+     timer for the handoff. */
+  --intro-strike-start: 0.3s; /* first letter lands */
+  --intro-strike-step: 0.11s; /* between letters */
+  --intro-hold-end: 2s; /* underline drawn, hold ends */
+  --intro-flight-start: 2s; /* wordmark flies to the header logo */
+  --intro-flight-end: 2.9s; /* and lands on it */
+  --intro-cover-end: 2.6s; /* the dark cover is fully gone */
+  --intro-hero-start: 2.6s; /* the hero entrance begins */
+  /* Offsets measured from --intro-hero-start. */
+  --intro-badge-delay: 0s; /* 2.60 */
+  --intro-line-1-delay: 0.08s; /* 2.68 */
+  --intro-line-2-delay: 0.16s; /* 2.76 */
+  --intro-line-3-delay: 0.24s; /* 2.84 */
+  --intro-line-dur: 0.6s;
+  --intro-mark-delay: 0.84s; /* 3.44, once line 3 has landed */
+  --intro-mark-dur: 0.35s;
+  --intro-sub-delay: 0.4s; /* 3.00 */
+  --intro-cta-delay: 0.5s; /* 3.10 */
+  --intro-cards-delay: 0.4s; /* 3.00 */
+  --intro-cards-dur: 0.8s;
+  --intro-cycle-delay: 1.2s; /* after the cards land (~4.8) */
+
+  /* ---------- the "return" entrance (every homepage load after the first in a session) ----------
+     No splash, just a short rolling-letters entrance. Measured from the first painted frame, so the
+     hero is hidden from frame one and never flashes its finished state. Same tokens file as the
+     splash timeline above: one place for both. */
+  --ret-badge-delay: 0.15s;
+  --ret-line-1-delay: 0.2s;
+  --ret-line-2-delay: 0.38s;
+  --ret-line-3-delay: 0.56s;
+  --ret-letter-dur: 0.5s; /* each letter's rise */
+  --ret-letter-step: 0.025s; /* stagger per letter within a line */
+  --ret-mark-dur: 0.35s;
+  /* Line 3 is "We read every one." — 15 letters, so its last letter starts at 0.56 + 14*0.025 and
+     lands 0.5s later. The sweep must not precede its words, so it is keyed to that, not to a round
+     number: 0.56 + 0.35 + 0.5 = 1.41s. */
+  --ret-mark-delay: 1.41s;
+  --ret-sub-delay: 0.7s;
+  --ret-cta-delay: 0.8s;
+  --ret-cards-delay: 0.7s;
+  --ret-cards-dur: 0.8s;
+  --ret-rise-dur: 0.45s;
+
+  /* ============================================================================
+     Legacy aliases. The rest of the site still reads the old --sd-* names, and
+     those must keep working while pages are migrated one at a time. These point
+     the old names at the new values rather than the reverse, so every page picks
+     up the new palette as soon as this file loads.
+
+     The verdict mapping is by MEANING, not by name: the old tokens used
+     --sd-clean / --sd-bad (amber!) / --sd-ugly for green / amber / red, which is
+     why --sd-bad maps to --v-okay and --sd-ugly maps to --v-bad.
+     ============================================================================ */
+  --sd-clean: var(--v-clean);
+  --sd-clean-ink: var(--v-clean-ink);
+  --sd-bad: var(--v-okay); /* amber, historically named "bad" */
+  --sd-bad-ink: var(--v-okay-ink);
+  --sd-ugly: var(--v-bad); /* red */
+  --sd-ugly-ink: var(--v-bad-ink);
+
+  /* Light surfaces were the "crystal paper" set. */
+  --sd-crystal-paper: var(--paper);
+  --sd-crystal-ink: var(--ink);
+  --sd-crystal-muted: var(--muted);
+  --sd-crystal-rule: var(--line);
+
+  /* The dark band tokens stay as they are until those sections are migrated;
+     they are deliberately NOT aliased to the light palette. */
+
+  /* Type families: every legacy name resolves to the two new families.
+     --sd-font-serif deliberately points at the BODY family: the new look has no italic serif,
+     so "voice" lines (.voice, .flip-hint, .expander-hint, .tile-reveal) inherit Inter instead.
+     Their font-style: italic is neutralised by the rule below. */
+  --sd-font-sans: var(--font-body);
+  --sd-font-serif: var(--font-body);
+}
+
+/* The old "voice" lines were italic Newsreader. In the new look they are Inter 500, muted, upright.
+   This covers every place that set font-style: italic against the serif var, without editing each
+   stylesheet (they are migrated one page at a time). */
+.voice,
+.flip-hint,
+.expander-hint,
+.crystal-signoff,
+.tiles .tile-reveal,
+.tiles:not([data-ready]) .tile-reveal {
+  font-family: var(--font-body);
+  font-style: normal;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* 1024px and up: looser rhythm, bigger radii. */
+@media (min-width: 1024px) {
+  :root {
+    --section-y: 96px;
+    /* The same-background join: 64px on laptops, matching the single gap a reader would expect. */
+    --section-join: 64px;
+    --gap: 16px;
+    --card-pad: 20px;
+    --radius: 22px;
+  }
+}

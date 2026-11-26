@@ -15,7 +15,7 @@
 .tryit-submit { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
 
 .tryit-samples legend,
-.tryit-form > label { padding: 0; margin-bottom: 12px; font-weight: 800; font-size: 1rem; }
+.tryit-form > label { padding: 0; margin-bottom: 12px; font-weight: 800; font-size: 1rem; min-height: 44px; display: flex; align-items: center; }
 .tryit-form > label { margin-bottom: 0; }
 .tryit-samples ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .tryit-samples li { position: relative; display: flex; }
@@ -36,7 +36,7 @@
   transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
 }
 .tryit-samples label b { font-weight: 800; }
-.tryit-samples label span { font-size: 0.875rem; color: var(--muted); }
+.tryit-samples label span { font-size: 1rem; color: var(--muted); }
 .tryit-samples label:hover { background: var(--glass); }
 .tryit-samples input:checked + label { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--sheet); }
 .tryit-samples input:focus-visible + label { outline: 2px solid var(--ink); outline-offset: 3px; }
@@ -56,13 +56,13 @@
 .tryit-form textarea { display: block; min-height: 6em; resize: vertical; }
 .tryit-form textarea::placeholder { color: var(--faint); opacity: 1; }
 .tryit-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.tryit-row label { font-size: 0.9375rem; color: var(--muted); }
+.tryit-row label { font-size: 1rem; color: var(--muted); }
 .tryit-row input { flex: 0 0 6.5em; width: 6.5em; min-height: 48px; }
 .tryit-form .btn { cursor: pointer; font-family: var(--sans); }
 .tryit-form .btn:disabled { opacity: 0.55; cursor: default; transform: none; }
 .tryit-error { margin: 0; font-weight: 700; color: var(--ugly); }
 .tryit-error:empty { display: none; }
-.tryit-fine { margin: 0; font-size: 0.875rem; color: var(--muted); }
+.tryit-fine { margin: 0; font-size: 1rem; color: var(--muted); }
 
 /* One panel shows at a time: the checked sample's, or your own list's. Works without JavaScript. */
 .tryit-static { display: none; }
@@ -80,6 +80,9 @@
 .tryit-facts .facts-word { margin: 0; }
 .tryit-facts .facts-why { margin-bottom: 8px; }
 .tryit-count { margin: 0 0 10px; font-size: 0.8125rem; font-weight: 700; color: var(--muted); }
+/* Ingredient chips: 12px floor for a small label, per the type scale. */
+.tryit-items .name { font-size: 1rem; }
+.tryit-items .tag { border: 0; padding: 0; font-size: 0.75rem; }
 .tryit-items { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .tryit-items li {
   display: inline-flex;
@@ -95,7 +98,7 @@
   color: var(--muted);
   overflow-wrap: anywhere;
 }
-.tryit-items .tag { border: 0; padding: 0; font-size: 0.6875rem; }
+.tryit-items .tag { border: 0; padding: 0; font-size: 0.75rem; }
 .tryit-items .within { font-size: 0.8125rem; font-weight: 400; color: var(--muted); }
 /* A class match is named; the ingredient that decided the verdict takes the verdict's color. */
 .tryit-items .hit { color: var(--ink); border-color: var(--rule); font-weight: 600; }
