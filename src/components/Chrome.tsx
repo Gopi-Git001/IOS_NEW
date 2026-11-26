@@ -1,12 +1,13 @@
 // Shared screen chrome: the top header, the profile button, the photo fades and the disclaimer footer.
 import { LinearGradient } from 'expo-linear-gradient';
 import { Menu, User } from 'lucide-react-native';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { memo, type ReactNode, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, type DimensionValue, Easing, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Defs, Pattern, Rect } from 'react-native-svg';
 import { useProfile } from '../lib/account';
 import { initials } from '../lib/display';
 import type { Verdict } from '../types';
-import { ambient, brand, colors, fonts } from '../theme';
+import { ambient, brand, colors, fonts, mint } from '../theme';
 import { Glass } from './Glass';
 
 export type Sheet = 'profile' | 'menu';
@@ -172,6 +173,30 @@ export function Ambient() {
   );
 }
 
+/**
+ * Website Mint backdrop for the sign-in screen only: mint paper, a 1 px grid every 40 px,
+ * a fade that hides the grid at the top and bottom, and a soft glow across the top 120 px.
+ * Fully static. Camera, result, profile and menu keep Ambient.
+ */
+export const PaperGrid = memo(function PaperGrid() {
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: mint.paper }]} />
+      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+        <Defs>
+          <Pattern id="sdGrid" x={0} y={0} width={40} height={40} patternUnits="userSpaceOnUse">
+            <Rect x={0} y={0} width={1} height={40} fill={mint.grid} />
+            <Rect x={0} y={0} width={40} height={1} fill={mint.grid} />
+          </Pattern>
+        </Defs>
+        <Rect x={0} y={0} width="100%" height="100%" fill="url(#sdGrid)" />
+      </Svg>
+      <LinearGradient colors={[mint.paper, mint.paperFade, mint.paper]} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={[mint.glow, mint.glow, mint.glowClear]} locations={[0, 0.45, 1]} style={styles.mintGlow} />
+    </View>
+  );
+});
+
 export function Footer({ ink }: { ink?: boolean }) {
   return <Text style={[styles.footer, ink && { color: colors.inkFaint }]}>Not medical advice · Doesn't check allergens</Text>;
 }
@@ -217,6 +242,7 @@ const styles = StyleSheet.create({
   glowTeal: { width: 360, height: 360, top: -90, left: -120, backgroundColor: ambient.glowTeal },
   glowIndigo: { width: 420, height: 420, top: '38%', right: -200, backgroundColor: ambient.glowIndigo },
   glowAmber: { width: 300, height: 300, bottom: -110, left: -60, backgroundColor: ambient.glowAmber },
+  mintGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 120 },
   taglineInk: { color: colors.inkMuted, textShadowColor: 'transparent', textShadowRadius: 0, marginTop: 0 },
   tagline: {
     fontFamily: fonts.serifMedium,

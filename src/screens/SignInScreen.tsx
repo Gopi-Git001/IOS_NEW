@@ -1,13 +1,12 @@
-import { type ComponentRef, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { CharacterView, MASCOT_FEET_RATIO } from '../components/Character';
-import { Ambient, Footer, useReducedMotion } from '../components/Chrome';
+import { Footer, PaperGrid, useReducedMotion } from '../components/Chrome';
 import { SmallMascot, smallMascotBox, WIDE_FROM } from '../components/SmallMascot';
-import { CrystalSwarm } from '../components/CrystalSwarm';
 import { signInWithGoogle, takeAuthRedirectError } from '../lib/api';
-import { colors, fonts, frost } from '../theme';
+import { colors, fonts, frost, mint } from '../theme';
 
 // Option A layout (docs/design/signin-option-a-*.png). Wide = laptop, narrow = phones and tablets.
 // Where the big name sits (unchanged from the first Option A build): its letters end NAME_GAP above
@@ -21,8 +20,6 @@ const MASCOT_BOX_ASPECT = 0.71;
 const MASCOT_GAP = 16;
 const FOOTER_GAP = 24;
 const MIN_CUBE = 60;
-// Width of the block the crystal swarm circles (main's single sign-in column).
-const CONTENT_MAX = 440;
 
 /** Where the big name sits and how it is set. The mascot, button and note are placed later, under the measured name. */
 function layout(width: number, height: number, topInset: number) {
@@ -77,11 +74,6 @@ function group(nameBottom: number, maxCube: number, slotHeight: number, footerTo
 export function SignInScreen({ onBack }: { onBack?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // The crystal swarm (web) circles the mascot column and keeps sharp crystals off the name, the button block and the footer.
-  const content = useRef<ComponentRef<typeof View>>(null);
-  const nameRef = useRef<ComponentRef<typeof View>>(null);
-  const slotRef = useRef<ComponentRef<typeof View>>(null);
-  const footerRef = useRef<ComponentRef<typeof View>>(null);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
@@ -114,14 +106,7 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
 
   return (
     <View style={styles.root}>
-      <Ambient />
-      {/* Behind everything else on the screen, above the glows; never takes a tap. */}
-      <CrystalSwarm around={content} quiet={[nameRef, slotRef, footerRef]} />
-      <View
-        ref={content}
-        pointerEvents="none"
-        style={[styles.content, { top: nameTop, height: Math.max(0, G.buttonTop + slotHeight - nameTop), width: Math.min(CONTENT_MAX, width - 2 * L.side), left: (width - Math.min(CONTENT_MAX, width - 2 * L.side)) / 2 }]}
-      />
+      <PaperGrid />
       <Text accessibilityRole="header" style={styles.srOnly}>
         Sugar Depth sign in
       </Text>
@@ -129,7 +114,6 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
       <SmallMascot still={reduced} />
 
       <View
-        ref={nameRef}
         testID="signin-name"
         aria-hidden
         pointerEvents="none"
@@ -148,7 +132,6 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
       </View>
 
       <View
-        ref={slotRef}
         onLayout={(e) => setSlotHeight(e.nativeEvent.layout.height)}
         style={[styles.buttonSlot, { top: G.buttonTop, left: L.side, right: L.side }, !ready && styles.hidden]}
       >
@@ -171,7 +154,7 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
         <CharacterView mood="idle" size={G.cubeSize} motion={reduced ? 'still' : 'planted'} shadow={false} />
       </View>
 
-      <View ref={footerRef} onLayout={(e) => setFooterTop(e.nativeEvent.layout.y)} style={[styles.footer, { paddingBottom: insets.bottom }]}>
+      <View onLayout={(e) => setFooterTop(e.nativeEvent.layout.y)} style={[styles.footer, { paddingBottom: insets.bottom }]}>
         <Footer ink />
       </View>
     </View>
@@ -213,8 +196,8 @@ export function GoogleButton({ onPress, busy, height }: { onPress: () => void; b
 }
 
 const styles = StyleSheet.create({
-  // Clip the ambient glows (they hang past the edges) so the page never scrolls.
-  root: { flex: 1, backgroundColor: colors.paper, overflow: 'hidden' },
+  // Mint paper fills the screen. PaperGrid draws the grid, fade and glow inside it, and nothing scrolls.
+  root: { flex: 1, backgroundColor: mint.paper, overflow: 'hidden' },
   srOnly: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
   // See-through wordmark: the app's heavy Libre Franklin at 800, 20% of the paper white.
   nameGroup: { position: 'absolute', left: 0, right: 0 },
@@ -241,7 +224,6 @@ const styles = StyleSheet.create({
   buttonText: { fontFamily: fonts.bold, fontSize: 18, color: colors.onInk },
   error: { fontFamily: fonts.semibold, fontSize: 14, color: colors.bad, textAlign: 'center', marginTop: 8 },
   buttonStandard: { height: 58, borderRadius: 29, marginTop: 4 },
-  content: { position: 'absolute' }, // invisible: the block the crystal swarm circles
   back: { alignSelf: 'center', marginTop: 12, padding: 4 },
   link: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },
 });

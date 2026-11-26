@@ -22,6 +22,19 @@ export const crystal = {
   BAD: { tint: colors.bad, deep: colors.uglyInk },
 };
 
+// Website Mint, shared with the marketing site's design tokens. Sign-in uses the paper group;
+// later screens use the ink, pill and verdict pairs.
+export const mint = {
+  paper: colors.mintPaper, paperFade: colors.mintPaperFade, glow: colors.mintGlow, glowClear: colors.mintGlowClear, grid: colors.mintGrid,
+  surface: colors.mintSurface, border: colors.mintBorder,
+  ink: colors.mintInk, muted: colors.mintMuted, onInk: colors.mintOnInk,
+  highlight: colors.mintHighlight, pill: colors.mintPill, pillInk: colors.mintPillInk, pillDot: colors.mintPillDot,
+  danger: colors.mintDanger,
+  CLEAN: { tint: colors.mintClean, deep: colors.mintCleanInk },
+  OKAY: { tint: colors.mintOkay, deep: colors.mintOkayInk },
+  BAD: { tint: colors.mintBad, deep: colors.mintBadInk },
+};
+
 export const fonts = {
   regular: 'LibreFranklin_400Regular',
   medium: 'LibreFranklin_500Medium',
