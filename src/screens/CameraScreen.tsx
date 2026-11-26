@@ -14,7 +14,7 @@ import { Glass } from '../components/Glass';
 import { FlashIcon } from '../components/Icons';
 import { LabelCamera } from '../components/LabelCamera';
 import { SmallMascot, useSmallMascotClearance } from '../components/SmallMascot';
-import { brand, colors, fonts } from '../theme';
+import { brand, colors, fonts, mint } from '../theme';
 import { freeScansLabel } from '../lib/guestTrial';
 import { autoCaptureOn } from '../lib/autoCaptureGate';
 
@@ -115,7 +115,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
         autoCapture={autoCaptureOn({ pref: prefs.autoCapture, scansLeft: !onSignIn || (freeScans ?? 0) > 0, active, busy, ready })}
         onAutoCapture={shoot}
       />
-      <Scrims />
+      <Scrims bottom="mint" />
 
       <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
         <Header
@@ -124,6 +124,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
           start={mascotClearance}
           right={
             <ProfileButton
+              tone="mint"
               onOpen={onOpenSheet}
               leading={
                 torchSupported ? (
@@ -134,7 +135,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
                     accessibilityLabel={torch ? 'Turn flash off' : 'Turn flash on'}
                     style={[styles.flash, torch && styles.flashOn]}
                   >
-                    <FlashIcon on={torch} size={20} color={torch ? '#FFD24A' : '#FFFFFF'} />
+                    <FlashIcon on={torch} size={20} color={torch ? mint.OKAY.deep : mint.ink} />
                   </Pressable>
                 ) : undefined
               }
@@ -143,26 +144,31 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
         />
 
         <View style={styles.middle} pointerEvents="none">
-          {/* The scan frame borrows the Nutrition Facts panel: heavy top bar, hairline sides, a medium base rule. */}
+          {/* Website Mint scan frame: four white corner brackets, with a mint section pill naming it above. */}
           <View ref={frame} onLayout={measureBox} style={styles.frame}>
-            <View style={styles.frameTop} />
-            <Text style={styles.frameLabel}>Ingredients</Text>
-            <View style={styles.frameBase} />
+            <View style={styles.frameLabel}>
+              <View style={styles.frameDot} />
+              <Text style={styles.frameLabelText}>Ingredients</Text>
+            </View>
+            <View style={[styles.corner, styles.cornerTL]} />
+            <View style={[styles.corner, styles.cornerTR]} />
+            <View style={[styles.corner, styles.cornerBL]} />
+            <View style={[styles.corner, styles.cornerBR]} />
           </View>
-          <Glass style={styles.hint}>
+          <View style={styles.hint}>
             <Text style={styles.hintText}>{noFlash ? NO_FLASH : prefs.autoCapture && Platform.OS === 'web' ? 'Fit the ingredients · Hold steady' : HINT}</Text>
-          </Glass>
+          </View>
         </View>
 
         <View style={styles.bottom}>
-          {freeScans !== undefined && <Glass style={styles.trial}>
+          {freeScans !== undefined && <View style={styles.trial}>
             <Text style={styles.hintText}>{freeScansLabel(freeScans)}</Text>
             <Pressable onPress={onSignIn} accessibilityRole="button" hitSlop={8}>
               <Text style={styles.trialLink}>Sign in</Text>
             </Pressable>
-          </Glass>}
+          </View>}
           <Shutter onPress={shoot} disabled={!(ready || testPhotoEnabled) || busy} busy={busy} />
-          <Footer />
+          <Footer ink />
         </View>
       </SafeAreaView>
       {/* A still frame, so nothing animates over the live camera. */}
@@ -171,7 +177,7 @@ export function CameraScreen({ active, onCapture, onOpenSheet, tagline, freeScan
   );
 }
 
-/** iOS-style shutter: a glass ring around a white disc that springs down when pressed. */
+/** iOS-style shutter: a glass ring with a white rim around a white disc that springs down when pressed. */
 function Shutter({ onPress, disabled, busy }: { onPress: () => void; disabled: boolean; busy: boolean }) {
   const scale = useRef(new Animated.Value(1)).current;
   const spring = (toValue: number) => Animated.spring(scale, { toValue, friction: 5, tension: 260, useNativeDriver: true }).start();
@@ -197,31 +203,45 @@ const styles = StyleSheet.create({
   // Sits on top of the live camera, so it must stay see-through.
   overlay: { flex: 1 },
   middle: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 40 },
-  frame: { width: '80%', maxWidth: 520, aspectRatio: 1.3, borderWidth: 1, borderColor: 'rgba(255,255,255,0.92)' },
-  frameTop: { position: 'absolute', left: -1, right: -1, top: -1, height: 10, backgroundColor: '#FFFFFF' },
-  frameBase: { position: 'absolute', left: -1, right: -1, bottom: -1, height: 5, backgroundColor: '#FFFFFF' },
+  frame: { width: '80%', maxWidth: 520, aspectRatio: 1.3 },
+  corner: { position: 'absolute', width: 34, height: 34, borderColor: mint.surface },
+  cornerTL: { left: -2, top: -2, borderLeftWidth: 4, borderTopWidth: 4, borderTopLeftRadius: 14 },
+  cornerTR: { right: -2, top: -2, borderRightWidth: 4, borderTopWidth: 4, borderTopRightRadius: 14 },
+  cornerBL: { left: -2, bottom: -2, borderLeftWidth: 4, borderBottomWidth: 4, borderBottomLeftRadius: 14 },
+  cornerBR: { right: -2, bottom: -2, borderRightWidth: 4, borderBottomWidth: 4, borderBottomRightRadius: 14 },
   frameLabel: {
     position: 'absolute',
-    left: 10,
-    top: 16,
-    fontFamily: fonts.black,
-    fontSize: 20,
-    letterSpacing: -0.4,
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    left: 0,
+    top: -40,
+    height: 28,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: mint.pill,
   },
-  hint: { marginTop: 18, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9 },
-  hintText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.text },
+  frameDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: mint.pillDot },
+  frameLabelText: { fontFamily: fonts.extrabold, fontSize: 12, letterSpacing: 1.3, textTransform: 'uppercase', color: mint.pillInk },
+  hint: {
+    marginTop: 28,
+    height: 44,
+    borderRadius: 22,
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+    backgroundColor: mint.surface,
+    borderWidth: 1,
+    borderColor: mint.border,
+  },
+  hintText: { fontFamily: fonts.semibold, fontSize: 15, color: mint.ink },
   flash: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  flashOn: { backgroundColor: 'rgba(251,191,36,0.22)' },
+  flashOn: { backgroundColor: mint.highlight },
   bottom: { alignItems: 'center', paddingTop: 8 },
-  trial: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, marginBottom: 12 },
-  trialLink: { fontFamily: fonts.bold, fontSize: 14, color: colors.text, textDecorationLine: 'underline' },
+  trial: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, marginBottom: 12, backgroundColor: mint.surface, borderWidth: 1, borderColor: mint.border },
+  trialLink: { fontFamily: fonts.bold, fontSize: 14, color: mint.ink, textDecorationLine: 'underline' },
   shutterSlot: { marginBottom: 10 },
-  shutter: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center' },
-  shutterInner: { width: 66, height: 66, borderRadius: 33, backgroundColor: '#FFFFFF' },
+  shutter: { width: 86, height: 86, borderRadius: 43, alignItems: 'center', justifyContent: 'center', backgroundColor: mint.shutterRing, borderWidth: 3, borderColor: mint.surface },
+  shutterInner: { width: 66, height: 66, borderRadius: 33, backgroundColor: mint.surface },
   shutterBusy: { opacity: 0.55 },
   permission: { alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12, backgroundColor: colors.paper },
   permissionTitle: { fontFamily: fonts.black, fontSize: 30, letterSpacing: -1, color: colors.ink },

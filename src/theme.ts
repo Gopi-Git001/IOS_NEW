@@ -22,8 +22,8 @@ export const crystal = {
   BAD: { tint: colors.bad, deep: colors.uglyInk },
 };
 
-// Website Mint, shared with the marketing site's design tokens. Sign-in, Menu and Profile use it;
-// camera and result keep the dark glass for now.
+// Website Mint, shared with the marketing site's design tokens. Sign-in, Menu, Profile, the camera chrome
+// and the result sheet use it.
 export const mint = {
   paper: colors.mintPaper, paperFade: colors.mintPaperFade, glow: colors.mintGlow, glowClear: colors.mintGlowClear, grid: colors.mintGrid,
   surface: colors.mintSurface, border: colors.mintBorder,
@@ -32,6 +32,11 @@ export const mint = {
   danger: colors.mintDanger,
   chipBorder: colors.mintChipBorder, shadow: colors.mintShadow, pressed: colors.mintPressed,
   toggleOn: colors.mintInk, toggleOff: colors.mintToggleOff, toggleOffBorder: colors.mintToggleOffBorder, thumb: colors.mintSurface, thumbShadow: colors.mintToggleThumbShadow,
+  paperClear: colors.mintPaperClear, photoFadeMid: colors.mintPhotoFadeMid, photoFadeEnd: colors.mintPhotoFadeEnd,
+  shadowStrong: colors.mintShadowStrong, cubeShadow: colors.mintCubeShadow, shutterRing: colors.mintShutterRing,
+  sheen: colors.mintSheen, sheenSoft: colors.mintSheenSoft, sheenClear: colors.mintSheenClear, rim: colors.mintRim,
+  // The No verdict slab: the toggle greys, so it reads as "nothing decided".
+  NONE: { tint: colors.mintToggleOff, deep: colors.mintToggleOffBorder },
   CLEAN: { tint: colors.mintClean, deep: colors.mintCleanInk },
   OKAY: { tint: colors.mintOkay, deep: colors.mintOkayInk },
   BAD: { tint: colors.mintBad, deep: colors.mintBadInk },

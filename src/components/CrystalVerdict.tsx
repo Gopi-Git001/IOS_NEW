@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useId, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient as SvgGradient, Stop, Text as SvgText } from 'react-native-svg';
-import { crystal, fonts } from '../theme';
+import { crystal, fonts, mint } from '../theme';
 import type { Verdict } from '../types';
 
 /** A shared accessibility preference, with cleanup on native and web. */
@@ -15,6 +15,47 @@ export function useCrystalReducedMotion() {
     return () => { mounted = false; subscription.remove(); };
   }, []);
   return reduced;
+}
+
+/**
+ * The Reduce Motion setting, or null until it has been read. Entrance animations wait for it, so they neither
+ * play for someone who turned motion off nor get skipped because the first render assumed it was off.
+ */
+export function useReducedMotionSetting() {
+  const [reduced, setReduced] = useState<boolean | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled().then(value => { if (mounted) setReduced(value); }).catch(() => { if (mounted) setReduced(false); });
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduced);
+    return () => { mounted = false; subscription.remove(); };
+  }, []);
+  return reduced;
+}
+
+/** Website Mint slab: a verdict-colour glass card ("VERDICT" + word), grey with "LABEL" and a dash when there's no verdict. */
+export function MintSlab({ verdict }: { verdict: Verdict | null }) {
+  const material = verdict ? mint[verdict] : mint.NONE;
+  const ink = verdict ? mint.onInk : mint.ink;
+  return (
+    <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.mintSlab}>
+      <View style={styles.mintSlabFace}>
+        <LinearGradient colors={[material.tint, material.deep]} start={{ x: 0, y: 0 }} end={{ x: .65, y: 1 }} style={StyleSheet.absoluteFill} />
+        <LinearGradient pointerEvents="none" colors={[mint.sheen, mint.sheenClear, mint.sheenSoft, mint.sheenClear]} locations={[0, .4, .55, .7]} start={{ x: 0, y: 0 }} end={{ x: .6, y: 1 }} style={StyleSheet.absoluteFill} />
+        <Text style={[styles.mintSlabLabel, { color: ink }]}>{verdict ? 'VERDICT' : 'LABEL'}</Text>
+        <Text style={[styles.mintSlabWord, { color: ink }]} numberOfLines={1} adjustsFontSizeToFit>{verdict ?? '—'}</Text>
+      </View>
+    </View>
+  );
+}
+
+/** Website Mint verdict hero: the verdict word in heavy ink beside the coloured slab. */
+export function MintVerdict({ verdict }: { verdict: Verdict }) {
+  return (
+    <View style={styles.mintHero} accessible accessibilityRole="header" accessibilityLabel={verdict}>
+      <Text style={styles.mintWord} numberOfLines={1} adjustsFontSizeToFit>{verdict}</Text>
+      <MintSlab verdict={verdict} />
+    </View>
+  );
 }
 
 /** A thick rectangular glass sheet, never a faceted gem. Works without web CSS. */
@@ -79,6 +120,21 @@ export function CrystalVerdict({ verdict }: { verdict: Verdict }) {
 }
 
 const styles = StyleSheet.create({
+  mintHero: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, minHeight: 124, marginTop: 2, marginBottom: 8 },
+  mintWord: { flex: 1, fontFamily: fonts.black, fontSize: 56, lineHeight: 70, letterSpacing: -2.2, color: mint.ink },
+  mintSlab: { width: 94, height: 120, borderRadius: 14, boxShadow: `0px 8px 18px ${mint.shadowStrong}` },
+  mintSlabFace: {
+    flex: 1,
+    borderRadius: 14,
+    overflow: 'hidden',
+    paddingHorizontal: 9,
+    paddingVertical: 9,
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: mint.rim,
+  },
+  mintSlabLabel: { fontFamily: fonts.extrabold, fontSize: 9.5, letterSpacing: 1.4 },
+  mintSlabWord: { fontFamily: fonts.black, fontSize: 19, letterSpacing: -0.6 },
   hero: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, marginBottom: 8, minHeight: 146 },
   type: { flex: 1, height: 138, overflow: 'hidden', justifyContent: 'center', paddingRight: 16 },
   sweep: { position: 'absolute', width: 30, top: 18, height: 78 },

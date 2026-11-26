@@ -13,22 +13,29 @@ import { Glass } from './Glass';
 export type Sheet = 'profile' | 'menu';
 
 /**
- * Top-right glass capsule: optional extra controls (the flash), the avatar (opens Profile) and ☰ (opens the Menu).
- * Shows the user's initials when they have a name.
+ * Top-right capsule: optional extra controls (the flash), the avatar (opens Profile) and ☰ (opens the Menu).
+ * Shows the user's initials when they have a name. `tone="mint"` is the Website Mint pill (white, ink icons,
+ * mint avatar) used on the camera and result screens; the default is the dark glass capsule.
  */
-export function ProfileButton({ onOpen, leading }: { onOpen: (sheet: Sheet) => void; leading?: ReactNode }) {
+export function ProfileButton({ onOpen, leading, tone = 'glass' }: { onOpen: (sheet: Sheet) => void; leading?: ReactNode; tone?: 'glass' | 'mint' }) {
   const letters = initials(useProfile().displayName);
-  return (
-    <Glass style={styles.profile}>
+  const isMint = tone === 'mint';
+  const iconColor = isMint ? mint.ink : colors.text;
+  const children = (
+    <>
       {leading}
       <Pressable
         onPress={() => onOpen('profile')}
         hitSlop={{ top: 6, bottom: 6, left: 6, right: 2 }}
         accessibilityRole="button"
         accessibilityLabel="Profile"
-        style={({ pressed }) => [styles.avatar, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.avatar, isMint && styles.avatarMint, pressed && styles.pressed]}
       >
-        {letters ? <Text style={styles.avatarText}>{letters}</Text> : <User size={16} color={colors.text} strokeWidth={2.25} />}
+        {letters ? (
+          <Text style={[styles.avatarText, isMint && styles.avatarTextMint]}>{letters}</Text>
+        ) : (
+          <User size={16} color={isMint ? mint.pillInk : colors.text} strokeWidth={2.25} />
+        )}
       </Pressable>
       <Pressable
         onPress={() => onOpen('menu')}
@@ -37,10 +44,12 @@ export function ProfileButton({ onOpen, leading }: { onOpen: (sheet: Sheet) => v
         accessibilityLabel="Menu"
         style={({ pressed }) => [styles.menu, pressed && styles.pressed]}
       >
-        <Menu size={20} color={colors.text} strokeWidth={2.25} />
+        <Menu size={20} color={iconColor} strokeWidth={2.25} />
       </Pressable>
-    </Glass>
+    </>
   );
+  if (isMint) return <View style={[styles.profile, styles.profileMint]}>{children}</View>;
+  return <Glass style={styles.profile}>{children}</Glass>;
 }
 
 const ICON = require('../../assets/brand-icon.png');
@@ -201,8 +210,11 @@ export function Footer({ ink }: { ink?: boolean }) {
   return <Text style={[styles.footer, ink && { color: mint.muted }]}>Not medical advice · Doesn't check allergens</Text>;
 }
 
-/** Dark gradients at the top and bottom so white text stays readable over any photo. */
-export function Scrims({ topHeight = 170 }: { topHeight?: DimensionValue }) {
+/**
+ * Gradients at the top and bottom so text stays readable over any photo. The top is always dark (white status bar
+ * and header); `bottom` is the dark fade (default), a Website Mint paper fade behind ink text, or nothing.
+ */
+export function Scrims({ topHeight = 170, bottom = 'dark' }: { topHeight?: DimensionValue; bottom?: 'dark' | 'mint' | 'none' }) {
   return (
     <>
       <LinearGradient
@@ -210,11 +222,21 @@ export function Scrims({ topHeight = 170 }: { topHeight?: DimensionValue }) {
         colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0)']}
         style={[styles.scrim, { top: 0, height: topHeight }]}
       />
-      <LinearGradient
-        pointerEvents="none"
-        colors={['rgba(11,11,15,0)', 'rgba(11,11,15,0.92)']}
-        style={[styles.scrim, { bottom: 0, height: 260 }]}
-      />
+      {bottom === 'dark' && (
+        <LinearGradient
+          pointerEvents="none"
+          colors={['rgba(11,11,15,0)', 'rgba(11,11,15,0.92)']}
+          style={[styles.scrim, { bottom: 0, height: 260 }]}
+        />
+      )}
+      {bottom === 'mint' && (
+        <LinearGradient
+          pointerEvents="none"
+          colors={[mint.paperClear, mint.paperFade, mint.paper]}
+          locations={[0, 0.5, 1]}
+          style={[styles.scrim, { bottom: 0, height: 200 }]}
+        />
+      )}
     </>
   );
 }
@@ -273,6 +295,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: { fontFamily: fonts.bold, fontSize: 12, color: colors.text },
+  profileMint: { backgroundColor: mint.surface, borderWidth: 1, borderColor: mint.border, boxShadow: `0px 4px 14px ${mint.shadowStrong}` },
+  avatarMint: { backgroundColor: mint.pill },
+  avatarTextMint: { color: mint.pillInk },
   pressed: { opacity: 0.7 },
   footer: {
     fontFamily: fonts.medium,

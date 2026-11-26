@@ -52,6 +52,16 @@
   --sd-mint-toggle-off: #D3D9D5;
   --sd-mint-toggle-off-border: #7C8580;
   --sd-mint-toggle-thumb-shadow: rgba(0,0,0,0.18);
+  --sd-mint-paper-clear: rgba(242,247,243,0);
+  --sd-mint-photo-fade-mid: rgba(242,247,243,0.44);
+  --sd-mint-photo-fade-end: rgba(242,247,243,0.92);
+  --sd-mint-shadow-strong: rgba(18,22,20,0.10);
+  --sd-mint-cube-shadow: rgba(18,22,20,0.16);
+  --sd-mint-shutter-ring: rgba(255,255,255,0.35);
+  --sd-mint-sheen: rgba(255,255,255,0.38);
+  --sd-mint-sheen-soft: rgba(255,255,255,0.12);
+  --sd-mint-sheen-clear: rgba(255,255,255,0);
+  --sd-mint-rim: rgba(255,255,255,0.5);
   --sd-ambient-0: #0B1220;
   --sd-ambient-1: #06080D;
   --sd-ambient-2: #0A0B12;
