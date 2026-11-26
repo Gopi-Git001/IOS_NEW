@@ -320,11 +320,15 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
         style={[styles.buttonSlot, { top: G.buttonTop, left: L.side, right: L.side }, !ready && styles.hidden]}
       >
         <Animated.View style={{ opacity: v.button, transform: [{ translateY: v.button.interpolate({ inputRange: [0, 1], outputRange: [80, 0] }) }] }}>
-          <GoogleButton onPress={start} busy={busy} height={L.buttonHeight} />
+          <GoogleButton variant="ink" onPress={start} busy={busy} height={L.buttonHeight} />
         </Animated.View>
         <Animated.View style={{ opacity: v.rest }}>
           <Text style={[styles.fineprint, { marginTop: L.finePrintGap }]}>We only get your name and email from Google.</Text>
-          {error && <Text style={styles.error}>{error}</Text>}
+          {error && (
+            <Text accessibilityRole="alert" style={styles.error}>
+              {error}
+            </Text>
+          )}
           {onBack && (
             <Pressable onPress={onBack} accessibilityRole="button" style={styles.back}>
               <Text style={styles.link}>Back to camera</Text>
@@ -384,23 +388,37 @@ function GoogleMark() {
   );
 }
 
-/** Also used by the guest scan prompt, which leaves out `height` and gets the standard 58 px button. */
-export function GoogleButton({ onPress, busy, height }: { onPress: () => void; busy: boolean; height?: number }) {
+/**
+ * Also used by the guest scan prompt, which leaves out `height` and gets the standard 58 px button.
+ * `glass` (default) is the frosted pill on the dark camera modal; `ink` is the solid black pill on the mint sign-in screen.
+ */
+export function GoogleButton({
+  onPress,
+  busy,
+  height,
+  variant = 'glass',
+}: {
+  onPress: () => void;
+  busy: boolean;
+  height?: number;
+  variant?: 'glass' | 'ink';
+}) {
   const size = height ? { height, borderRadius: height / 2 } : styles.buttonStandard;
+  const ink = variant === 'ink';
   return (
     <Pressable
       onPress={onPress}
       disabled={busy}
       accessibilityRole="button"
       accessibilityLabel="Continue with Google"
-      style={({ pressed }) => [styles.button, size, busy && styles.buttonDisabled, pressed && styles.buttonPressed]}
+      style={({ pressed }) => [styles.button, ink ? styles.buttonInk : styles.buttonGlass, size, busy && styles.buttonDisabled, pressed && styles.buttonPressed]}
     >
       {busy ? (
-        <ActivityIndicator color={colors.onInk} />
+        <ActivityIndicator color={ink ? mint.onInk : colors.onInk} />
       ) : (
         <View style={styles.buttonRow}>
           <GoogleMark />
-          <Text style={styles.buttonText}>Continue with Google</Text>
+          <Text style={[styles.buttonText, ink && styles.buttonTextInk]}>Continue with Google</Text>
         </View>
       )}
     </Pressable>
@@ -411,33 +429,31 @@ const styles = StyleSheet.create({
   // Mint paper fills the screen. PaperGrid draws the grid, fade and glow inside it, and nothing scrolls.
   root: { flex: 1, backgroundColor: mint.paper, overflow: 'hidden' },
   srOnly: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
-  // See-through wordmark: the app's heavy Libre Franklin at 800, 20% of the paper white.
+  // Ink wordmark: the app's heavy Libre Franklin at 800, with a mint highlighter band behind each word.
   nameGroup: { position: 'absolute', left: 0, right: 0 },
   line: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start' },
   word: { position: 'relative', flexDirection: 'row', alignItems: 'flex-start' },
   name: {
     textAlign: 'center',
     fontFamily: fonts.extrabold,
-    color: 'rgba(244,241,234,0.2)',
+    color: mint.ink,
     includeFontPadding: false, // Android: the line is exactly ascent + descent, like iOS and the web
   },
   hidden: { opacity: 0 }, // until the name, button block and footer have been measured
   buttonSlot: { position: 'absolute', zIndex: 1 },
   bigMascot: { position: 'absolute', zIndex: 2 },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0 },
-  button: {
-    backgroundColor: 'rgba(244,246,251,0.92)',
-    ...frost(16),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  button: { alignItems: 'center', justifyContent: 'center' },
+  buttonGlass: { backgroundColor: 'rgba(244,246,251,0.92)', ...frost(16) },
+  buttonInk: { backgroundColor: mint.ink },
   buttonDisabled: { opacity: 0.35 },
   buttonPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   buttonRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  fineprint: { fontFamily: fonts.semibold, fontSize: 13, color: colors.inkMuted, textAlign: 'center' },
+  fineprint: { fontFamily: fonts.semibold, fontSize: 13, color: mint.muted, textAlign: 'center' },
   buttonText: { fontFamily: fonts.bold, fontSize: 18, color: colors.onInk },
-  error: { fontFamily: fonts.semibold, fontSize: 14, color: colors.bad, textAlign: 'center', marginTop: 8 },
+  buttonTextInk: { color: mint.onInk },
+  error: { fontFamily: fonts.semibold, fontSize: 14, color: mint.danger, textAlign: 'center', marginTop: 8 },
   buttonStandard: { height: 58, borderRadius: 29, marginTop: 4 },
   back: { alignSelf: 'center', marginTop: 12, padding: 4 },
-  link: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },
+  link: { fontFamily: fonts.bold, fontSize: 15, color: mint.ink, textDecorationLine: 'underline' },
 });

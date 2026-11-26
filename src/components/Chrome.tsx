@@ -198,7 +198,7 @@ export const PaperGrid = memo(function PaperGrid() {
 });
 
 export function Footer({ ink }: { ink?: boolean }) {
-  return <Text style={[styles.footer, ink && { color: colors.inkFaint }]}>Not medical advice · Doesn't check allergens</Text>;
+  return <Text style={[styles.footer, ink && { color: mint.muted }]}>Not medical advice · Doesn't check allergens</Text>;
 }
 
 /** Dark gradients at the top and bottom so white text stays readable over any photo. */
