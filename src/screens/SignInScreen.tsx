@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Easing, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { CharacterView, MASCOT_FEET_RATIO } from '../components/Character';
@@ -7,6 +7,73 @@ import { Footer, PaperGrid, useReducedMotion } from '../components/Chrome';
 import { SmallMascot, smallMascotBox, WIDE_FROM } from '../components/SmallMascot';
 import { signInWithGoogle, takeAuthRedirectError } from '../lib/api';
 import { colors, fonts, frost, mint } from '../theme';
+
+// One-time sign-in intro. t = 0 is the moment `ready` becomes true, not mount. SPEED scales every delay and duration.
+const INTRO = {
+  SPEED: 1,
+  buttonMs: 350,
+  hopDelay: 350,
+  hopRise: 302,
+  hopFall: 248,
+  letterStart: 700,
+  letterStagger: 40,
+  letterDrop: 176,
+  letterRebound: 74,
+  letterSettle: 70,
+  letters: 10,
+  squashDelay: 900,
+  squashA: 105,
+  squashB: 105,
+  squashC: 90,
+  restDelay: 1150,
+  fadeMs: 200,
+  hlStart: [1150, 1250],
+  hlMs: 350,
+  footerDelay: 1200,
+  plantedAt: 1200,
+  smallDelay: 1250,
+};
+
+const introMs = (n: number) => n * INTRO.SPEED;
+const easeOut = Easing.bezier(0.22, 1, 0.36, 1);
+const easeHop = Easing.bezier(0.3, 0.6, 0.5, 1);
+const easeLetter = Easing.bezier(0.5, 0, 0.5, 1);
+const easeSoft = Easing.out(Easing.ease);
+
+const letterDrop = (p: Animated.Value, delay: number) =>
+  Animated.sequence([
+    Animated.delay(introMs(delay)),
+    Animated.timing(p, { toValue: 0.55, duration: introMs(INTRO.letterDrop), easing: easeLetter, useNativeDriver: true }),
+    Animated.timing(p, { toValue: 0.78, duration: introMs(INTRO.letterRebound), easing: easeLetter, useNativeDriver: true }),
+    Animated.timing(p, { toValue: 1, duration: introMs(INTRO.letterSettle), easing: easeLetter, useNativeDriver: true }),
+  ]);
+
+const wipe = (p: Animated.Value, delay: number) =>
+  Animated.sequence([
+    Animated.delay(introMs(delay)),
+    Animated.timing(p, { toValue: 1, duration: introMs(INTRO.hlMs), easing: easeOut, useNativeDriver: true }),
+  ]);
+
+const fadeIn = (p: Animated.Value, delay: number) =>
+  Animated.sequence([
+    Animated.delay(introMs(delay)),
+    Animated.timing(p, { toValue: 1, duration: introMs(INTRO.fadeMs), easing: easeSoft, useNativeDriver: true }),
+  ]);
+
+type SignInWord = { highlight: number; letters: { char: string; index: number }[] };
+
+/** Both layouts index S…h as 0…9. The space between "Sugar" and "Depth" is not a letter. */
+function signInLines(lines: string[]): { index: number; words: SignInWord[] }[] {
+  let glyph = 0;
+  let highlight = 0;
+  return lines.map((line, index) => ({
+    index,
+    words: line.split(' ').map((word) => ({
+      highlight: highlight++,
+      letters: Array.from(word).map((char) => ({ char, index: glyph++ })),
+    })),
+  }));
+}
 
 // Option A layout (docs/design/signin-option-a-*.png). Wide = laptop, narrow = phones and tablets.
 // Where the big name sits (unchanged from the first Option A build): its letters end NAME_GAP above
@@ -74,9 +141,12 @@ function group(nameBottom: number, maxCube: number, slotHeight: number, footerTo
 export function SignInScreen({ onBack }: { onBack?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [introDone, setIntroDone] = useState(false);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
+  const reducedNow = useRef(reduced);
+  reducedNow.current = reduced;
   const L = layout(width, height - insets.top - insets.bottom, insets.top);
 
   // Measured on screen: one name line at its natural height (it holds the g/p descenders on every platform),
@@ -104,6 +174,85 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
     setBusy(false);
   };
 
+  const v = useRef({
+    button: new Animated.Value(0),
+    rest: new Animated.Value(0),
+    footer: new Animated.Value(0),
+    small: new Animated.Value(0),
+    hop: new Animated.Value(0),
+    squash: new Animated.Value(0),
+    hl: [new Animated.Value(0), new Animated.Value(0)],
+    letters: Array.from({ length: INTRO.letters }, () => new Animated.Value(0)),
+  }).current;
+  const introRan = useRef(false);
+  const animRef = useRef<ReturnType<typeof Animated.parallel> | null>(null);
+
+  const setAllFinal = () => {
+    animRef.current?.stop();
+    animRef.current = null;
+    [v.button, v.rest, v.footer, v.small, v.hop, v.squash, ...v.hl, ...v.letters].forEach((a) => {
+      a.stopAnimation();
+      a.setValue(1);
+    });
+    setIntroDone(true);
+  };
+
+  // Plays once, the first time the name, button and footer have been measured. Resize does not replay it.
+  useEffect(() => {
+    if (!ready || introRan.current) return;
+    introRan.current = true;
+    if (reducedNow.current) {
+      setAllFinal();
+      return;
+    }
+    const buttonIn = Animated.timing(v.button, { toValue: 1, duration: introMs(INTRO.buttonMs), easing: easeOut, useNativeDriver: true });
+    const hop = Animated.sequence([
+      Animated.delay(introMs(INTRO.hopDelay)),
+      Animated.timing(v.hop, { toValue: 0.55, duration: introMs(INTRO.hopRise), easing: easeHop, useNativeDriver: true }),
+      Animated.timing(v.hop, { toValue: 1, duration: introMs(INTRO.hopFall), easing: easeHop, useNativeDriver: true }),
+    ]);
+    const squashLand = Animated.sequence([
+      Animated.timing(v.squash, { toValue: 0.35, duration: introMs(INTRO.squashA), easing: easeSoft, useNativeDriver: true }),
+      Animated.timing(v.squash, { toValue: 0.7, duration: introMs(INTRO.squashB), easing: easeSoft, useNativeDriver: true }),
+      Animated.timing(v.squash, { toValue: 1, duration: introMs(INTRO.squashC), easing: easeSoft, useNativeDriver: true }),
+    ]);
+    const anim = Animated.parallel([
+      buttonIn,
+      hop,
+      Animated.sequence([Animated.delay(introMs(INTRO.squashDelay)), squashLand]),
+      ...v.letters.map((p, i) => letterDrop(p, INTRO.letterStart + INTRO.letterStagger * i)),
+      wipe(v.hl[0], INTRO.hlStart[0]),
+      wipe(v.hl[1], INTRO.hlStart[1]),
+      fadeIn(v.rest, INTRO.restDelay),
+      fadeIn(v.footer, INTRO.footerDelay),
+      fadeIn(v.small, INTRO.smallDelay),
+    ]);
+    animRef.current = anim;
+    anim.start();
+    const timer = setTimeout(() => setIntroDone(true), introMs(INTRO.plantedAt));
+    return () => {
+      anim.stop();
+      clearTimeout(timer);
+    };
+  }, [ready, v]);
+
+  // Reduced motion switched on mid-intro: stop and show the finished frame.
+  useEffect(() => {
+    if (reduced && introRan.current) setAllFinal();
+  }, [reduced, v]);
+
+  const fontK = L.name.fontSize / 93;
+  const hopK = G.cubeSize / 166;
+  const bandInset = 4 * fontK;
+  const band = {
+    position: 'absolute' as const,
+    left: -bandInset,
+    right: -bandInset,
+    top: (lineHeight - L.pitch) / 2 + 0.56 * L.pitch,
+    height: 0.34 * L.pitch,
+    backgroundColor: mint.highlight,
+  };
+
   return (
     <View style={styles.root}>
       <PaperGrid />
@@ -111,23 +260,58 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
         Sugar Depth sign in
       </Text>
 
-      <SmallMascot still={reduced} />
+      <Animated.View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { zIndex: 3, opacity: v.small }]}>
+        <SmallMascot still={reduced} />
+      </Animated.View>
 
       <View
         testID="signin-name"
         aria-hidden
+        // Native only: react-native-web forwards these as unknown DOM attributes.
+        {...(Platform.OS === 'web'
+          ? {}
+          : { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const })}
         pointerEvents="none"
         onLayout={(e) => setNameHeight(e.nativeEvent.layout.height)}
         style={[styles.nameGroup, { top: nameTop }, !ready && styles.hidden]}
       >
-        {L.lines.map((line, i) => (
-          <Text
-            key={line}
-            onLayout={i === 0 ? (e) => setLineHeight(e.nativeEvent.layout.height) : undefined}
-            style={[styles.name, L.name, i > 0 && lineHeight > 0 && { marginTop: L.pitch - lineHeight }]}
+        {signInLines(L.lines).map((line) => (
+          <View
+            key={line.index}
+            onLayout={line.index === 0 ? (e) => setLineHeight(e.nativeEvent.layout.height) : undefined}
+            style={[styles.line, line.index > 0 && lineHeight > 0 && { marginTop: L.pitch - lineHeight }]}
           >
-            {line}
-          </Text>
+            {line.words.map((word, wi) => {
+              const highlight = v.hl[word.highlight] ?? v.hl[0];
+              return (
+                <Fragment key={word.letters[0]?.index ?? wi}>
+                  {wi > 0 ? <Text style={[styles.name, L.name]}>{' '}</Text> : null}
+                  <View style={styles.word}>
+                    <Animated.View pointerEvents="none" style={[band, { transform: [{ scaleX: highlight }], transformOrigin: 'left center' }]} />
+                    {word.letters.map(({ char, index }) => {
+                      const p = v.letters[index];
+                      if (!p) return null;
+                      return (
+                        <Animated.Text
+                          key={index}
+                          style={[
+                            styles.name,
+                            L.name,
+                            {
+                              opacity: p.interpolate({ inputRange: [0, 0.55, 1], outputRange: [0, 1, 1] }),
+                              transform: [{ translateY: p.interpolate({ inputRange: [0, 0.55, 0.78, 1], outputRange: [-44 * fontK, 0, -7 * fontK, 0] }) }],
+                            },
+                          ]}
+                        >
+                          {char}
+                        </Animated.Text>
+                      );
+                    })}
+                  </View>
+                </Fragment>
+              );
+            })}
+          </View>
         ))}
       </View>
 
@@ -135,14 +319,18 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
         onLayout={(e) => setSlotHeight(e.nativeEvent.layout.height)}
         style={[styles.buttonSlot, { top: G.buttonTop, left: L.side, right: L.side }, !ready && styles.hidden]}
       >
-        <GoogleButton onPress={start} busy={busy} height={L.buttonHeight} />
-        <Text style={[styles.fineprint, { marginTop: L.finePrintGap }]}>We only get your name and email from Google.</Text>
-        {error && <Text style={styles.error}>{error}</Text>}
-        {onBack && (
-          <Pressable onPress={onBack} accessibilityRole="button" style={styles.back}>
-            <Text style={styles.link}>Back to camera</Text>
-          </Pressable>
-        )}
+        <Animated.View style={{ opacity: v.button, transform: [{ translateY: v.button.interpolate({ inputRange: [0, 1], outputRange: [80, 0] }) }] }}>
+          <GoogleButton onPress={start} busy={busy} height={L.buttonHeight} />
+        </Animated.View>
+        <Animated.View style={{ opacity: v.rest }}>
+          <Text style={[styles.fineprint, { marginTop: L.finePrintGap }]}>We only get your name and email from Google.</Text>
+          {error && <Text style={styles.error}>{error}</Text>}
+          {onBack && (
+            <Pressable onPress={onBack} accessibilityRole="button" style={styles.back}>
+              <Text style={styles.link}>Back to camera</Text>
+            </Pressable>
+          )}
+        </Animated.View>
       </View>
 
       {/* In front of the button but never in the way of a tap. */}
@@ -151,11 +339,35 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
         pointerEvents="none"
         style={[styles.bigMascot, { top: G.cubeTop, left: (width - G.cubeSize) / 2 }, !ready && styles.hidden]}
       >
-        <CharacterView mood="idle" size={G.cubeSize} motion={reduced ? 'still' : 'planted'} shadow={false} />
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            opacity: v.hop.interpolate({ inputRange: [0, 0.1, 1], outputRange: [0, 1, 1] }),
+            transform: [
+              { translateX: v.hop.interpolate({ inputRange: [0, 0.55, 1], outputRange: [-150 * hopK, -60 * hopK, 0] }) },
+              { translateY: v.hop.interpolate({ inputRange: [0, 0.55, 1], outputRange: [220 * hopK, -70 * hopK, 0] }) },
+            ],
+          }}
+        >
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              transformOrigin: '50% 99%',
+              transform: [
+                { scaleX: v.squash.interpolate({ inputRange: [0, 0.35, 0.7, 1], outputRange: [1, 1.08, 0.98, 1] }) },
+                { scaleY: v.squash.interpolate({ inputRange: [0, 0.35, 0.7, 1], outputRange: [1, 0.9, 1.03, 1] }) },
+              ],
+            }}
+          >
+            <CharacterView mood="idle" size={G.cubeSize} shadow={false} skipEnter motion={reduced || !introDone ? 'still' : 'planted'} />
+          </Animated.View>
+        </Animated.View>
       </View>
 
       <View onLayout={(e) => setFooterTop(e.nativeEvent.layout.y)} style={[styles.footer, { paddingBottom: insets.bottom }]}>
-        <Footer ink />
+        <Animated.View style={{ opacity: v.footer }}>
+          <Footer ink />
+        </Animated.View>
       </View>
     </View>
   );
@@ -201,6 +413,8 @@ const styles = StyleSheet.create({
   srOnly: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
   // See-through wordmark: the app's heavy Libre Franklin at 800, 20% of the paper white.
   nameGroup: { position: 'absolute', left: 0, right: 0 },
+  line: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start' },
+  word: { position: 'relative', flexDirection: 'row', alignItems: 'flex-start' },
   name: {
     textAlign: 'center',
     fontFamily: fonts.extrabold,

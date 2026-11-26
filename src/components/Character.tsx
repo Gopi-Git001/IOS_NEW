@@ -106,7 +106,7 @@ function moodLoop(mood: Mood, v: Values, planted: boolean) {
   }
 }
 
-function useCube(mood: Mood, motion: Motion) {
+function useCube(mood: Mood, motion: Motion, skipEnter = false) {
   const v = useRef({
     enter: new Animated.Value(0),
     glint: new Animated.Value(0),
@@ -125,8 +125,18 @@ function useCube(mood: Mood, motion: Motion) {
       return;
     }
     const loop = moodLoop(mood, v, motion === 'planted');
-    const intro = Animated.spring(v.enter, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true });
     const glint = Animated.loop(Animated.sequence([wait(1400), t(v.glint, 1, 260), t(v.glint, 0, 420), wait(900)]));
+    // The sign-in hop already landed the mascot. Starting the mood loop must not replay the drop-in spring.
+    if (skipEnter) {
+      v.enter.setValue(1);
+      loop.start();
+      glint.start();
+      return () => {
+        loop.stop();
+        glint.stop();
+      };
+    }
+    const intro = Animated.spring(v.enter, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true });
     intro.start(() => loop.start());
     glint.start();
     return () => {
@@ -134,7 +144,7 @@ function useCube(mood: Mood, motion: Motion) {
       loop.stop();
       glint.stop();
     };
-  }, [mood, motion, v]);
+  }, [mood, motion, skipEnter, v]);
 
   // Drop in from above, landing with a little squash from the spring overshoot.
   const dropY = v.enter.interpolate({ inputRange: [0, 1], outputRange: [-60, 0] });
@@ -155,9 +165,21 @@ function useCube(mood: Mood, motion: Motion) {
   return { body, shadow, glint, opacity: v.enter };
 }
 
-/** Standalone character (sign-in screen and anywhere it isn't pinned to a corner). */
-export function CharacterView({ mood, size, motion = 'full', shadow: withShadow = true }: { mood: Mood; size: number; motion?: Motion; shadow?: boolean }) {
-  const { body, shadow, glint, opacity } = useCube(mood, motion);
+/** Standalone character (sign-in screen and anywhere it isn't pinned to a corner). `skipEnter` skips the drop-in spring. */
+export function CharacterView({
+  mood,
+  size,
+  motion = 'full',
+  shadow: withShadow = true,
+  skipEnter = false,
+}: {
+  mood: Mood;
+  size: number;
+  motion?: Motion;
+  shadow?: boolean;
+  skipEnter?: boolean;
+}) {
+  const { body, shadow, glint, opacity } = useCube(mood, motion, skipEnter);
   // The glint is 18 px; it shrinks only on a small cube (under 113 px), so larger ones are unchanged.
   const g = Math.min(18, size * 0.16);
   return (
