@@ -22,14 +22,16 @@ export const crystal = {
   BAD: { tint: colors.bad, deep: colors.uglyInk },
 };
 
-// Website Mint, shared with the marketing site's design tokens. Sign-in uses the paper group;
-// later screens use the ink, pill and verdict pairs.
+// Website Mint, shared with the marketing site's design tokens. Sign-in, Menu and Profile use it;
+// camera and result keep the dark glass for now.
 export const mint = {
   paper: colors.mintPaper, paperFade: colors.mintPaperFade, glow: colors.mintGlow, glowClear: colors.mintGlowClear, grid: colors.mintGrid,
   surface: colors.mintSurface, border: colors.mintBorder,
   ink: colors.mintInk, muted: colors.mintMuted, onInk: colors.mintOnInk,
   highlight: colors.mintHighlight, pill: colors.mintPill, pillInk: colors.mintPillInk, pillDot: colors.mintPillDot,
   danger: colors.mintDanger,
+  chipBorder: colors.mintChipBorder, shadow: colors.mintShadow, pressed: colors.mintPressed,
+  toggleOn: colors.mintInk, toggleOff: colors.mintToggleOff, toggleOffBorder: colors.mintToggleOffBorder, thumb: colors.mintSurface, thumbShadow: colors.mintToggleThumbShadow,
   CLEAN: { tint: colors.mintClean, deep: colors.mintCleanInk },
   OKAY: { tint: colors.mintOkay, deep: colors.mintOkayInk },
   BAD: { tint: colors.mintBad, deep: colors.mintBadInk },

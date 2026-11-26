@@ -174,9 +174,9 @@ export function Ambient() {
 }
 
 /**
- * Website Mint backdrop for the sign-in screen only: mint paper, a 1 px grid every 40 px,
+ * Website Mint backdrop for sign-in, Profile and Menu: mint paper, a 1 px grid every 40 px,
  * a fade that hides the grid at the top and bottom, and a soft glow across the top 120 px.
- * Fully static. Camera, result, profile and menu keep Ambient.
+ * Fully static. Camera and result keep Ambient.
  */
 export const PaperGrid = memo(function PaperGrid() {
   return (

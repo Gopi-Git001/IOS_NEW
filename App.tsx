@@ -216,7 +216,8 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style={mustSignIn ? 'dark' : 'light'} />
+      {/* Dark icons on the Website Mint screens (sign-in, Profile, Menu); light over the camera and result. */}
+      <StatusBar style={mustSignIn || sheet !== null ? 'dark' : 'light'} />
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         {ready &&
           (mustSignIn ? (

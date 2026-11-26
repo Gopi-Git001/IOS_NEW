@@ -2,15 +2,15 @@ import Constants from 'expo-constants';
 import { BookOpen, Camera, Feather, FileText, History, Lock, Mail, ShieldCheck, Star, Trash2, Vibrate, Globe } from 'lucide-react-native';
 import { useState } from 'react';
 import { FlatList, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Group, listStyles, openLink, Row, Sheet } from '../components/ListUI';
-import { verdictColor } from '../components/VerdictPanel';
+import { Group, listStyles, openLink, Row, Sheet, VerdictChip } from '../components/ListUI';
 import { CrystalSlab } from '../components/CrystalVerdict';
 import { links } from '../config';
 import { applyStrictMode, ingredientSummary } from '../lib/display';
 import { confirmAction } from '../lib/confirm';
 import { clearHistory, useHistory } from '../lib/history';
 import { type Prefs, setPref, usePrefs } from '../lib/prefs';
-import { brand, colors, fonts, frost } from '../theme';
+import type { Verdict } from '../types';
+import { brand, fonts, mint } from '../theme';
 
 type Page = 'menu' | 'history' | 'methodology';
 const titles: Record<Page, string> = { menu: 'Menu', history: 'Scan history', methodology: 'How verdicts work' };
@@ -42,8 +42,8 @@ function MenuList({ open }: { open: (p: Page) => void }) {
       <Group title="What the verdicts mean">
         {definitions.map((d, i) => (
           <View key={d.verdict} style={[styles.defRow, i > 0 && styles.defDivider]} accessible accessibilityLabel={`${d.verdict}: ${d.text}`}>
-            <View style={[listStyles.badge, styles.defBadge, { backgroundColor: `${verdictColor[d.verdict]}1F` }]}>
-              <Text style={[listStyles.badgeText, { color: verdictColor[d.verdict] }]}>{d.verdict}</Text>
+            <View style={styles.defBadge}>
+              <VerdictChip verdict={d.verdict} />
             </View>
             <Text style={styles.defText}>{d.text}</Text>
           </View>
@@ -132,13 +132,13 @@ function formatDate(iso: string) {
 // ---------- How verdicts work ----------
 
 /** One-line definitions for the menu; "How verdicts work" has the full rules (Rules v3). */
-const definitions: { verdict: keyof typeof verdictColor; text: string }[] = [
+const definitions: { verdict: Verdict; text: string }[] = [
   { verdict: 'CLEAN', text: 'No added sugar, sweeteners or alcohol. Only sugars that are naturally in the food.' },
   { verdict: 'OKAY', text: '4 g or less of added sugar per serving, or a gentler sweetener such as stevia, monk fruit or a sugar alcohol.' },
   { verdict: 'BAD', text: 'More than 4 g of added sugar per serving, an artificial sweetener, or alcohol.' },
 ];
 
-const rules: { verdict: keyof typeof verdictColor; text: string }[] = [
+const rules: { verdict: Verdict; text: string }[] = [
   { verdict: 'CLEAN', text: 'No added sugar, no sweeteners and no alcohol. Sugars that are naturally in the food, like the lactose in milk, the fructose in fruit or a 100% juice, are fine.' },
   { verdict: 'OKAY', text: '4 g or less of added sugar per serving, or a gentler sweetener: stevia, monk fruit, allulose, or a sugar alcohol such as erythritol, xylitol, sorbitol or maltitol.' },
   { verdict: 'BAD', text: 'More than 4 g of added sugar per serving, or added sugar when the grams per serving are not shown. Also artificial sweeteners such as sucralose or aspartame, or alcohol above 0.5% ABV.' },
@@ -153,9 +153,7 @@ function Methodology() {
       </Text>
       {rules.map((r) => (
         <View key={r.verdict} style={styles.ruleCard}>
-          <View style={[listStyles.badge, { backgroundColor: `${verdictColor[r.verdict]}1F`, alignSelf: 'flex-start' }]}>
-            <Text style={[listStyles.badgeText, { color: verdictColor[r.verdict] }]}>{r.verdict}</Text>
-          </View>
+          <VerdictChip verdict={r.verdict} />
           <Text style={styles.ruleText}>{r.text}</Text>
         </View>
       ))}
@@ -179,24 +177,24 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: colors.paperRaised,
+    backgroundColor: mint.surface,
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: colors.hairline,
+    borderColor: mint.border,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.hairline,
+    borderTopColor: mint.border,
   },
-  first: { marginTop: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderTopWidth: 1, borderTopColor: colors.hairline },
-  last: { borderBottomLeftRadius: 16, borderBottomRightRadius: 16, borderBottomWidth: 1, borderBottomColor: colors.hairline },
+  first: { marginTop: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderTopWidth: 1, borderTopColor: mint.border },
+  last: { borderBottomLeftRadius: 16, borderBottomRightRadius: 16, borderBottomWidth: 1, borderBottomColor: mint.border },
   historyBadge: { width: 58, alignItems: 'center' }, // same width, so the text column lines up
-  historyDate: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 16, color: colors.inkMuted, textAlign: 'right' },
-  empty: { fontFamily: fonts.regular, fontSize: 15, color: colors.inkMuted, textAlign: 'center', marginTop: 48 },
-  paragraph: { fontFamily: fonts.serif, fontSize: 17, lineHeight: 24, color: colors.ink, marginTop: 16 },
+  historyDate: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 16, color: mint.muted, textAlign: 'right' },
+  empty: { fontFamily: fonts.regular, fontSize: 15, color: mint.muted, textAlign: 'center', marginTop: 48 },
+  paragraph: { fontFamily: fonts.serif, fontSize: 17, lineHeight: 24, color: mint.ink, marginTop: 16 },
   defRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
-  defDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.rule },
-  defBadge: { width: 62, alignItems: 'center', marginTop: 1 },
-  defText: { flex: 1, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21, color: colors.ink },
-  ruleCard: { backgroundColor: colors.paperRaised, ...frost(24), borderRadius: 20, padding: 16, marginTop: 12, gap: 8 },
-  ruleText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.ink },
-  muted: { fontFamily: fonts.regular, fontSize: 13, color: colors.inkFaint, marginTop: 24 },
+  defDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: mint.border },
+  defBadge: { width: 78, marginTop: -2 },
+  defText: { flex: 1, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21, color: mint.ink },
+  ruleCard: { backgroundColor: mint.surface, borderWidth: 1, borderColor: mint.border, borderRadius: 20, padding: 16, marginTop: 12, gap: 8 },
+  ruleText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: mint.ink },
+  muted: { fontFamily: fonts.regular, fontSize: 13, color: mint.muted, marginTop: 24 },
 });

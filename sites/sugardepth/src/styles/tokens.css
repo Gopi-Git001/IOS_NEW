@@ -46,6 +46,12 @@
   --sd-mint-okay-ink: #7A4E00;
   --sd-mint-bad: #C93A31;
   --sd-mint-bad-ink: #A3271E;
+  --sd-mint-chip-border: rgba(18,22,20,0.16);
+  --sd-mint-shadow: rgba(18,22,20,0.06);
+  --sd-mint-pressed: rgba(18,22,20,0.05);
+  --sd-mint-toggle-off: #D3D9D5;
+  --sd-mint-toggle-off-border: #7C8580;
+  --sd-mint-toggle-thumb-shadow: rgba(0,0,0,0.18);
   --sd-ambient-0: #0B1220;
   --sd-ambient-1: #06080D;
   --sd-ambient-2: #0A0B12;
