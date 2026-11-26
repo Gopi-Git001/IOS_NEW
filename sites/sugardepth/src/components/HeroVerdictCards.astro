@@ -143,6 +143,11 @@ const HEAD_WORDS_2 = HEAD_LINES[2];
             data-vcard
             data-index={i}
             data-dot={v.dot}
+            {/* data-pos is rendered here, not just set by the script, so the resting positions and
+                stacking order are already correct before any JS runs: CLEAN is in front. Without it
+                all three cards sit at the same spot and the last one (BAD) paints on top, which is
+                what a visitor with scripting disabled would see. */}
+            data-pos={i}
             aria-hidden={i === 0 ? 'false' : 'true'}
             style={`--c-from:${v.from};--c-via:${v.via};--c-to:${v.to};--c-edge:${v.edge};--c-dot:${v.dot}`}
           >
@@ -303,15 +308,17 @@ const HEAD_WORDS_2 = HEAD_LINES[2];
     color: var(--ink);
   }
   /* Laptops: a slightly wider text column and a smaller cap keep the second sentence on one line
-     without forcing it (no text-wrap: nowrap). flex-basis is 56% / 44% per column. */
+     without forcing it (no text-wrap: nowrap). The two columns share the row with the 48px gap, so
+     their bases must total less than 100% — 56% + 44% + 48px overflowed and pushed the cards onto
+     a second row at exactly 1024px. calc() subtracts half the gap from each side. */
   @media (min-width: 1024px) {
     .paper-copy {
-      flex: 0 0 56%;
-      max-inline-size: 56%;
+      flex: 0 0 calc(56% - 24px);
+      max-inline-size: calc(56% - 24px);
     }
     .paper-cards {
-      flex: 0 0 44%;
-      max-inline-size: 44%;
+      flex: 0 0 calc(44% - 24px);
+      max-inline-size: calc(44% - 24px);
     }
     .paper-h1 {
       font-size: clamp(34px, 1.2rem + 3.4vw, 64px);

@@ -31,18 +31,52 @@ function isRedundant(alias: string, name: string): boolean {
   return n.startsWith(`${a} `) || n.endsWith(` ${a}`) || n.includes(` ${a} `);
 }
 
+/** Words too generic to prove two aliases describe the same ingredient. */
+const GENERIC_WORDS = new Set(['sugar', 'syrup', 'extract', 'powder', 'solids', 'juice', 'concentrate', 'of', 'the', 'and']);
+
+/** The meaningful words in a name, lowercased, for the synonym test below. */
+function meaningfulWords(value: string): Set<string> {
+  return new Set(
+    normalise(value)
+      .split(' ')
+      .filter((w) => w && !GENERIC_WORDS.has(w)),
+  );
+}
+
 /**
- * Pick the first alias that is neither a stop word nor a repeat of the card's own name.
- * Returns null when the card has nothing worth printing.
+ * True when `alias` looks like another printed name for the SAME ingredient rather than merely
+ * another entry in the same classification group.
+ *
+ * The registry groups every name that the scanner classifies alike — so plain "sugar" also lists
+ * cane sugar, coconut sugar, date sugar, maple sugar and invert sugar. Those are different sugars,
+ * not synonyms, and printing "Also listed as Cane sugar" on a Coconut sugar card is wrong.
+ * Requiring one shared meaningful word keeps genuine synonyms ("coconut sugar" -> "coconut palm
+ * sugar") while rejecting neighbours that share only the group word "sugar".
+ */
+function sharesIngredientWord(alias: string, name: string): boolean {
+  const aliasWords = meaningfulWords(alias);
+  if (aliasWords.size === 0) return false;
+  for (const word of meaningfulWords(name)) {
+    if (aliasWords.has(word)) return true;
+  }
+  return false;
+}
+
+/**
+ * Pick the best alias for a card. Preference order:
+ *   1. an alias that shares a meaningful word with the card's own name (a real synonym),
+ *   2. otherwise the first alias that is not a stop word or a repeat of the name.
+ * Returns null when nothing worth printing remains.
  */
 export function pickAlias(aliases: string[], name: string): string | null {
-  for (const alias of aliases) {
-    const key = normalise(alias);
-    if (USELESS_ALIASES.has(key)) continue;
-    if (isRedundant(alias, name)) continue;
-    return alias;
-  }
-  return null;
+  const usable = aliases.filter((alias) => !USELESS_ALIASES.has(normalise(alias)) && !isRedundant(alias, name));
+  if (usable.length === 0) return null;
+  // A known abbreviation is the best possible "also listed as" line: short and familiar.
+  const abbreviation = usable.find((alias) => CAPITALISE.has(normalise(alias)));
+  if (abbreviation) return abbreviation;
+  // Otherwise prefer a genuine synonym, so a card never advertises a different sugar as its alternate.
+  const synonym = usable.find((alias) => sharesIngredientWord(alias, name));
+  return synonym ?? usable[0];
 }
 
 /**

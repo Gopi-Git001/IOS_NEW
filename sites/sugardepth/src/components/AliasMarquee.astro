@@ -87,7 +87,12 @@ const total = rowsOfCards.reduce((n, cards) => n + cards.length, 0);
           }
           {
             cards.map((card) => (
-              <li aria-hidden="true" inert>
+              // The looping copy is decoration for assistive tech and Tab only: aria-hidden keeps
+              // it out of the a11y tree and tabindex="-1" out of the tab order. It deliberately does
+              // NOT use `inert`, because inert also blocks pointer hit-testing — and any one of these
+              // copies can be the card under the cursor at the start of row 2. A mouse or touch user
+              // must still be able to click whatever card they can see.
+              <li aria-hidden="true">
                 <a class="name-card" href={`/ingredients/${card.slug}`} tabindex="-1">
                   <span class="name-card-title">{card.label}</span>
                   {card.also && <span class="name-card-also">Also listed as {card.also}</span>}
@@ -505,19 +510,68 @@ const total = rowsOfCards.reduce((n, cards) => n + cards.length, 0);
     marquee.addEventListener('pointerup', release);
     marquee.addEventListener('pointercancel', release);
 
-    // --- slide a card back into view when Tab reaches one that has drifted off the edge ---
+    // --- keep the focused card fully visible ---
+    // The track carries two independent offsets: the marquee animation's `transform`, and a
+    // `translate` from --focus-shift. Row 2's animation begins at -50%, so its real cards start a
+    // full set to the LEFT and only the decorative copies are on screen. A shift is therefore
+    // allowed to be positive — the old `shift <= 0` clamp made row 2's first cards impossible to
+    // reach. Bounds are derived from where the track actually sits, not from zero.
     rows.forEach(function (row) {
       var track = row.querySelector('.marquee-track');
       row.addEventListener('focusin', function (event) {
         var card = event.target.closest('[data-real-card]');
         if (!card || !track) return;
+
+        // 1. Freeze the animation and clear any previous shift, so the measurement is of the
+        //    track's resting position with no leftover translate.
+        row.setAttribute('data-focused', '');
+        track.style.transition = 'none';
+        row.style.setProperty('--focus-shift', '0px');
+        void track.offsetWidth; // flush
+
+        // 2. Measure at shift 0.
         var cardBox = card.getBoundingClientRect();
         var rowBox = row.getBoundingClientRect();
-        var wanted = rowBox.width / 2 - cardBox.width / 2;
-        // Never shift past one copy, or the track would run out of cards behind it.
-        var shift = Math.max(-track.scrollWidth / 2, Math.min(0, wanted - (cardBox.left - rowBox.left)));
-        row.style.setProperty('--focus-shift', Math.round(shift) + 'px');
-        row.setAttribute('data-focused', '');
+        var trackBox = track.getBoundingClientRect();
+        var rowWidth = rowBox.width;
+        var totalWidth = trackBox.width;
+        if (!rowWidth || !totalWidth) return;
+        var margin = 16; // keep the card clear of the edge fade
+
+        // 3. Legal range for the shift. The track must still cover the whole row, but the first
+        //    card of a row sits hard against the track's start, so sliding it out from under the
+        //    edge fade briefly needs a small gap at the left. Allow that gap up to the fade width
+        //    rather than refusing to move at all.
+        var trackLeft = trackBox.left - rowBox.left;
+        var sMax = -trackLeft + margin;
+        var sMin = rowWidth - totalWidth - trackLeft;
+
+        // 4. Minimal shift that brings the card clear of the edge fade (0 if already clear).
+        var cardLeft = cardBox.left - rowBox.left;
+        var cardWidth = cardBox.width;
+        var need = 0;
+        if (cardLeft < margin) need = margin - cardLeft;
+        else if (cardLeft + cardWidth > rowWidth - margin) need = rowWidth - margin - (cardLeft + cardWidth);
+
+        // 5. The track holds two identical sets, so shifting by one set width is visually
+        //    identical. Try the needed shift first, then the same shift one or two sets either way,
+        //    and take the first that is legal.
+        var setWidth = totalWidth / 2;
+        var chosen = null;
+        var tries = [need, need - setWidth, need + setWidth, need - 2 * setWidth, need + 2 * setWidth];
+        for (var i = 0; i < tries.length; i++) {
+          if (tries[i] >= sMin - 0.5 && tries[i] <= sMax + 0.5) {
+            chosen = tries[i];
+            break;
+          }
+        }
+        if (chosen === null) chosen = Math.max(sMin, Math.min(sMax, need));
+
+        // 6. Apply next frame with the transition restored, so it slides rather than snaps.
+        requestAnimationFrame(function () {
+          track.style.transition = '';
+          row.style.setProperty('--focus-shift', Math.round(chosen) + 'px');
+        });
       });
       row.addEventListener('focusout', function (event) {
         if (row.contains(event.relatedTarget)) return;

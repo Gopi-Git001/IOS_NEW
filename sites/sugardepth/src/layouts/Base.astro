@@ -124,7 +124,7 @@ const hasSplash = path === '/'; // SugarSplash only renders on the homepage
     {jsonLd.map((d) => <script type="application/ld+json" set:html={JSON.stringify(d)} />)}
   </head>
   <body>
-    <SugarSplash />
+    {hasSplash && <SugarSplash />}
     <JadeSky fixed />
     <a class="skip" href="#main">Skip to content</a>
     <Header path={path} />
