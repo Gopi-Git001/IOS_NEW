@@ -1,4 +1,5 @@
-import { Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
+import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
@@ -10,6 +11,7 @@ import { postScan } from './scanTransport';
 import { requestScanStream, RetryableScanError, type ScanEvent } from './scanStream';
 import { normalizeJev, normalizeResult } from './verdicts';
 import { parseGuestQuota } from './guestTrial';
+import { authCodeFrom, nativeAuthRedirect } from './authRedirect';
 
 /** Reads the error message (and optional code) our Edge Functions send back, or a fallback. */
 async function errorFrom(error: unknown, fallback: string): Promise<{ message: string; code?: string; timing?: unknown }> {
@@ -190,7 +192,6 @@ export async function signInAsGuest(): Promise<string | null> {
   return authError ? 'Free scans are unavailable. Sign in with Google.' : null;
 }
 
-const NATIVE_REDIRECT = 'reallabel://auth';
 
 /**
  * Google sign-in through Supabase Auth (free; no SMS). Returns an error message, or null when it
@@ -203,14 +204,30 @@ export async function signInWithGoogle(): Promise<string | null> {
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: back } });
     return error ? failed : null;
   }
+  const redirect = nativeAuthRedirect(Constants);
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: NATIVE_REDIRECT, skipBrowserRedirect: true },
+    options: { redirectTo: redirect, skipBrowserRedirect: true },
   });
   if (error || !data?.url) return failed;
-  const result = await WebBrowser.openAuthSessionAsync(data.url, NATIVE_REDIRECT);
-  if (result.type !== 'success') return null;
-  const code = new URL(result.url).searchParams.get('code');
+  // The return can also arrive as a deep link (Android can report the browser as dismissed first).
+  let deepLink: string | null = null;
+  const subscription = Linking.addEventListener('url', ({ url }) => {
+    if (url.startsWith(redirect)) deepLink = url;
+  });
+  let returned: string | null;
+  try {
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirect);
+    if (result.type === 'success') returned = result.url;
+    else {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      returned = deepLink;
+    }
+  } finally {
+    subscription.remove();
+  }
+  if (!returned) return null;
+  const code = authCodeFrom(returned, redirect);
   if (!code) return 'Google sign-in was cancelled.';
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
   return exchangeError ? 'Could not sign you in. Try again.' : null;
