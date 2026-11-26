@@ -1,4 +1,4 @@
-import { AtSign, LogOut, Trash2, User } from 'lucide-react-native';
+import { LogOut, Trash2, User } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { demoAlert, Group, listStyles, Row, Sheet } from '../components/ListUI';
@@ -27,10 +27,9 @@ export function ProfileScreen({ visible, onClose, email }: Props) {
         <NameCard displayName={displayName} />
 
         <Group title="Account">
-          <Row
-            icon={AtSign}
-            label="Google account"
-            value={!isConfigured ? 'Demo mode' : email && !isTestEmail(email) ? email : 'Test session'}
+          <AccountRow
+            text={!isConfigured ? 'Demo mode' : email && !isTestEmail(email) ? email : 'Test session'}
+            signedIn={isConfigured && !!email && !isTestEmail(email)}
             onPress={isConfigured ? undefined : demoAlert}
           />
         </Group>
@@ -45,6 +44,23 @@ export function ProfileScreen({ visible, onClose, email }: Props) {
         </Group>
       </ScrollView>
     </Sheet>
+  );
+}
+
+/** The account card: just the signed-in email (or Demo mode / Test session), one line, left-aligned like the other rows. */
+function AccountRow({ text, signedIn, onPress }: { text: string; signedIn: boolean; onPress?: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : 'text'}
+      accessibilityLabel={signedIn ? `Signed in as ${text}` : text}
+      style={({ pressed }) => [listStyles.row, pressed && listStyles.rowPressed]}
+    >
+      <Text style={styles.accountText} numberOfLines={1} ellipsizeMode="middle">
+        {text}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -182,6 +198,7 @@ function confirmDelete() {
 }
 
 const styles = StyleSheet.create({
+  accountText: { flex: 1, fontFamily: fonts.medium, fontSize: 16, color: mint.ink },
   nameCard: { backgroundColor: mint.surface, borderWidth: 1, borderColor: mint.border, borderRadius: 20, padding: 20, marginTop: 12, alignItems: 'center', gap: 8 },
   avatar: {
     width: 72,

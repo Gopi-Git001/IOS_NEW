@@ -84,7 +84,9 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
 
       {state.status !== 'reading' && (
         <>
-          <ResultSheet key={state.status} action={action} footer={<Text style={styles.footer}>Not medical advice · Doesn't check allergens</Text>} maxHeight={sheetMax} bottomInset={sheetInset} onHeight={setSheetHeight}>
+          {/* Siblings in one fragment: their keys must differ, or React warns about duplicate keys. Keyed by status so
+              the sheet slides up and the cube hops in again when the result changes between a verdict and No verdict. */}
+          <ResultSheet key={`sheet-${state.status}`} action={action} footer={<Text style={styles.footer}>Not medical advice · Doesn't check allergens</Text>} maxHeight={sheetMax} bottomInset={sheetInset} onHeight={setSheetHeight}>
             {state.status === 'done' ? (
               <VerdictContent result={state.result} listsPending={state.listsPending} onRetryLists={state.retryLists} onPick={setPick} />
             ) : (
@@ -100,7 +102,7 @@ export function ResultScreen({ photoUri, state, onScanAnother, onOpenSheet, gent
           </ResultSheet>
           {sheetHeight > 0 && (
             <HopCube
-              key={state.status}
+              key={`cube-${state.status}`}
               mood={state.status === 'done' ? doneMood(state.result.verdict) : 'okay'}
               bottom={sheetHeight - PERCH}
               right={10}
