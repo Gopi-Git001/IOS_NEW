@@ -1,0 +1,1539 @@
+---
+// HeroVerdictCards — "Option C: Sugar paper". Light sugar-paper background with a faint 48px
+// grid, mission copy on the left, and three tilted verdict cards on the right that cycle
+// CLEAN -> OKAY -> BAD. Cards are built in CSS, never images.
+//
+// The h1 and every string are server-rendered, so the headline is in the HTML before JS runs.
+// Motion is a plain data-motion script (this site's build check allows no other inline scripts).
+import { APP_URL } from '../config';
+
+interface Props {
+  /** Which hero to show. "paper" is this one; "classic" keeps the dark crystal hero. */
+  variant?: 'paper' | 'classic';
+}
+
+const { variant = 'paper' } = Astro.props;
+
+/**
+ * Sample products, not real labels. Edit this array to change the cards: order is the cycle
+ * order (index 0 starts in front), and each entry drives the card, its glow and its button.
+ */
+const VERDICTS = [
+  {
+    word: 'CLEAN',
+    product: 'Greek yogurt',
+    reason: 'No added sugar',
+    from: '#3DBB78',
+    via: '#1C8E52',
+    to: '#127443',
+    edge: '#0D5A33',
+    dot: '#3DCB7F',
+  },
+  {
+    word: 'OKAY',
+    product: 'Protein bar',
+    reason: '1 g added · erythritol',
+    from: '#ECB955',
+    via: '#C98E2A',
+    to: '#9E6A16',
+    edge: '#7A4E0C',
+    dot: '#F2B33D',
+  },
+  {
+    word: 'BAD',
+    product: 'Cola',
+    reason: '39 g added sugar',
+    from: '#EE6355',
+    via: '#C93A31',
+    to: '#A12922',
+    edge: '#771B16',
+    dot: '#F0635A',
+  },
+] as const;
+
+const EYEBROW = 'OUR MISSION';
+const SUBTEXT =
+  'We read the fine print on every food label and name each added sugar and sweetener. What you eat is your call.';
+const DISCLAIMER = 'A food-label scanner. Not medical advice; no allergen checks.';
+
+// Splitting the headline into per-letter spans lets each letter rise on its own beat. Words are
+// grouped so a line can only break between words, never inside one. A visually hidden copy gives
+// screen readers the plain sentence.
+const HEAD_TEXT = 'Sugar has a lot of aliases. We read every one.';
+const toWords = (text: string) =>
+  text.split(' ').map((w) => ({ letters: [...w] }));
+// Three explicit lines, each in its own overflow mask, so the entrance can stagger them. The
+// breaks match what the text already wrapped to ("Sugar has a" / "lot of aliases." / "We read
+// every one.") at every width tested, so nothing re-wraps; each line is short enough to fit.
+const HEAD_LINES = [toWords('Sugar has a'), toWords('lot of aliases.'), toWords('We read every one.')];
+const HEAD_WORDS_2 = HEAD_LINES[2];
+---
+
+<section class="paper-hero" data-hero-paper data-variant={variant} aria-labelledby="paper-hero-h">
+  <div class="paper-grid" aria-hidden="true"></div>
+  <div class="paper-fade" aria-hidden="true"></div>
+
+  <div class="paper-inner">
+    <div class="paper-copy">
+      <p class="paper-badge" data-hero-item>
+        <span class="paper-badge-dot" aria-hidden="true"></span>
+        {EYEBROW}
+      </p>
+
+      <h1 id="paper-hero-h" class="paper-h1" data-hero-item>
+        <!-- Three lines, each its own overflow mask. Words are nowrap spans so a line can never
+             re-wrap mid-animation. Each letter carries --i (its index within the line) for the
+             rolling stagger. A visually hidden copy gives screen readers the plain sentence. -->
+        <span class="sr-only">{HEAD_TEXT}</span>
+        {HEAD_LINES.map((words, li) => {
+          // Letters are numbered across the whole line, so the stagger continues word to word
+          // instead of restarting at every word.
+          let n = 0;
+          return (
+            <span class={`paper-line${li === 2 ? ' paper-line--last' : ''}`} data-line={li + 1} aria-hidden="true">
+              <span class="paper-rise" style={`--ret-line-start: var(--ret-line-${li + 1}-delay)`}>
+                <span class={li === 2 ? 'paper-mark' : undefined}>
+                  {words.map((word, wi) => (
+                    <>
+                      {wi > 0 ? ' ' : ''}
+                      <span class="paper-word">
+                        {word.letters.map((c) => {
+                          const idx = n++;
+                          return (
+                            <span class="paper-letter" style={`--i: ${idx}`}>
+                              {c}
+                            </span>
+                          );
+                        })}
+                      </span>
+                    </>
+                  ))}
+                </span>
+              </span>
+            </span>
+          );
+        })}
+      </h1>
+
+      <p class="paper-sub" data-hero-item>{SUBTEXT}</p>
+
+      <p class="paper-note" data-hero-note>{DISCLAIMER}</p>
+
+      <div class="paper-ctas" data-hero-item>
+        <a class="paper-btn paper-btn--primary" href={APP_URL}>
+          <span class="paper-dot" aria-hidden="true"></span>
+          Scan a label
+          <span class="paper-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
+            </svg>
+          </span>
+        </a>
+        <a class="paper-btn paper-btn--ghost" href="/how-it-works">How verdicts work</a>
+      </div>
+    </div>
+
+    <div class="paper-cards">
+      <div class="paper-glow" data-hero-glow aria-hidden="true"></div>
+
+      <div class="paper-stage" data-hero-stage>
+        {VERDICTS.map((v, i) => (
+          <article
+            class="vcard"
+            data-vcard
+            data-index={i}
+            data-dot={v.dot}
+            {/* data-pos is rendered here, not just set by the script, so the resting positions and
+                stacking order are already correct before any JS runs: CLEAN is in front. Without it
+                all three cards sit at the same spot and the last one (BAD) paints on top, which is
+                what a visitor with scripting disabled would see. */}
+            data-pos={i}
+            aria-hidden={i === 0 ? 'false' : 'true'}
+            style={`--c-from:${v.from};--c-via:${v.via};--c-to:${v.to};--c-edge:${v.edge};--c-dot:${v.dot}`}
+          >
+            <span class="vcard-gloss" aria-hidden="true"></span>
+            <div class="vcard-top">
+              <span class="vcard-kicker">Verdict</span>
+              <span class="vcard-chip">{v.product}</span>
+            </div>
+            <div class="vcard-bottom">
+              <p class="vcard-word">{v.word}</p>
+              <p class="vcard-reason">{v.reason}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div class="paper-verdicts" data-verdict-btns role="group" aria-label="Show a verdict">
+        {VERDICTS.map((v, i) => (
+          <button
+            type="button"
+            class="paper-verdict"
+            data-verdict-btn
+            data-index={i}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+          >
+            <span class="paper-verdict-dot" aria-hidden="true" style={`--c-dot:${v.dot}`}></span>
+            {v.word}
+          </button>
+        ))}
+      </div>
+
+      <p class="paper-live" data-hero-live aria-live="polite">Showing CLEAN: Greek yogurt, no added sugar.</p>
+    </div>
+  </div>
+</section>
+
+<!--
+  Phone quick actions. Sits above the page but below the header (z 30) and the glass menu (z 24+),
+  and hides while the menu is open or the hero entrance has not finished yet.
+-->
+<nav class="paper-bar" data-paper-bar aria-label="Quick actions" hidden>
+  <a class="paper-bar-ghost" href="/how-it-works">How it works</a>
+  <a class="paper-bar-primary" href={APP_URL}>
+    <span class="paper-dot" aria-hidden="true"></span>
+    Scan a label
+  </a>
+</nav>
+
+<style>
+  /* ---------- sugar paper ---------- */
+  /* Spacing is owned here, not inherited. global.css gives every <section> a
+     clamp(56px, 8vw, 104px) block padding and .paper-inner adds its own; stacked they produced a
+     200px gap under the header at 1440px. Zero the inherited padding and add the intended one. */
+  .paper-hero {
+    --paper-bg: #f2f7f3;
+    --paper-ink: #121614;
+    --paper-muted: #4a5650;
+    --paper-accent: #13804b;
+    --paper-line: rgba(18, 22, 20, 0.25);
+
+    /* Gap under the header, per breakpoint: 28px phones, 36px tablets, 40-64px laptops. */
+    --hero-gap-top: 28px;
+    --hero-pad-bottom: 40px;
+
+    padding-block: 0;
+
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: var(--paper-bg);
+    color: var(--paper-ink);
+  }
+
+  /* 48px squares, then a vertical fade so the grid reads faint at the edges. */
+  .paper-grid {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(18, 22, 20, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(18, 22, 20, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .paper-fade {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      #f2f7f3 0%,
+      rgba(242, 247, 243, 0.6) 50%,
+      #f2f7f3 100%
+    );
+  }
+
+  .paper-inner {
+    position: relative;
+    z-index: 1;
+    /* The same container as .wrap, so the hero text lines up with every other section. */
+    inline-size: 100%;
+    max-inline-size: var(--container-max);
+    margin-inline: auto;
+    padding-block: var(--hero-gap-top) var(--hero-pad-bottom);
+    padding-inline: var(--container-pad);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px 48px;
+    /* No vertical centring: the columns start at the top of the hero. */
+    align-items: start;
+  }
+
+  /* ---------- text column ---------- */
+  .paper-copy {
+    flex: 1 1 440px;
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  /* The eyebrow is a pill badge: dot + "Our mission". */
+  .paper-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    margin: 0 0 4px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: #ddf3e6;
+    color: #0f6b3e;
+    font-family: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .paper-badge-dot {
+    inline-size: 6px;
+    block-size: 6px;
+    flex: none;
+    border-radius: 50%;
+    background: #13804b;
+  }
+  /* Two sentences, each its own block, so the wrap count is the browser's choice, not a <br>.
+     The second sentence must not wrap internally: at the top of the size clamp it is a few pixels
+     wider than the text column, and breaking it yields a one-word last line. Holding it whole keeps
+     the headline at three lines across the whole range. */
+  .paper-h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(34px, 1.2rem + 3.6vw, 72px);
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+  /* Laptops: a slightly wider text column and a smaller cap keep the second sentence on one line
+     without forcing it (no text-wrap: nowrap). The two columns share the row with the 48px gap, so
+     their bases must total less than 100% — 56% + 44% + 48px overflowed and pushed the cards onto
+     a second row at exactly 1024px. calc() subtracts half the gap from each side. */
+  @media (min-width: 1024px) {
+    .paper-copy {
+      flex: 0 0 calc(56% - 24px);
+      max-inline-size: calc(56% - 24px);
+    }
+    .paper-cards {
+      flex: 0 0 calc(44% - 24px);
+      max-inline-size: calc(44% - 24px);
+    }
+    .paper-h1 {
+      font-size: clamp(34px, 1.2rem + 3.4vw, 64px);
+    }
+  }
+  .paper-line {
+    display: block;
+    text-wrap: balance;
+    /* A mask so each letter can rise from below the line without spilling over its neighbour.
+       The bottom padding keeps descenders ("y", "g") inside the mask instead of being clipped —
+       line-height alone is not enough, because the mask clips to the padding box. */
+    overflow: hidden;
+    padding-block-end: 0.14em;
+    margin-block-end: -0.14em;
+  }
+  .paper-line--last {
+    margin-block-start: 2px;
+  }
+  /* The stagger container; letters translate inside it. */
+  .paper-rise {
+    display: inline-block;
+  }
+  /* A word never breaks internally: this is what keeps "lot" whole. */
+  .paper-word {
+    display: inline-block;
+    white-space: nowrap;
+  }
+  .paper-letter {
+    display: inline-block;
+    will-change: transform;
+  }
+  /* Desktop only: a letter knocked down by the pointer springs back. */
+  @media (hover: hover) and (pointer: fine) {
+    .paper-letter[data-knock='true'] {
+      animation: paper-knock 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes paper-knock {
+      0% {
+        transform: translateY(0) scale(1);
+      }
+      18% {
+        transform: translateY(0.07em) scale(1.04, 0.9);
+      }
+      100% {
+        transform: translateY(0) scale(1);
+      }
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    /* The per-line rise is the intro's; with reduced motion there is no intro at all. */
+    .paper-line .paper-rise {
+      transform: none;
+      animation: none;
+    }
+  }
+  /* Highlighter behind the second sentence: a marker stripe, not a colour change.
+     It is a background-image whose size the intro sweeps from 0% to 100%, so the bar can only
+     appear once its words have landed. */
+  .paper-mark {
+    padding: 0 4px;
+    margin: 0 -4px;
+    background-image: linear-gradient(
+      transparent 56%,
+      #bdefd2 56%,
+      #bdefd2 90%,
+      transparent 90%
+    );
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: 100% 100%;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .paper-sub {
+    margin: 0;
+    max-inline-size: 46ch;
+    font-family: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--paper-muted);
+    text-wrap: pretty;
+  }
+
+  /* ---------- buttons ---------- */
+  .paper-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 14px;
+    align-items: center;
+  }
+  .paper-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    block-size: 54px;
+    padding: 0 26px;
+    border-radius: 999px;
+    font-family: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.2s var(--ease-out), background 0.2s var(--ease-out),
+      box-shadow 0.2s var(--ease-out);
+  }
+  .paper-btn--primary {
+    background: #121614;
+    color: #fff;
+    box-shadow: 0 14px 28px -16px rgba(18, 22, 20, 0.7);
+  }
+  .paper-btn--primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 32px -16px rgba(18, 22, 20, 0.8);
+  }
+  .paper-btn--ghost {
+    background: transparent;
+    color: var(--paper-ink);
+    border: 1px solid var(--paper-line);
+  }
+  .paper-btn--ghost:hover {
+    background: rgba(18, 22, 20, 0.05);
+  }
+  .paper-btn:focus-visible {
+    outline: 2px solid var(--paper-ink);
+    outline-offset: 3px;
+  }
+  .paper-dot {
+    inline-size: 14px;
+    block-size: 14px;
+    flex: none;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    box-shadow: inset 0 0 0 2.5px #121614, inset 0 0 0 8px currentColor;
+  }
+  .paper-arrow svg {
+    inline-size: 17px;
+    block-size: 17px;
+    display: block;
+  }
+  .paper-note {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--muted);
+  }
+
+  /* ---------- cards column ---------- */
+  .paper-cards {
+    position: relative;
+    flex: 1 1 420px;
+    min-inline-size: 0;
+    /* Centred against the text block itself, not against the viewport. */
+    align-self: center;
+  }
+  /* A soft pool of the front card's colour, behind the stack. */
+  .paper-glow {
+    position: absolute;
+    inset-block-start: 8%;
+    inset-inline-end: -6%;
+    inline-size: 60%;
+    aspect-ratio: 1;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at center,
+      color-mix(in srgb, var(--glow, #3dbb78) 16%, transparent) 0%,
+      transparent 65%
+    );
+    transition: background 0.6s var(--ease-out);
+  }
+
+  .paper-stage {
+    position: relative;
+    z-index: 1;
+    block-size: clamp(330px, 32vw, 470px);
+  }
+
+  /* ---------- a single card ---------- */
+  .vcard {
+    position: absolute;
+    inset-inline-start: 50%;
+    inset-block-start: 50%;
+    inline-size: clamp(200px, 21vw, 290px);
+    aspect-ratio: 10 / 13;
+    padding: 20px 20px 22px;
+    border-radius: 26px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    background: linear-gradient(160deg, var(--c-from) 0%, var(--c-via) 55%, var(--c-to) 100%);
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 255, 255, 0.32),
+      inset 0 2px 0 rgba(255, 255, 255, 0.45),
+      0 10px 0 var(--c-edge),
+      0 34px 60px -22px rgba(0, 0, 0, 0.65);
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease;
+    will-change: transform, opacity;
+    font-family: var(--font-body);
+  }
+  /* The diagonal gloss that makes the card read as glass. */
+  .vcard-gloss {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      118deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.32) 42%,
+      transparent 54%
+    );
+  }
+  .vcard-top {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .vcard-kicker {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.92;
+  }
+  .vcard-chip {
+    max-inline-size: 62%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.22);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .vcard-bottom {
+    position: relative;
+  }
+  .vcard-word {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 900;
+    font-size: clamp(44px, 4.6vw, 66px);
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    text-shadow: 0 3px 0 rgba(0, 0, 0, 0.18);
+  }
+  .vcard-reason {
+    margin: 10px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.95;
+  }
+
+  /* ---------- the three resting positions ---------- */
+  .vcard[data-pos='0'] {
+    transform: translate(-86%, -50%) rotate(-6deg) scale(1);
+    z-index: 3;
+    opacity: 1;
+  }
+  .vcard[data-pos='1'] {
+    transform: translate(-44%, -53%) rotate(7deg) scale(0.95);
+    z-index: 2;
+    opacity: 1;
+  }
+  .vcard[data-pos='2'] {
+    transform: translate(-8%, -56%) rotate(15deg) scale(0.9);
+    z-index: 1;
+    opacity: 0.85;
+  }
+  /* Leaving: the front card swings out to the left before it re-enters at the back. */
+  .vcard[data-leaving='true'] {
+    transform: translate(-150%, -44%) rotate(-20deg) scale(0.94);
+    opacity: 0;
+    z-index: 4;
+  }
+
+  /* ---------- verdict buttons ---------- */
+  .paper-verdicts {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-block-start: 18px;
+    /* A finger sliding along the row must not be mistaken for a page scroll (and vice versa). */
+    touch-action: pan-y;
+  }
+  .paper-verdict {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    block-size: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(18, 22, 20, 0.16);
+    background: transparent;
+    color: #2c3531;
+    font-family: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.2s var(--ease-out), color 0.2s var(--ease-out),
+      border-color 0.2s var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .paper-verdict[aria-pressed='true'] {
+    background: #121614;
+    color: #fff;
+    border-color: #121614;
+  }
+  .paper-verdict:focus-visible {
+    outline: 2px solid var(--paper-ink);
+    outline-offset: 3px;
+  }
+  .paper-verdict-dot {
+    inline-size: 9px;
+    block-size: 9px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--c-dot);
+  }
+
+  /* Announced politely; not visible. */
+  .paper-live {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* ---------- breakpoint spacing: 28px phones, 36px tablets, 40-64px laptops ---------- */
+  @media (min-width: 768px) {
+    .paper-hero {
+      --hero-gap-top: 36px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .paper-hero {
+      --hero-gap-top: clamp(40px, 4vw, 64px);
+      --hero-pad-bottom: 64px;
+    }
+  }
+
+  /* ---------- under 1024px: one column, max 560px, phone layout ---------- */
+  @media (max-width: 1023.98px) {
+    .paper-hero .paper-grid {
+      background-size: 40px 40px;
+      background-image:
+        linear-gradient(to right, rgba(18, 22, 20, 0.055) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(18, 22, 20, 0.055) 1px, transparent 1px);
+    }
+    .paper-hero .paper-fade {
+      background: linear-gradient(
+        180deg,
+        #f2f7f3 0%,
+        rgba(242, 247, 243, 0.55) 50%,
+        #f2f7f3 100%
+      );
+    }
+    .paper-inner {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 18px;
+      /* Same container width and padding as .wrap on phones: no separate 560px column, which
+         would pull the hero text out of line with "Three steps". */
+      max-inline-size: none;
+      padding-block: var(--hero-gap-top) var(--hero-pad-bottom);
+      padding-inline: var(--container-pad);
+    }
+    .paper-copy,
+    .paper-cards {
+      flex: 1 1 auto;
+    }
+    /* Stacked on phones, so the cards are no longer a side column to centre. */
+    .paper-cards {
+      align-self: stretch;
+    }
+    /* The tight 14px rhythm between eyebrow, headline and subtext. */
+    .paper-copy {
+      gap: 14px;
+      text-align: left;
+    }
+    .paper-badge {
+      margin-block-end: 0;
+    }
+    .paper-h1 {
+      font-size: 34px;
+    }
+    .paper-sub {
+      max-inline-size: 34ch;
+    }
+    /* The inline buttons move into the sticky bar on phones. */
+    .paper-ctas {
+      display: none;
+    }
+    .paper-glow {
+      inset-inline-end: -10%;
+      inline-size: 300px;
+      block-size: 300px;
+      aspect-ratio: auto;
+      background: radial-gradient(
+        circle at center,
+        color-mix(in srgb, var(--glow, #3dbb78) 20%, transparent) 0%,
+        transparent 65%
+      );
+    }
+    .paper-stage {
+      block-size: 300px;
+      /* The fan's outer cards are rotated and translate past the stage edges. Clipping here keeps
+         them from widening the document on narrow phones (320px would otherwise scroll sideways). */
+      overflow: hidden;
+      border-radius: 22px;
+    }
+    .vcard {
+      inline-size: 182px;
+      border-radius: 22px;
+      padding: 16px;
+    }
+    .vcard-kicker {
+      font-size: 11px;
+    }
+    .vcard-chip {
+      font-size: 10px;
+      padding: 3px 8px;
+    }
+    .vcard-word {
+      font-size: 42px;
+    }
+    .vcard-reason {
+      font-size: 12px;
+      margin-block-start: 7px;
+    }
+    .vcard {
+      box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.32),
+        inset 0 2px 0 rgba(255, 255, 255, 0.45),
+        0 8px 0 var(--c-edge),
+        0 22px 40px -20px rgba(0, 0, 0, 0.6);
+    }
+    .paper-verdicts {
+      justify-content: center;
+      gap: 6px;
+      margin-block-start: 14px;
+    }
+    .paper-verdict {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 0 14px;
+    }
+  }
+
+  /* ---------- sticky quick actions (under 1024px only) ---------- */
+  .paper-bar {
+    display: none;
+  }
+  @media (max-width: 1023.98px) {
+    .paper-bar {
+      position: fixed;
+      inset-inline: 0;
+      inset-block-end: 0;
+      /* Above the page, below the header (30) and the glass menu (24+). */
+      z-index: 22;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+      background: rgba(242, 247, 243, 0.86);
+      -webkit-backdrop-filter: blur(14px) saturate(1.4);
+      backdrop-filter: blur(14px) saturate(1.4);
+      border-block-start: 1px solid rgba(18, 22, 20, 0.1);
+      transform: translateY(100%);
+      transition: transform 0.3s var(--ease-out);
+      font-family: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+    .paper-bar[data-shown='true'] {
+      transform: translateY(0);
+    }
+    /* The bar never covers the menu or the splash. */
+    body:has(.nav-menu[open]) .paper-bar,
+    body:has([data-splash]:not([data-splash='done'])) .paper-bar {
+      transform: translateY(100%) !important;
+      pointer-events: none;
+    }
+    .paper-bar-ghost,
+    .paper-bar-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      block-size: 52px;
+      border-radius: 999px;
+      text-decoration: none;
+      white-space: nowrap;
+      min-inline-size: 44px;
+    }
+    .paper-bar-ghost {
+      padding: 0 16px;
+      border: 1px solid rgba(18, 22, 20, 0.22);
+      color: #121614;
+      font-size: 14px;
+      font-weight: 700;
+      background: transparent;
+    }
+    .paper-bar-primary {
+      flex: 1 1 auto;
+      padding: 0 20px;
+      background: #121614;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      box-shadow: 0 10px 22px -14px rgba(18, 22, 20, 0.8);
+    }
+    .paper-bar :focus-visible {
+      outline: 2px solid #121614;
+      outline-offset: 3px;
+    }
+    /* Reserve the bar's height so it never covers the footer. */
+    body:has(.paper-hero) {
+      padding-block-end: 84px;
+      padding-block-end: calc(84px + env(safe-area-inset-bottom, 0px));
+    }
+    /* The site hides the header CTA on phones whenever a scan bar is present (interactive.css keys
+       this off .sticky-scan). The home page suppresses that bar in favour of this one, so the same
+       intent is restated here. :global() is required because .header-cta lives in Header.astro and
+       does not carry this component's scope hash; without it the rule silently never matches. */
+    :global(body:has(.paper-hero) .header-cta) {
+      display: none;
+    }
+  }
+  @media (min-width: 1024px) {
+    .paper-bar {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .paper-bar {
+      transition: none;
+    }
+  }
+
+  /* ---------- entrance ----------
+     Driven by ONE state: <html data-intro>. The pre-paint script sets "splash" or "none", the
+     splash moves it to "hero" at flight start, then "done". There is no "ready" attribute and no
+     component-owned timer, so the hero can never be shown and then hidden again.
+     :global(html[...]) is required: <html> lives outside this component, so Astro's scoping would
+     otherwise rewrite the selector to something no element can match. */
+
+  /* The hidden entrance state. Only ever active while the splash is covering the page. */
+  :global(html[data-intro='splash']) [data-hero-item],
+  :global(html[data-intro='splash']) [data-hero-note] {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  :global(html[data-intro='splash']) .paper-cards {
+    opacity: 0;
+    transform: translateX(60px);
+  }
+  /* Each headline line waits below its overflow mask. Per LINE, not per letter. */
+  :global(html[data-intro='splash']) .paper-line .paper-rise {
+    transform: translateY(105%);
+  }
+  /* The highlighter is empty until its line has landed. */
+  :global(html[data-intro='splash']) .paper-mark {
+    background-size: 0% 100%;
+  }
+
+  /* Running: the entrance plays once, from the shared timeline variables. */
+  :global(html[data-intro='hero']) [data-hero-item],
+  :global(html[data-intro='hero']) [data-hero-note] {
+    animation: hero-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  :global(html[data-intro='hero']) .paper-badge {
+    animation-duration: 0.4s;
+    animation-delay: var(--intro-badge-delay);
+  }
+  :global(html[data-intro='hero']) .paper-sub {
+    animation-delay: var(--intro-sub-delay);
+  }
+  :global(html[data-intro='hero']) .paper-ctas {
+    animation-delay: var(--intro-cta-delay);
+  }
+  :global(html[data-intro='hero']) [data-hero-note] {
+    animation: hero-fade 0.45s ease both;
+    animation-delay: var(--intro-sub-delay);
+  }
+  :global(html[data-intro='hero']) .paper-cards {
+    animation: hero-in-right var(--intro-cards-dur) cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--intro-cards-delay);
+  }
+  /* Headline lines: 105% -> 0, one after another, 0.6s each. */
+  :global(html[data-intro='hero']) .paper-line .paper-rise {
+    animation: paper-line-rise var(--intro-line-dur) cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  :global(html[data-intro='hero']) [data-line='1'] .paper-rise {
+    animation-delay: var(--intro-line-1-delay);
+  }
+  :global(html[data-intro='hero']) [data-line='2'] .paper-rise {
+    animation-delay: var(--intro-line-2-delay);
+  }
+  :global(html[data-intro='hero']) [data-line='3'] .paper-rise {
+    animation-delay: var(--intro-line-3-delay);
+  }
+  @keyframes paper-line-rise {
+    from {
+      transform: translateY(105%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  /* The highlighter sweeps in once its line has landed: --intro-mark-delay is already measured
+     from the hero start (0.84s = 3.44s absolute, just after line 2 lands at 3.36s). */
+  :global(html[data-intro='hero']) .paper-mark {
+    animation: paper-mark-sweep var(--intro-mark-dur) ease-out both;
+    animation-delay: var(--intro-mark-delay);
+  }
+  @keyframes paper-mark-sweep {
+    from {
+      background-size: 0% 100%;
+    }
+    to {
+      background-size: 100% 100%;
+    }
+  }
+
+  @keyframes hero-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes hero-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes hero-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(60px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* No intro at all (reduced motion, ?nosplash=1, a non-home page): the hero is simply final.
+     Nothing animates, and the state is already correct at first paint. */
+  :global(html[data-intro='none']) [data-hero-item],
+  :global(html[data-intro='none']) [data-hero-note],
+  :global(html[data-intro='none']) .paper-cards,
+  :global(html[data-intro='none']) .paper-line .paper-rise,
+  :global(html[data-intro='none']) .paper-mark {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  :global(html[data-intro='none']) .paper-mark {
+    background-size: 100% 100%;
+  }
+
+  /* ---------- the "return" entrance: rolling letters ----------
+     Every homepage load after the first in a session. No splash — the hero is hidden from the first
+     painted frame in this state, then the letters roll up line by line. Per LETTER here (the splash
+     keeps its per-line rise, above), but the lines themselves are fixed from the start, so nothing
+     re-wraps mid-animation. */
+
+  /* Hidden state: identical geometry, just invisible and below the mask. */
+  :global(html[data-intro='return']) [data-hero-item],
+  :global(html[data-intro='return']) [data-hero-note] {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  :global(html[data-intro='return']) .paper-cards {
+    opacity: 0;
+    transform: translateX(60px);
+  }
+  :global(html[data-intro='return']) .paper-letter {
+    opacity: 0;
+    transform: translateY(110%);
+  }
+  :global(html[data-intro='return']) .paper-mark {
+    background-size: 0% 100%;
+  }
+
+  /* The rolling letters: fade + rise, one after another across the whole headline. */
+  :global(html[data-intro='return']) .paper-letter {
+    animation: ret-letter var(--ret-letter-dur) cubic-bezier(0.22, 1, 0.36, 1) both;
+    /* --i is the letter's index in the headline; the line's start is added by its own rule below. */
+    animation-delay: calc(var(--ret-line-start, 0s) + var(--i, 0) * var(--ret-letter-step));
+  }
+  /* Line start times. Letters carry their index WITHIN the line, so each line begins at its own
+     offset with no gap while the lines still overlap slightly, as the spec's timings intend. */
+  :global(html[data-intro='return']) [data-line='1'] {
+    --ret-line-start: var(--ret-line-1-delay);
+  }
+  :global(html[data-intro='return']) [data-line='2'] {
+    --ret-line-start: var(--ret-line-2-delay);
+  }
+  :global(html[data-intro='return']) [data-line='3'] {
+    --ret-line-start: var(--ret-line-3-delay);
+  }
+  @keyframes ret-letter {
+    from {
+      opacity: 0;
+      transform: translateY(110%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Everything else in the return entrance, on the same tokens. */
+  :global(html[data-intro='return']) [data-hero-item],
+  :global(html[data-intro='return']) [data-hero-note] {
+    animation: hero-up var(--ret-rise-dur) cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  :global(html[data-intro='return']) .paper-badge {
+    animation-duration: 0.4s;
+    animation-delay: var(--ret-badge-delay);
+  }
+  :global(html[data-intro='return']) .paper-sub {
+    animation-delay: var(--ret-sub-delay);
+  }
+  :global(html[data-intro='return']) .paper-ctas {
+    animation-delay: var(--ret-cta-delay);
+  }
+  :global(html[data-intro='return']) [data-hero-note] {
+    animation: hero-fade var(--ret-rise-dur) ease both;
+    animation-delay: var(--ret-sub-delay);
+  }
+  :global(html[data-intro='return']) .paper-cards {
+    animation: hero-in-right var(--ret-cards-dur) cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--ret-cards-delay);
+  }
+  /* The highlighter sweeps once its line's last letter has landed. */
+  :global(html[data-intro='return']) .paper-mark {
+    animation: paper-mark-sweep var(--ret-mark-dur) ease-out both;
+    animation-delay: var(--ret-mark-delay);
+  }
+  /* The headline container itself never animates in the return state: only its letters do. */
+  :global(html[data-intro='return']) .paper-h1 {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  /* "done" is the settled state after either entrance: everything final, nothing animated. */
+  :global(html[data-intro='done']) [data-hero-item],
+  :global(html[data-intro='done']) [data-hero-note],
+  :global(html[data-intro='done']) .paper-cards,
+  :global(html[data-intro='done']) .paper-line .paper-rise,
+  :global(html[data-intro='done']) .paper-letter,
+  :global(html[data-intro='done']) .paper-mark {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  :global(html[data-intro='done']) .paper-mark {
+    background-size: 100% 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* No intro: the hero is final from the first paint, so nothing is hidden and nothing animates. */
+    :global(html[data-intro='splash']) [data-hero-item],
+    :global(html[data-intro='splash']) [data-hero-note],
+    :global(html[data-intro='splash']) .paper-cards,
+    :global(html[data-intro='splash']) .paper-line .paper-rise,
+    :global(html[data-intro='hero']) [data-hero-item],
+    :global(html[data-intro='hero']) [data-hero-note],
+    :global(html[data-intro='hero']) .paper-cards,
+    :global(html[data-intro='hero']) .paper-line .paper-rise {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+    :global(html[data-intro='splash']) .paper-mark,
+    :global(html[data-intro='hero']) .paper-mark {
+      background-size: 100% 100%;
+      animation: none;
+    }
+    .vcard {
+      transition: opacity 0.3s linear;
+    }
+    /* Reduced motion: cards cross-fade between positions instead of flying. */
+    .vcard[data-pos='0'],
+    .vcard[data-pos='1'],
+    .vcard[data-pos='2'] {
+      transition-property: opacity;
+      transition-duration: 0.3s;
+    }
+    .vcard[data-leaving='true'] {
+      transition: opacity 0.2s linear;
+    }
+    .paper-glow {
+      transition: none;
+    }
+  }
+</style>
+
+<script is:inline data-motion>
+  // Card cycle, verdict buttons, glow and the entrance. Pure DOM; no framework.
+  (function () {
+    var hero = document.querySelector('[data-hero-paper]');
+    if (!hero) return;
+
+    var cards = [].slice.call(hero.querySelectorAll('[data-vcard]'));
+    var buttons = [].slice.call(hero.querySelectorAll('[data-verdict-btn]'));
+    var glow = hero.querySelector('[data-hero-glow]');
+    var live = hero.querySelector('[data-hero-live]');
+    if (!cards.length) return;
+
+    var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // All interaction timings live here.
+    var TIMING = {
+      cycleEvery: 2600, // automatic cycle period
+      hoverDelay: 80, // debounce so sweeping across buttons shows only the last
+      resumeAfterHover: 2000, // after the pointer leaves both buttons and cards
+      resumeAfterTap: 6000, // after a tap / click / keypress
+      leaveMs: 420, // a card's fly-out before it re-enters at the back
+    };
+
+    // order[0] is the front card, order[1] second, order[2] third.
+    var order = [0, 1, 2];
+    var paused = false;
+    var holdUntil = 0;
+    var leaving = false;
+    // Bumped whenever something external reorders the deck. A cycle that was mid-flight when the
+    // user acted checks this and stands down, so its pending timer cannot overwrite their choice.
+    var generation = 0;
+    // Pending debounce timers, so a sweep across buttons only applies the last one.
+    var hoverTimer = 0;
+    var resumeTimer = 0;
+
+    // `announce` is true only for tap / click / keyboard, never for hover.
+    function paint(announce) {
+      cards.forEach(function (card, i) {
+        var pos = order.indexOf(i);
+        card.removeAttribute('data-leaving');
+        card.setAttribute('data-pos', String(pos));
+        // Only the front card is exposed to assistive tech.
+        card.setAttribute('aria-hidden', pos === 0 ? 'false' : 'true');
+      });
+      // Glow follows the front card's colour.
+      var front = cards[order[0]];
+      if (front && glow) {
+        glow.style.setProperty('--glow', front.getAttribute('data-dot'));
+      }
+      // Buttons mirror the front card.
+      buttons.forEach(function (btn, i) {
+        btn.setAttribute('aria-pressed', i === order[0] ? 'true' : 'false');
+      });
+      if (live && announce) {
+        var f = cards[order[0]];
+        if (f) {
+          var word = f.querySelector('.vcard-word').textContent.trim();
+          var reason = f.querySelector('.vcard-reason').textContent.trim();
+          var product = f.querySelector('.vcard-chip').textContent.trim();
+          live.textContent = 'Showing ' + word + ': ' + product + ', ' + reason + '.';
+        }
+      }
+    }
+
+    function advance() {
+      if (leaving) return;
+      leaving = true;
+      var mine = generation;
+      var frontIdx = order[0];
+      var front = cards[frontIdx];
+      front.setAttribute('data-leaving', 'true');
+      window.setTimeout(function () {
+        // The user acted while this card was flying out: drop this cycle's result entirely.
+        if (mine !== generation) {
+          leaving = false;
+          return;
+        }
+        // Move the front card to the back.
+        order = [order[1], order[2], order[0]];
+        front.removeAttribute('data-leaving');
+        paint(false);
+        leaving = false;
+      }, TIMING.leaveMs);
+    }
+
+    function cycleRunning() {
+      return !REDUCED && !paused && Date.now() >= holdUntil;
+    }
+
+    // A self-rescheduling timer rather than setInterval: after a pause the next card must advance
+    // when the pause expires, not whenever a fixed interval happens to come round (which made the
+    // first post-hover change land up to a whole cycle late).
+    var cycleTimer = 0;
+    function scheduleNext(ms) {
+      window.clearTimeout(cycleTimer);
+      if (REDUCED) return;
+      cycleTimer = window.setTimeout(function () {
+        if (cycleRunning()) advance();
+        scheduleNext(TIMING.cycleEvery);
+      }, ms);
+    }
+    // NOTE: the first scheduleNext() runs once the cards have landed (see the end of this script),
+    // so the deck does not cycle behind the opening film. CLEAN is in front until then.
+
+    /**
+     * Bring card `idx` to the front immediately, continuing from whatever is there now so the
+     * remaining two keep their relative order (no jump back to CLEAN).
+     * Cancels any in-flight fly-out so repeated switches cannot stack or jump.
+     */
+    function show(idx, announce) {
+      if (order[0] === idx) {
+        // Already in front: still settle any fly-out and refresh the announcement.
+        generation += 1;
+        leaving = false;
+        cards.forEach(function (c) {
+          c.removeAttribute('data-leaving');
+        });
+        paint(announce);
+        return;
+      }
+      // Invalidate the pending fly-out and clear its leaving state.
+      generation += 1;
+      leaving = false;
+      cards.forEach(function (c) {
+        c.removeAttribute('data-leaving');
+      });
+      var rest = order.filter(function (i) {
+        return i !== idx;
+      });
+      order = [idx].concat(rest);
+      paint(announce);
+    }
+
+    // ---------- hover / focus (laptop pointer and keyboard share this) ----------
+    // Debounced by hoverDelay so sweeping the cursor across all three only shows the last.
+    function queueShow(idx) {
+      window.clearTimeout(hoverTimer);
+      hoverTimer = window.setTimeout(function () {
+        show(idx, false);
+      }, TIMING.hoverDelay);
+    }
+
+    function pauseNow() {
+      paused = true;
+      window.clearTimeout(resumeTimer);
+    }
+    // Resume after a quiet period, continuing from whichever card is in front. The next advance is
+    // scheduled for exactly the end of that quiet period, so the cycle restarts on time instead of
+    // waiting for a fixed interval that may already be half spent.
+    function resumeLater(ms) {
+      window.clearTimeout(resumeTimer);
+      paused = false;
+      holdUntil = Date.now() + ms;
+      scheduleNext(ms);
+    }
+
+    var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    var btnRow = hero.querySelector('[data-verdict-btns]');
+    // Whether the pointer is currently over the buttons or over the card stack; the cycle pauses
+    // while either is true and resumes only once both are false.
+    var hoveringButtons = false;
+    var hoveringCards = false;
+
+    buttons.forEach(function (btn) {
+      var idx = Number(btn.getAttribute('data-index'));
+
+      // Pointer hover (mouse/trackpad only): no click needed.
+      if (finePointer) {
+        btn.addEventListener('pointerenter', function () {
+          pauseNow();
+          queueShow(idx);
+        });
+      }
+
+      // Keyboard focus behaves like hover.
+      btn.addEventListener('focus', function () {
+        pauseNow();
+        queueShow(idx);
+      });
+
+      // Click (mouse) and tap (touch) are the deliberate actions: announce them.
+      btn.addEventListener('click', function () {
+        window.clearTimeout(resumeTimer);
+        window.clearTimeout(hoverTimer);
+        show(idx, true);
+        resumeLater(TIMING.resumeAfterTap);
+      });
+
+      // Arrow keys move between the three buttons.
+      btn.addEventListener('keydown', function (event) {
+        var delta = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+        if (!delta) return;
+        event.preventDefault();
+        var next = buttons[(idx + delta + buttons.length) % buttons.length];
+        if (next) next.focus();
+      });
+    });
+
+    // Leaving the button row resumes the cycle from the card in front.
+    if (btnRow) {
+      btnRow.addEventListener('pointerleave', function () {
+        hoveringButtons = false;
+        // Let the card the pointer is still over claim the pause before we release it.
+        window.setTimeout(function () {
+          if (!hoveringCards) resumeLater(TIMING.resumeAfterHover);
+        }, 0);
+      });
+    }
+
+    // ---------- touch: slide a finger along the buttons ----------
+    // pointerdown captures the pointer, pointermove maps the finger to a button, pointerup starts
+    // the resume timer. touch-action: pan-y on the row keeps vertical page scrolling working.
+    if (btnRow) {
+      var dragIndex = -1;
+
+      function buttonAt(x, y) {
+        var el = document.elementFromPoint(x, y);
+        var btn = el && el.closest ? el.closest('[data-verdict-btn]') : null;
+        return btn ? Number(btn.getAttribute('data-index')) : -1;
+      }
+
+      btnRow.addEventListener('pointerdown', function (event) {
+        // Only for touch/pen; mouse press is handled by click.
+        if (event.pointerType === 'mouse') return;
+        dragIndex = buttonAt(event.clientX, event.clientY);
+        if (dragIndex < 0) return;
+        try {
+          btnRow.setPointerCapture(event.pointerId);
+        } catch (e) {
+          /* capture is a nicety; the elementFromPoint path still works without it */
+        }
+        pauseNow();
+        queueShow(dragIndex);
+      });
+
+      btnRow.addEventListener('pointermove', function (event) {
+        if (dragIndex < 0) return;
+        var under = buttonAt(event.clientX, event.clientY);
+        if (under < 0 || under === dragIndex) return;
+        dragIndex = under;
+        queueShow(under);
+      });
+
+      var endDrag = function () {
+        if (dragIndex < 0) return;
+        dragIndex = -1;
+        resumeLater(TIMING.resumeAfterTap);
+      };
+      btnRow.addEventListener('pointerup', endDrag);
+      btnRow.addEventListener('pointercancel', endDrag);
+    }
+
+    // ---------- the card stack pauses the cycle too ----------
+    var stage = hero.querySelector('[data-hero-stage]');
+    if (stage) {
+      stage.addEventListener('pointerenter', function () {
+        hoveringCards = true;
+        pauseNow();
+      });
+      stage.addEventListener('pointerleave', function () {
+        hoveringCards = false;
+        if (!hoveringButtons) resumeLater(TIMING.resumeAfterHover);
+      });
+    }
+
+    if (btnRow) {
+      btnRow.addEventListener('pointerenter', function () {
+        hoveringButtons = true;
+      });
+    }
+
+    paint(false);
+
+
+    // Entrance is CSS-owned: <html data-intro> is the single source of truth, set before the first
+    // paint and advanced by SugarSplash along the shared timeline. The hero only reveals the
+    // quick-actions bar when the intro is over, and starts its card cycle once the cards land.
+    function showBar() {
+      var bar = document.querySelector('[data-paper-bar]');
+      if (!bar || REDUCED) {
+        if (bar) {
+          bar.hidden = false;
+          bar.setAttribute('data-shown', 'true');
+        }
+        return;
+      }
+      bar.hidden = false;
+      // Two frames: one to commit the hidden -> layout state, one to trigger the transition.
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          bar.setAttribute('data-shown', 'true');
+        });
+      });
+    }
+    // The hero obeys <html data-intro>; it never decides its own entrance. It only needs to know
+    // when the entrance has finished, to reveal the quick-actions bar, and when the cards have
+    // landed, to start the card cycle from CLEAN.
+    function introSeconds(name, fallback) {
+      var raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      var n = parseFloat(raw);
+      return isNaN(n) ? fallback : n * (raw.indexOf('ms') > -1 ? 0.001 : 1);
+    }
+    var htmlEl = document.documentElement;
+    var INTRO = htmlEl.getAttribute('data-intro');
+    // Two entrances, one timeline source. "splash" waits for the film (SugarSplash advances the
+    // attribute); "return" rolls in immediately. Either way the hero ends by setting "done".
+    var NO_ENTRANCE = INTRO === 'none' || INTRO === 'done';
+    var IS_RETURN = INTRO === 'return';
+
+    // When the cards land, measured from load for "return" and from the hero start for "splash".
+    var CARDS_LAND_MS = Math.round(
+      IS_RETURN
+        ? (introSeconds('--ret-cards-delay', 0.7) + introSeconds('--ret-cards-dur', 0.8)) * 1000
+        : (introSeconds('--intro-hero-start', 2.6) +
+            introSeconds('--intro-cards-delay', 0.4) +
+            introSeconds('--intro-cards-dur', 0.8)) *
+            1000,
+    );
+    var CYCLE_DELAY_MS = Math.round(introSeconds('--intro-cycle-delay', 1.2) * 1000);
+    var CYCLE_START_MS = NO_ENTRANCE ? CYCLE_DELAY_MS : CARDS_LAND_MS + CYCLE_DELAY_MS;
+    // When the last thing to finish actually finishes — the settled "done" state is only applied
+    // after that, or it would cut a running animation short (the highlighter sweeps to 1.76s).
+    var ENTRANCE_END_MS = Math.round(
+      (IS_RETURN
+        ? Math.max(
+            introSeconds('--ret-cards-delay', 0.7) + introSeconds('--ret-cards-dur', 0.8),
+            introSeconds('--ret-mark-delay', 1.41) + introSeconds('--ret-mark-dur', 0.35),
+            introSeconds('--ret-line-3-delay', 0.56) + 14 * introSeconds('--ret-letter-step', 0.025) + introSeconds('--ret-letter-dur', 0.5),
+          )
+        : introSeconds('--intro-hero-start', 2.6) +
+          Math.max(
+            introSeconds('--intro-cards-delay', 0.4) + introSeconds('--intro-cards-dur', 0.8),
+            introSeconds('--intro-mark-delay', 0.84) + introSeconds('--intro-mark-dur', 0.35),
+          )) * 1000,
+    );
+    var INTRO_END_MS = ENTRANCE_END_MS + 120;
+
+    function afterIntro(fn) {
+      if (NO_ENTRANCE || htmlEl.getAttribute('data-intro') === 'done') {
+        fn();
+        return;
+      }
+      var obs = new MutationObserver(function () {
+        if (htmlEl.getAttribute('data-intro') === 'done') {
+          obs.disconnect();
+          fn();
+        }
+      });
+      obs.observe(htmlEl, { attributes: true, attributeFilter: ['data-intro'] });
+      // Belt and braces: never leave the bar hidden if the observer cannot fire.
+      window.setTimeout(function () {
+        if (htmlEl.getAttribute('data-intro') !== 'done') {
+          obs.disconnect();
+          fn();
+        }
+      }, INTRO_END_MS + 2000);
+    }
+
+    // The return entrance has no splash to advance the state, so the hero closes it itself once the
+    // cards have landed. "done" is the settled state and matches the end keyframes exactly.
+    if (IS_RETURN) {
+      window.setTimeout(function () {
+        if (htmlEl.getAttribute('data-intro') === 'return') htmlEl.setAttribute('data-intro', 'done');
+      }, INTRO_END_MS + 60);
+    }
+
+    // Back/forward restores the page from cache with "return" set again; restart the entrance.
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) restartReturn();
+    });
+    function restartReturn() {
+      if (htmlEl.getAttribute('data-intro') !== 'return') return;
+      window.setTimeout(function () {
+        if (htmlEl.getAttribute('data-intro') === 'return') htmlEl.setAttribute('data-intro', 'done');
+      }, INTRO_END_MS + 60);
+    }
+
+    afterIntro(showBar);
+    // Start cycling when the cards land. scheduleNext takes the delay until the NEXT advance, so
+    // pass 0 and let it re-arm itself after that.
+    window.setTimeout(function () {
+      scheduleNext(0);
+    }, CYCLE_START_MS);
+
+    // Desktop: a hovered letter is knocked down and springs back. One-shot on pointerenter.
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      var h1El = document.querySelector('[data-rise]');
+      if (h1El) {
+        h1El.addEventListener('pointerover', function (event) {
+          var t = event.target;
+          if (!t.classList || !t.classList.contains('paper-letter')) return;
+          t.removeAttribute('data-knock');
+          void t.offsetWidth; // restart the animation
+          t.setAttribute('data-knock', 'true');
+        });
+      }
+    }
+  })();
+</script>

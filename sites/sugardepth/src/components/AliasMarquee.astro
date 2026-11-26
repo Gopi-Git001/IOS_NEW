@@ -1,0 +1,583 @@
+---
+// The "Sugar's other names" band: two rows of sugar-name cards drifting in opposite directions.
+//
+// Built from the InfiniteMovingCards idea, but this site has no React and no motion library
+// (scripts/check.mjs also allows only JSON-LD, data-motion inline scripts and two named modules),
+// so the loop is a CSS keyframe on a doubled track and the script below is a plain DOM controller.
+//
+// Seamless loop: each row is ONE track holding the same cards twice — 8 real, then 8 copies. The
+// copies are decoration (aria-hidden + inert + tabindex="-1"), so screen readers, Google and Tab
+// only meet the real cards. The track is exactly two copies wide, so translating it by half its
+// width (-50%) puts copy two where copy one began: the wrap has no visible jump.
+//
+// Every card is an ordinary <a> in the HTML and the animation is pure CSS, so the section reads
+// and links without this script. The script only adds the button, the touch hold and the
+// run-while-visible logic; hover and keyboard focus pause in CSS.
+import { PAGES, ADDED_SUGAR_ALIAS_COUNT } from '../data/ingredients';
+import { alsoListedAs, formatName } from '../data/alias-display';
+
+interface Props {
+  /** The two rows, top row first. Each entry is the printed name as it appears on a label. */
+  rows: [string[], string[]];
+}
+
+const { rows } = Astro.props as Props;
+
+// Resolve every printed name to the guide that owns it. The "Also listed as" line is chosen at
+// display time (see data/alias-display.ts) so the registry data stays untouched; a missing alias
+// is still a build error, never a dead link.
+function cardsFor(aliases: string[]) {
+  return aliases.map((alias) => {
+    const page = PAGES.find((p) => p.treatment === 'added_sugar' && p.aliases.includes(alias));
+    if (!page) throw new Error(`AliasMarquee: "${alias}" is not an added-sugar alias in the ingredient registry`);
+    const label = formatName(alias);
+    const others = page.aliases.filter((a) => a !== alias);
+    return { label, slug: page.slug, also: alsoListedAs(others, label) };
+  });
+}
+
+const rowsOfCards = rows.map(cardsFor);
+const total = rowsOfCards.reduce((n, cards) => n + cards.length, 0);
+---
+
+<div class="wrap aliases-head">
+  <h2 id="explore-h">Sugar's other names</h2>
+  <p class="explore-sub">{total} names from real labels. All of them are added sugar.</p>
+  <button
+    class="marquee-toggle"
+    type="button"
+    data-marquee-toggle
+    aria-pressed="false"
+    aria-label="Pause moving names"
+  >
+    <svg class="marquee-toggle-pause" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="8" y="6" width="3.2" height="12" rx="1.1"></rect>
+      <rect x="12.8" y="6" width="3.2" height="12" rx="1.1"></rect>
+    </svg>
+    <svg class="marquee-toggle-play" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M9 6.2v11.6a.9.9 0 0 0 1.37.77l9.1-5.8a.9.9 0 0 0 0-1.54l-9.1-5.8A.9.9 0 0 0 9 6.2Z"></path>
+    </svg>
+  </button>
+</div>
+
+<div class="marquee" data-marquee data-live="true" data-paused="false">
+  {
+    rowsOfCards.map((cards, rowIndex) => (
+      <div class={`marquee-row marquee-row-${rowIndex + 1}`} data-marquee-row>
+        {/* One track, two copies. The real half comes first; focus and screen readers stop there. */}
+        <ul class="marquee-track">
+          {
+            cards.map((card) => (
+              <li>
+                <a class="name-card" href={`/ingredients/${card.slug}`} data-real-card>
+                  <span class="name-card-title">{card.label}</span>
+                  {card.also && <span class="name-card-also">Also listed as {card.also}</span>}
+                  <span class="name-card-foot">
+                    <span class="name-card-tag">Added sugar</span>
+                    <span class="name-card-arrow" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14" />
+                        <path d="m13 6 6 6-6 6" />
+                      </svg>
+                    </span>
+                  </span>
+                </a>
+              </li>
+            ))
+          }
+          {
+            cards.map((card) => (
+              // The looping copy is decoration for assistive tech and Tab only: aria-hidden keeps
+              // it out of the a11y tree and tabindex="-1" out of the tab order. It deliberately does
+              // NOT use `inert`, because inert also blocks pointer hit-testing — and any one of these
+              // copies can be the card under the cursor at the start of row 2. A mouse or touch user
+              // must still be able to click whatever card they can see.
+              <li aria-hidden="true">
+                <a class="name-card" href={`/ingredients/${card.slug}`} tabindex="-1">
+                  <span class="name-card-title">{card.label}</span>
+                  {card.also && <span class="name-card-also">Also listed as {card.also}</span>}
+                  <span class="name-card-foot">
+                    <span class="name-card-tag">Added sugar</span>
+                    <span class="name-card-arrow" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14" />
+                        <path d="m13 6 6 6-6 6" />
+                      </svg>
+                    </span>
+                  </span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    ))
+  }
+</div>
+
+<div class="wrap aliases-foot">
+  <p class="explore-all">
+    <a href="/hidden-sugar-names"
+      >See all {ADDED_SUGAR_ALIAS_COUNT} sugar names
+      <span class="explore-all-arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14" />
+          <path d="m13 6 6 6-6 6" />
+        </svg>
+      </span></a
+    >
+  </p>
+</div>
+
+<style>
+  /* ---------- header: stays in the page container, same left edge as every other section ---------- */
+  .aliases-head {
+    position: relative;
+    padding-block-end: 24px;
+  }
+  .aliases-head h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(30px, 1rem + 2.6vw, 48px);
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+  .aliases-head .explore-sub {
+    margin: 12px 0 0;
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--muted);
+    max-inline-size: 52ch;
+  }
+
+  /* A 44px round pause/play. Beside the header on laptops, under it on phones. */
+  .marquee-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 44px;
+    block-size: 44px;
+    margin-block-start: 16px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.2s var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .marquee-toggle:hover {
+    border-color: var(--ink);
+  }
+  .marquee-toggle:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+  .marquee-toggle svg {
+    inline-size: 18px;
+    block-size: 18px;
+    fill: currentColor;
+    display: block;
+  }
+  /* aria-pressed="true" means paused, so the button then offers "play". */
+  .marquee-toggle .marquee-toggle-play {
+    display: none;
+  }
+  .marquee-toggle[aria-pressed='true'] .marquee-toggle-pause {
+    display: none;
+  }
+  .marquee-toggle[aria-pressed='true'] .marquee-toggle-play {
+    display: block;
+  }
+  @media (min-width: 1024px) {
+    .marquee-toggle {
+      position: absolute;
+      inset-block-start: 2px;
+      inset-inline-end: var(--container-pad);
+      margin: 0;
+    }
+  }
+
+  /* ---------- the "see all" line under the rows ---------- */
+  /* 20px from the second row's card edge to the link. The row reserves 4px below its cards for the
+     hover lift, so 16px here measures 20px from the card itself. The line is a flex box so no
+     inline baseline strut can add to the gap, and the link carries no min-height or margin. */
+  .aliases-foot {
+    padding-block-start: 16px;
+  }
+  .aliases-foot .explore-all {
+    margin: 0;
+    display: flex;
+  }
+  .aliases-foot .explore-all a {
+    min-height: 0;
+  }
+
+  /* ---------- the marquee: two full-bleed rows ---------- */
+  .marquee {
+    --card-w: 220px;
+    --card-gap: 12px;
+    /* 8 cards + 8 gaps per copy; the track is two copies wide. */
+    --loop: 71.4s; /* 8 * (220 + 12) / 26px per second */
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    /* No margin here: the "see all" gap is owned by .aliases-foot alone, so it can be exact. */
+    margin-block-end: 0;
+  }
+
+  .marquee-row {
+    /* Room for the 2px hover lift, so the row's overflow clip never shaves a card. */
+    padding-block: 4px;
+    overflow: hidden;
+    /* Cards fade out at both edges instead of being cut, over the --paper band. */
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+  }
+
+  .marquee-track {
+    display: flex;
+    align-items: stretch;
+    gap: var(--card-gap);
+    /* The trailing gap belongs to the track, so -50% is exactly one copy. */
+    padding-inline: 0 var(--card-gap);
+    margin: 0;
+    list-style: none;
+    inline-size: max-content;
+    will-change: transform;
+  }
+
+  /* Row 1 drifts left, row 2 drifts right. */
+  .marquee-row-1 .marquee-track {
+    animation: marquee-left var(--loop) linear infinite;
+  }
+  .marquee-row-2 .marquee-track {
+    animation: marquee-right var(--loop) linear infinite;
+  }
+
+  /* -50% is one copy. The extra half step offsets row 2 so its cards never sit in row 1's columns. */
+  @keyframes marquee-left {
+    from {
+      transform: translate3d(calc(var(--card-gap) / -2), 0, 0);
+    }
+    to {
+      transform: translate3d(calc(-50% - var(--card-gap) / 2), 0, 0);
+    }
+  }
+  @keyframes marquee-right {
+    from {
+      transform: translate3d(calc(-50% - var(--card-gap) / 2), 0, 0);
+    }
+    to {
+      transform: translate3d(calc(var(--card-gap) / -2), 0, 0);
+    }
+  }
+
+  /* Every pause: the button, hover, keyboard focus, a finger on the rows, an off-screen
+     section, and a background tab. */
+  .marquee[data-paused='true'] .marquee-track,
+  .marquee[data-live='false'] .marquee-track,
+  .marquee[data-touch='true'] .marquee-track,
+  .marquee:hover .marquee-track,
+  .marquee:focus-within .marquee-track {
+    animation-play-state: paused;
+  }
+
+  /* A card Tab reached may have drifted off the edge. The track stops and slides so the card sits
+     near the middle. The shift lives on the padding of the track's parent, not on the transform,
+     so it composes with the running animation instead of fighting it. */
+  .marquee-row[data-focused] .marquee-track {
+    animation-play-state: paused;
+  }
+  .marquee-row[data-focused] .marquee-track {
+    translate: var(--focus-shift, 0px) 0;
+    transition: translate 0.4s var(--ease-out);
+  }
+
+  /* ---------- the card ---------- */
+  /* Every card in a row is the tallest card's height: the track stretches its items, each <li>
+     stretches its <a>, and the foot is pinned to the bottom, so a card with no "Also listed as"
+     line (Trehalose) lines up with its neighbours instead of floating short. */
+  .marquee-track > li {
+    flex: none;
+    inline-size: var(--card-w);
+    display: flex;
+    align-items: stretch;
+  }
+  .name-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    inline-size: 100%;
+    min-block-size: 104px;
+    padding: var(--card-pad);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--ink);
+    text-decoration: none;
+    transition: border-color 0.2s var(--ease-out), transform 0.2s var(--ease-out),
+      box-shadow 0.2s var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .name-card:hover,
+  .name-card:focus-visible {
+    border-color: var(--ink);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px -12px rgba(18, 22, 20, 0.5);
+  }
+  .name-card:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+  .name-card-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .name-card-also {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .name-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-block-start: auto;
+  }
+  /* A neutral category tag: grey, never a verdict colour. */
+  .name-card-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #eef1ef;
+    color: var(--ink);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .name-card-arrow {
+    display: inline-flex;
+    color: var(--muted);
+    transition: transform 0.25s var(--ease-out);
+  }
+  .name-card-arrow svg {
+    inline-size: 16px;
+    block-size: 16px;
+    display: block;
+  }
+  .name-card:hover .name-card-arrow {
+    transform: translateX(3px);
+    color: var(--ink);
+  }
+
+  /* ---------- laptops: wider cards and gaps, deeper edge fade ---------- */
+  @media (min-width: 1024px) {
+    .marquee {
+      --card-w: 248px;
+      --card-gap: 16px;
+      --loop: 81.2s; /* 8 * (248 + 16) / 26 */
+      gap: 8px; /* + the two 4px row paddings = 16px between cards */
+    }
+    .marquee-row {
+      -webkit-mask-image: linear-gradient(to right, transparent 0, #000 96px, #000 calc(100% - 96px), transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0, #000 96px, #000 calc(100% - 96px), transparent 100%);
+    }
+    .name-card {
+      min-block-size: 120px;
+    }
+    .name-card-title {
+      font-size: 19px;
+    }
+  }
+
+  /* ---------- reduced motion: no marquee, no copies, just the 16 real cards ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    /* The rows go back inside the page container, so the grid lines up with the heading. */
+    .marquee {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--gap);
+      inline-size: 100%;
+      max-inline-size: var(--container-max);
+      margin-inline: auto;
+      padding-inline: var(--container-pad);
+      margin-block-end: 0;
+    }
+    .marquee-row {
+      display: contents;
+      overflow: visible;
+      padding-block: 0;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+    .marquee-track {
+      display: contents;
+      animation: none !important;
+      translate: none !important;
+    }
+    /* The decorative half is hidden, so exactly 16 cards remain. */
+    .marquee-track > li[aria-hidden='true'] {
+      display: none;
+    }
+    .marquee-track > li {
+      inline-size: auto;
+    }
+    /* There is nothing to pause, so the control goes away. */
+    .marquee-toggle {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) and (min-width: 1024px) {
+    .marquee {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+</style>
+
+<script is:inline data-motion>
+  // Pause control for the alias marquee. Hover, keyboard focus and reduced motion are CSS-only;
+  // this adds the button, the touch hold, and pausing while the band is off-screen or the tab is
+  // hidden. Nothing here is needed to read or follow the cards.
+  (function () {
+    var marquee = document.querySelector('[data-marquee]');
+    if (!marquee) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var rows = [].slice.call(marquee.querySelectorAll('[data-marquee-row]'));
+    var toggle = document.querySelector('[data-marquee-toggle]');
+
+    // --- the pause / play button ---
+    function paint() {
+      if (!toggle) return;
+      var playing = toggle.getAttribute('aria-pressed') !== 'true';
+      toggle.setAttribute('aria-label', playing ? 'Pause moving names' : 'Play moving names');
+    }
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        var paused = toggle.getAttribute('aria-pressed') === 'true';
+        toggle.setAttribute('aria-pressed', paused ? 'false' : 'true');
+        marquee.setAttribute('data-paused', paused ? 'false' : 'true');
+        paint();
+      });
+      paint();
+    }
+
+    // --- animate only while the band is on screen and the tab is visible ---
+    var onScreen = false;
+    function sync() {
+      marquee.setAttribute('data-live', onScreen && !document.hidden ? 'true' : 'false');
+    }
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(
+        function (entries) {
+          onScreen = entries[0].isIntersecting;
+          sync();
+        },
+        { rootMargin: '120px' },
+      ).observe(marquee);
+    } else {
+      onScreen = true;
+      sync();
+    }
+    document.addEventListener('visibilitychange', sync);
+
+    // --- a finger on the rows holds them still, then lets go 1.5s after it lifts ---
+    var holdTimer = null;
+    marquee.addEventListener('pointerdown', function () {
+      clearTimeout(holdTimer);
+      marquee.setAttribute('data-touch', 'true');
+    });
+    function release() {
+      clearTimeout(holdTimer);
+      holdTimer = setTimeout(function () {
+        marquee.removeAttribute('data-touch');
+      }, 1500);
+    }
+    marquee.addEventListener('pointerup', release);
+    marquee.addEventListener('pointercancel', release);
+
+    // --- keep the focused card fully visible ---
+    // The track carries two independent offsets: the marquee animation's `transform`, and a
+    // `translate` from --focus-shift. Row 2's animation begins at -50%, so its real cards start a
+    // full set to the LEFT and only the decorative copies are on screen. A shift is therefore
+    // allowed to be positive — the old `shift <= 0` clamp made row 2's first cards impossible to
+    // reach. Bounds are derived from where the track actually sits, not from zero.
+    rows.forEach(function (row) {
+      var track = row.querySelector('.marquee-track');
+      row.addEventListener('focusin', function (event) {
+        var card = event.target.closest('[data-real-card]');
+        if (!card || !track) return;
+
+        // 1. Freeze the animation and clear any previous shift, so the measurement is of the
+        //    track's resting position with no leftover translate.
+        row.setAttribute('data-focused', '');
+        track.style.transition = 'none';
+        row.style.setProperty('--focus-shift', '0px');
+        void track.offsetWidth; // flush
+
+        // 2. Measure at shift 0.
+        var cardBox = card.getBoundingClientRect();
+        var rowBox = row.getBoundingClientRect();
+        var trackBox = track.getBoundingClientRect();
+        var rowWidth = rowBox.width;
+        var totalWidth = trackBox.width;
+        if (!rowWidth || !totalWidth) return;
+        var margin = 16; // keep the card clear of the edge fade
+
+        // 3. Legal range for the shift. The track must still cover the whole row, but the first
+        //    card of a row sits hard against the track's start, so sliding it out from under the
+        //    edge fade briefly needs a small gap at the left. Allow that gap up to the fade width
+        //    rather than refusing to move at all.
+        var trackLeft = trackBox.left - rowBox.left;
+        var sMax = -trackLeft + margin;
+        var sMin = rowWidth - totalWidth - trackLeft;
+
+        // 4. Minimal shift that brings the card clear of the edge fade (0 if already clear).
+        var cardLeft = cardBox.left - rowBox.left;
+        var cardWidth = cardBox.width;
+        var need = 0;
+        if (cardLeft < margin) need = margin - cardLeft;
+        else if (cardLeft + cardWidth > rowWidth - margin) need = rowWidth - margin - (cardLeft + cardWidth);
+
+        // 5. The track holds two identical sets, so shifting by one set width is visually
+        //    identical. Try the needed shift first, then the same shift one or two sets either way,
+        //    and take the first that is legal.
+        var setWidth = totalWidth / 2;
+        var chosen = null;
+        var tries = [need, need - setWidth, need + setWidth, need - 2 * setWidth, need + 2 * setWidth];
+        for (var i = 0; i < tries.length; i++) {
+          if (tries[i] >= sMin - 0.5 && tries[i] <= sMax + 0.5) {
+            chosen = tries[i];
+            break;
+          }
+        }
+        if (chosen === null) chosen = Math.max(sMin, Math.min(sMax, need));
+
+        // 6. Apply next frame with the transition restored, so it slides rather than snaps.
+        requestAnimationFrame(function () {
+          track.style.transition = '';
+          row.style.setProperty('--focus-shift', Math.round(chosen) + 'px');
+        });
+      });
+      row.addEventListener('focusout', function (event) {
+        if (row.contains(event.relatedTarget)) return;
+        row.removeAttribute('data-focused');
+        row.style.removeProperty('--focus-shift');
+      });
+    });
+  })();
+</script>

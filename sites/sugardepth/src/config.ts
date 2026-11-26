@@ -29,4 +29,38 @@ export const ORG = {
 /** Date the content was last reviewed against the rulebook (ISO). */
 export const CONTENT_UPDATED = '2026-11-10';
 
+/**
+ * Homepage hero. "paper" is the light sugar-paper hero with the cycling verdict cards;
+ * "classic" keeps the dark crystal hero. Flip this to compare the two.
+ */
+export const HERO_VARIANT: 'paper' | 'classic' = 'paper';
+
+/**
+ * Falling crystals on the home hero. The paper hero turns them off (they are a dark-band effect
+ * and would fight the light background) without deleting them: switch back to true any time.
+ * Only the home hero is affected; /how-it-works and /about keep their crystal bands.
+ */
+export const HERO_CRYSTALS = false;
+
+/**
+ * Crystals on the /how-it-works top band. That band is now light sugar-paper like the homepage
+ * hero, so the crystals are off there too. The <CrystalSwarm /> component is untouched: flip this
+ * to true to bring them back.
+ */
+export const HOW_IT_WORKS_CRYSTALS = false;
+
+/**
+ * "Sugar's other names" on the homepage. false (default) shows the new white alias cards; true
+ * brings back the original dark flip-tile board with its swarm burst canvas. The old markup, CSS
+ * (swarm.css) and script (src/lib/swarm.ts) are all kept, so this is a one-word switch.
+ */
+export const EXPLORE_SWARM_CARDS = false;
+
+/**
+ * "Sugar's other names" on the homepage. true (default) shows the two-row moving band
+ * (components/AliasMarquee.astro); false brings back the static 8-card grid this replaced.
+ * The grid markup and its CSS are kept, so this is a one-word switch.
+ */
+export const EXPLORE_MARQUEE = true;
+
 export const abs = (path: string) => new URL(path, SITE_URL).href;

@@ -56,3 +56,9 @@ dist-web/
 # Eval: label photos are downloaded (tests/eval/fetch-photos.mjs), the report is generated
 tests/eval/photos/*.jpg
 tests/eval/report.md
+
+# Local share tools (e.g. the cloudflared binary used for a temporary public tunnel)
+.tools/
+
+# Generated design captures for the site; not source
+sites/sugardepth/docs/

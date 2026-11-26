@@ -1,0 +1,259 @@
+---
+// Liquid glass button — the "liquid-glass-button" recipe (specular edge stack + backdrop blur +
+// a sheen that slides across on hover), rebuilt as a dependency-free Astro component.
+//
+// The React original needed @radix-ui/react-slot, class-variance-authority and a cn() helper
+// purely to compose class strings. None of that survives the port: one element, one <style> block.
+//
+//   <LiquidGlassButton href={APP_URL} size="sm" icon>Scan a label</LiquidGlassButton>
+//
+// Renders an <a> when `href` is set, otherwise a <button>.
+interface Props {
+  /** Renders an anchor instead of a button. */
+  href?: string;
+  /** Shows the camera-shutter ring before the label (the site's scan affordance). */
+  icon?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+  class?: string;
+  /** Only used for <a>; ignored for <button>. */
+  target?: string;
+  rel?: string;
+  /** Passed to <button> only. */
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+}
+
+const {
+  href,
+  icon = false,
+  size = 'md',
+  class: className = '',
+  target,
+  rel,
+  type = 'button',
+  disabled = false,
+} = Astro.props;
+
+const Tag = href ? 'a' : 'button';
+const sizeClass = size === 'sm' ? 'is-sm' : size === 'lg' ? 'is-lg' : 'is-md';
+---
+
+<Tag
+  class:list={['liquid-glass', sizeClass, className]}
+  href={href}
+  target={target}
+  rel={rel}
+  type={href ? undefined : type}
+  disabled={href ? undefined : disabled}
+>
+  <span class="lg-tint" aria-hidden="true"></span>
+  <span class="lg-edge" aria-hidden="true"></span>
+  <span class="lg-sheen" aria-hidden="true"></span>
+  <span class="lg-face">
+    {icon && <span class="lg-shutter" aria-hidden="true"></span>}
+    <slot />
+  </span>
+</Tag>
+
+<style>
+  /* ---------- base ---------- */
+  .liquid-glass {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    font-family: var(--sans);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    text-decoration: none;
+    color: var(--ink);
+    background: transparent;
+    cursor: pointer;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.28s var(--ease-out), box-shadow 0.28s var(--ease-out);
+  }
+  .liquid-glass.is-sm {
+    min-height: 44px;
+    padding: 10px 18px;
+    font-size: 0.92rem;
+    gap: 8px;
+  }
+  .liquid-glass.is-md {
+    min-height: 48px;
+    padding: 13px 24px;
+    font-size: 1rem;
+    gap: 10px;
+  }
+  .liquid-glass.is-lg {
+    min-height: 56px;
+    padding: 16px 32px;
+    font-size: 1.06rem;
+    gap: 12px;
+  }
+
+  /* ---------- layer 1: the glass body ---------- */
+  /* A light glass needs something behind it to refract. Over the header's near-opaque paper the
+     blur is imperceptible, so the visual weight comes from the tint gradient and the edge stack. */
+  .lg-tint {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.78) 0%,
+      rgba(255, 255, 255, 0.44) 48%,
+      rgba(20, 22, 19, 0.07) 100%
+    );
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+  }
+
+  /* ---------- layer 2: the specular edge stack ---------- */
+  /* This is what reads as "glass": a bright top bevel, a dark bottom seat, and side highlights. */
+  .lg-edge {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 0 rgba(20, 22, 19, 0.12),
+      inset 1px 0 0 rgba(255, 255, 255, 0.55),
+      inset -1px 0 0 rgba(255, 255, 255, 0.55),
+      inset 0 -6px 10px -6px rgba(20, 22, 19, 0.16),
+      0 1px 2px rgba(20, 22, 19, 0.1),
+      0 8px 20px rgba(20, 22, 19, 0.1);
+    transition: box-shadow 0.28s var(--ease-out);
+  }
+
+  /* ---------- layer 3: the sheen that makes it feel liquid ---------- */
+  .lg-sheen {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .lg-sheen::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    left: -35%;
+    width: 60%;
+    height: 220%;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.9) 42%,
+      rgba(255, 255, 255, 0.2) 60%,
+      transparent 100%
+    );
+    filter: blur(7px);
+    opacity: 0.5;
+    transform: translateX(-40%) rotate(8deg);
+    transition: transform 0.75s var(--ease-out), opacity 0.4s var(--ease-out);
+  }
+  .liquid-glass:hover .lg-sheen::before {
+    transform: translateX(230%) rotate(8deg);
+    opacity: 0.85;
+  }
+  .liquid-glass:active .lg-sheen::before {
+    opacity: 0.25;
+    transition-duration: 0.15s;
+  }
+
+  /* ---------- content ---------- */
+  .lg-face {
+    position: relative;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: inherit;
+  }
+
+  /* The site's scan shutter, sized to the label it sits beside. */
+  .lg-shutter {
+    display: inline-block;
+    flex: none;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    box-shadow: inset 0 0 0 3px rgba(244, 242, 235, 0.92), inset 0 0 0 9px currentColor;
+  }
+  .liquid-glass.is-sm .lg-shutter {
+    width: 15px;
+    height: 15px;
+  }
+
+  /* ---------- interaction ---------- */
+  .liquid-glass:hover {
+    transform: translateY(-1px);
+  }
+  .liquid-glass:hover .lg-edge {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 1),
+      inset 0 -1px 0 rgba(20, 22, 19, 0.14),
+      inset 1px 0 0 rgba(255, 255, 255, 0.65),
+      inset -1px 0 0 rgba(255, 255, 255, 0.65),
+      inset 0 -6px 10px -6px rgba(20, 22, 19, 0.18),
+      0 2px 4px rgba(20, 22, 19, 0.1),
+      0 14px 30px rgba(20, 22, 19, 0.16);
+  }
+  .liquid-glass:active {
+    transform: translateY(1px) scale(0.985);
+    transition-duration: 0.1s;
+  }
+  .liquid-glass:active .lg-edge {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      inset 0 2px 6px -2px rgba(20, 22, 19, 0.3),
+      inset 1px 0 0 rgba(255, 255, 255, 0.4),
+      inset -1px 0 0 rgba(255, 255, 255, 0.4),
+      0 1px 2px rgba(20, 22, 19, 0.08);
+  }
+  .liquid-glass:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+  .liquid-glass:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+  }
+
+  /* No backdrop-filter: fall back to a more opaque body so the label keeps contrast. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .lg-tint {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(248, 247, 242, 0.9) 48%,
+        rgba(226, 224, 215, 0.95) 100%
+      );
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .liquid-glass,
+    .liquid-glass .lg-sheen::before,
+    .liquid-glass .lg-edge {
+      transition: none !important;
+    }
+    .liquid-glass:hover,
+    .liquid-glass:active {
+      transform: none;
+    }
+    .liquid-glass:hover .lg-sheen::before {
+      transform: translateX(-40%) rotate(8deg);
+    }
+  }
+</style>

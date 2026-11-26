@@ -1,26 +1,48 @@
 ---
 import Base from '../layouts/Base.astro';
 import CrystalVerdict from '../components/CrystalVerdict.astro';
+import GradientBackground from '../components/GradientBackground.astro';
 import TryIt from '../components/TryIt.astro';
 import CrystalSwarm from '../components/CrystalSwarm.astro';
+import HeroVerdictCards from '../components/HeroVerdictCards.astro';
+import ScanCta from '../components/ScanCta.astro';
+import HomeClosingCta from '../components/HomeClosingCta.astro';
+import AliasMarquee from '../components/AliasMarquee.astro';
+import { HERO_VARIANT, HERO_CRYSTALS, EXPLORE_SWARM_CARDS, EXPLORE_MARQUEE } from '../config';
 import { APP_URL } from '../config';
 import { organization, website, webApplication } from '../data/schema';
 import { MISSION, MISSION_DETAIL } from '../data/mission';
 import { VERDICTS } from '../data/rules';
 import { ADDED_SUGAR_ALIAS_COUNT, PAGES, toneClass } from '../data/ingredients';
+import { alsoListedAs, formatName } from '../data/alias-display';
 // After Base and the components, so these rules come last in the page's CSS.
 import '../styles/brief-pages.css';
 
 // Three sections: the mission, how it works, and everything else.
 
-// Alias tiles: a name as a label prints it on the front, "That's sugar." on the back. Every name is read from the
-// scanner's registry (src/data/ingredients.ts) and must be one it files under added sugar.
-const TILE_ALIASES = ['evaporated cane juice', 'brown rice syrup', 'agave nectar', 'dextrose', 'barley malt syrup', 'fruit juice concentrate', 'coconut sugar', 'invert sugar'];
-const addedSugarNames = new Set(PAGES.filter((p) => p.treatment === 'added_sugar').flatMap((p) => p.aliases));
-const tiles = TILE_ALIASES.map((alias) => {
-  if (!addedSugarNames.has(alias)) throw new Error(`index: "${alias}" is not an added-sugar name in the ingredient registry`);
-  return alias[0].toUpperCase() + alias.slice(1);
+// Which hero to render. "paper" is the light sugar-paper hero with the cycling verdict cards;
+// "classic" keeps the original dark crystal hero. See HERO_VARIANT in src/config.ts.
+const paperHero = HERO_VARIANT === 'paper';
+
+// Two rows of sugar names for the moving band. Row 1 keeps the eight names the section always
+// showed; row 2 adds eight different printed names. Slugs and the "also listed as" line come from
+// the generated registry, so a renamed ingredient cannot leave a dead link behind.
+const MARQUEE_ROWS: [string[], string[]] = [
+  ['evaporated cane juice', 'brown rice syrup', 'agave nectar', 'dextrose', 'barley malt syrup', 'fruit juice concentrate', 'coconut sugar', 'invert sugar'],
+  ['high fructose corn syrup', 'corn syrup', 'maltose', 'honey', 'maple syrup', 'fructose', 'trehalose', 'isomaltulose'],
+];
+
+// The old static grid, kept for EXPLORE_MARQUEE = false and still used by the flip-tile board's
+// labels. The "Also listed as" line goes through the same display helper as the marquee.
+const TILE_ALIASES = MARQUEE_ROWS[0];
+const NAME_CARDS = TILE_ALIASES.map((alias) => {
+  const page = PAGES.find((p) => p.treatment === 'added_sugar' && p.aliases.includes(alias));
+  if (!page) throw new Error(`index: "${alias}" is not an added-sugar alias in the ingredient registry`);
+  const label = formatName(alias);
+  const others = page.aliases.filter((a) => a !== alias);
+  return { label, slug: page.slug, also: alsoListedAs(others, label) };
 });
+const tiles = TILE_ALIASES.map((alias) => alias[0].toUpperCase() + alias.slice(1));
 
 const explore = [
   { href: '/hidden-sugar-names', label: `All ${ADDED_SUGAR_ALIAS_COUNT} added-sugar names` },
@@ -35,26 +57,32 @@ const explore = [
   description="Sugar Depth is a food-label scanner. Photograph an ingredient list and get one verdict: CLEAN, OKAY or BAD. No barcodes, no product database."
   path="/"
   jsonLd={[organization, website, webApplication]}
+  noStickyScan
 >
-  <section class="hero swarm-band" data-swarm="hero" aria-labelledby="mission-h">
-    <CrystalSwarm />
-    <div class="wrap hero-split">
-      <div class="hero-copy" data-swarm-copy>
-        <span class="kicker">Our mission</span>
-        <h1 id="mission-h">{MISSION}</h1>
-        <p class="lead">{MISSION_DETAIL}</p>
-        <div class="cta-row" data-sticky-hide>
-          <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
+  {paperHero ? (
+    <HeroVerdictCards variant="paper" />
+  ) : (
+    <section class="hero swarm-band" data-swarm="hero" aria-labelledby="mission-h">
+      <GradientBackground from="#16130E" via="#372F20" to="#9C8D63" class="hero-gradient" />
+      {HERO_CRYSTALS && <CrystalSwarm />}
+      <div class="wrap hero-split">
+        <div class="hero-copy" data-swarm-copy>
+          <span class="kicker">Our mission</span>
+          <h1 id="mission-h">{MISSION}</h1>
+          <p class="lead">{MISSION_DETAIL}</p>
+          <div class="cta-row" data-sticky-hide>
+            <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
+          </div>
+          <p class="plain-note">A food-label scanner. Not medical advice; no allergen checks.</p>
         </div>
-        <p class="plain-note">A food-label scanner. Not medical advice; no allergen checks.</p>
+        <CrystalVerdict interactive compact rotate verdict="CLEAN" />
       </div>
-      <CrystalVerdict interactive compact rotate verdict="CLEAN" />
-    </div>
-  </section>
+    </section>
+  )}
 
   <section class="how" aria-labelledby="how-h">
     <div class="wrap">
-      <h2 id="how-h">How it works</h2>
+      <h2 id="how-h">Three steps, one word</h2>
       <ol class="how-steps">
         <li>
           <span class="how-icon" aria-hidden="true">
@@ -87,53 +115,97 @@ const explore = [
         </li>
       </ol>
 
-      <ul class="how-verdicts">
+      <!-- Compact summary: the full rule lists live on /how-it-works, not here. -->
+      <ul class="how-rows">
         {VERDICTS.map((v) => (
-          <li class={`how-verdict tone-${toneClass(v.word)}`}>
-            <h3><span class="how-chip" aria-hidden="true"></span>{v.word}</h3>
-            <p>{v.line}</p>
-            <details class="verdict-more">
-              <summary>The {v.word} rules</summary>
-              <ul>{v.rules.map((r) => <li>{r}</li>)}</ul>
-            </details>
+          <li class={`how-row tone-${toneClass(v.word)}`}>
+            <span class="how-row-dot" aria-hidden="true"></span>
+            <strong>{v.word}</strong>
+            <span class="how-row-line">{v.line}</span>
           </li>
         ))}
       </ul>
+
+      <p class="how-retry">
+        <span class="how-retry-badge">RETRY</span>
+        Can't read the label? You get RETRY — take another photo.
+      </p>
+
+      <p class="how-more">
+        <a href="/how-it-works"
+          >See the full rules
+          <span class="how-more-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
+            </svg>
+          </span></a
+        >
+      </p>
 
       <TryIt />
     </div>
   </section>
 
-  <section class="aliases explore swarm-band" aria-labelledby="explore-h">
-    <div class="wrap disguise-grid">
-      <div class="section-head" data-burst-clear>
-        <h2 id="explore-h">Explore</h2>
-        <p class="flip-hint">Eight of sugar's aliases. Tap a card to unmask it.</p>
-      </div>
-      <!-- Each tile is a button: a click, a tap, Enter or Space turns it over and back (src/lib/swarm.ts). Without
-           the script nothing turns: every tile shows its name and the answer together. -->
-      <div class="tiles-stage" data-tiles>
-        <canvas class="tiles-fx" data-tiles-fx aria-hidden="true"></canvas>
-        <ul class="tiles">
-          {tiles.map((alias) => (
-            <li>
-              <button class="tile" type="button" aria-pressed="false">
-                <span class="tile-face tile-front"><span class="tile-alias">{alias}</span></span>
-                <span class="tile-face tile-back"><span class="tile-tag">Added sugar</span><span class="tile-reveal">That's sugar.</span></span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <p class="sr-only" role="status" data-tiles-status></p>
-      <div class="explore-more" data-burst-clear>
-        <ul class="explore-links">
-          {explore.map((l) => <li><a href={l.href}>{l.label}<span aria-hidden="true">→</span></a></li>)}
-        </ul>
-        <p class="explore-cta" data-sticky-hide>
-          <a class="btn primary" href={APP_URL}><span class="shutter" aria-hidden="true"></span>Scan a label</a>
+  <section class="aliases explore" aria-labelledby="explore-h">
+    {EXPLORE_MARQUEE ? (
+      <AliasMarquee rows={MARQUEE_ROWS} />
+    ) : (
+      <div class="wrap">
+        <h2 id="explore-h">Sugar's other names</h2>
+        <p class="explore-sub">Eight names from real labels. All of them are added sugar.</p>
+
+        {EXPLORE_SWARM_CARDS ? (
+          <>
+            <!-- The original flip-tile board, kept behind EXPLORE_SWARM_CARDS in src/config.ts. -->
+            <div class="tiles-stage" data-tiles>
+              <canvas class="tiles-fx" data-tiles-fx aria-hidden="true"></canvas>
+              <ul class="tiles">
+                {tiles.map((alias) => (
+                  <li>
+                    <button class="tile" type="button" aria-pressed="false">
+                      <span class="tile-face tile-front"><span class="tile-alias">{alias}</span></span>
+                      <span class="tile-face tile-back"><span class="tile-tag">Added sugar</span><span class="tile-reveal">That's sugar.</span></span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <p class="sr-only" role="status" data-tiles-status></p>
+          </>
+        ) : (
+          <ul class="name-cards">
+            {NAME_CARDS.map((card) => (
+              <li>
+                <a class="name-card" href={`/ingredients/${card.slug}`}>
+                  <span class="name-card-title">{card.label}</span>
+                  {card.also && <span class="name-card-also">Also listed as {card.also}</span>}
+                  <span class="name-card-foot">
+                    <span class="name-card-tag">Added sugar</span>
+                    <span class="name-card-arrow" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
+                      </svg>
+                    </span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <p class="explore-all">
+          <a href="/hidden-sugar-names"
+            >See all {ADDED_SUGAR_ALIAS_COUNT} sugar names
+            <span class="explore-all-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
+              </svg>
+            </span></a
+          >
         </p>
       </div>
-    </div>
+    )}
   </section>
+
+  <HomeClosingCta />
 </Base>
