@@ -1294,7 +1294,6 @@ const HEAD_WORDS_2 = HEAD_LINES[2];
       scheduleNext(ms);
     }
 
-    var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     var btnRow = hero.querySelector('[data-verdict-btns]');
     // Whether the pointer is currently over the buttons or over the card stack; the cycle pauses
     // while either is true and resumes only once both are false.
@@ -1304,13 +1303,29 @@ const HEAD_WORDS_2 = HEAD_LINES[2];
     buttons.forEach(function (btn) {
       var idx = Number(btn.getAttribute('data-index'));
 
-      // Pointer hover (mouse/trackpad only): no click needed.
-      if (finePointer) {
-        btn.addEventListener('pointerenter', function () {
-          pauseNow();
-          queueShow(idx);
-        });
-      }
+      // Pointer hover (mouse/trackpad or pen): no click needed. Decided per event rather than once
+      // per page load, because a touchscreen laptop reports (pointer: coarse) while a mouse is in
+      // use, which killed hover for the whole visit. Touch is left to the tap and finger-slide
+      // handlers below, so a finger resting on a pill never switches the card on its own; the row's
+      // pointerleave still releases the pause 2s after the pointer leaves the pills and cards.
+      btn.addEventListener('pointerenter', function (event) {
+        if (event.pointerType === 'touch') return;
+        pauseNow();
+        queueShow(idx);
+      });
+
+      // Moving between pills must not release the pause, so this only fires once the pointer has
+      // actually left the row.
+      btn.addEventListener('pointerleave', function (event) {
+        if (event.pointerType === 'touch') return;
+        var next = event.relatedTarget;
+        if (next && next.closest && next.closest('[data-verdict-btns]')) return;
+        hoveringButtons = false;
+        // Let the card the pointer is still over claim the pause before we release it.
+        window.setTimeout(function () {
+          if (!hoveringCards) resumeLater(TIMING.resumeAfterHover);
+        }, 0);
+      });
 
       // Keyboard focus behaves like hover.
       btn.addEventListener('focus', function () {
