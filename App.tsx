@@ -14,6 +14,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { getGuestQuota, guestConfig, guestMode, guestTrialFlag, signInAsGuest } from './src/lib/api';
+import { clearScanIntent, hasScanIntent, rememberScanIntent, syncScanPath, wantsScanOnLoad } from './src/config/scanRoute';
+import { useScanLink } from './src/lib/scanLink';
 import { isGuestUser, type GuestQuota } from './src/lib/guestTrial';
 import { GuestScanPrompt } from './src/components/GuestScanPrompt';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -213,6 +215,46 @@ export default function App() {
     if (next === 'profile' && trialVisitor) setSignInOpen(true);
     else setSheet(next);
   };
+
+  // Reached the app on /scan (or deep-linked from the site with ?from=app): remember it, so a sign-in
+  // round trip returns here instead of dropping the visitor on a bare camera screen. Recorded on the
+  // first render, before the address-bar effect below could rewrite the path, and only once.
+  const scanIntentRecorded = useRef(false);
+  if (!scanIntentRecorded.current) {
+    scanIntentRecorded.current = true;
+    if (wantsScanOnLoad()) rememberScanIntent();
+  }
+
+  // Phones: a tap on "Scan a label" that reached the app (Universal Link, App Link or the custom
+  // scheme) also means "scan". The scan screen is where the app starts, so nothing else to move.
+  const scanLinkRequested = useScanLink();
+  useEffect(() => {
+    if (scanLinkRequested) {
+      setScan(null);
+      setSheet(null);
+      setPrompt(false);
+      setSignInOpen(false);
+    }
+  }, [scanLinkRequested]);
+
+  // Keep the address bar in step with what is on screen: /scan while the scanner is showing, / otherwise.
+  // While a sign-in started from /scan is in progress, the address stays on /scan so the redirect target
+  // survives: Google returns to the origin root, and this puts /scan back once the session arrives.
+  const scannerOnScreen = ready && !mustSignIn && scan === null && sheet === null;
+  useEffect(() => {
+    if (!ready) return;
+    if (scannerOnScreen) {
+      clearScanIntent();
+      syncScanPath(true);
+      return;
+    }
+    // Signing in after asking for the scanner: hold the /scan address rather than rewriting it to /.
+    if (mustSignIn && hasScanIntent()) {
+      syncScanPath(true);
+      return;
+    }
+    syncScanPath(false);
+  }, [ready, scannerOnScreen, mustSignIn]);
 
   return (
     <SafeAreaProvider>

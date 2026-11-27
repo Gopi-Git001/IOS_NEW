@@ -1,0 +1,9 @@
+{
+  "_comment": "Single source of truth for deep links between sugardepth.com and the scanner app. Read by both the Expo app (src/config/appLinks.ts) and the marketing site (sites/sugardepth/src/data/app-links.ts). Identifiers that only exist once Apple/Google are set up (team id, bundle id, android package, signing fingerprint) are NOT here: they come from build-time env vars, see .env.example.",
+  "appWebOrigin": "https://app.sugardepth.com",
+  "scanPath": "/scan",
+  "appScheme": "reallabel",
+  "siteOrigin": "https://sugardepth.com",
+  "fromAppParam": "from",
+  "fromAppValue": "app"
+}

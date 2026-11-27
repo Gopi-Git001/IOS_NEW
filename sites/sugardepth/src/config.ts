@@ -4,11 +4,12 @@
 export const SITE_URL = 'https://sugardepth.com';
 
 /**
- * Where "Scan a label" buttons go: the Expo web build on its own subdomain
- * (Vercel project quickgob-web). Google sign-in there needs app.sugardepth.com in the
- * Supabase Auth redirect list and the Google OAuth client before this ships.
+ * Where a "Scan a label" button goes on a normal visit: the Expo web scan screen (Vercel project
+ * quickgob-web). Kept as a plain literal because astro.config.mjs loads this file with bare Node and
+ * cannot resolve an import — see the note further down. `src/data/app-links.ts` holds the same values
+ * from brand/app-links.json and a unit test asserts the two agree.
  */
-export const APP_URL = 'https://app.sugardepth.com';
+export const APP_URL = 'https://app.sugardepth.com/scan';
 
 export const SITE_NAME = 'Sugar Depth';
 export const TAGLINE = 'Read the fine print.';

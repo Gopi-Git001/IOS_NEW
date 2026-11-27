@@ -24,7 +24,34 @@
       "permanent": true
     }
   ],
+  "rewrites": [
+    {
+      "source": "/scan",
+      "destination": "/"
+    },
+    {
+      "source": "/scan/(.*)",
+      "destination": "/"
+    }
+  ],
   "headers": [
+    {
+      "source": "/.well-known/(.*)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

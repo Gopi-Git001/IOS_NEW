@@ -8,9 +8,26 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "app.sugardepth.scanner",
+      "associatedDomains": ["applinks:app.sugardepth.com"]
     },
     "android": {
+      "package": "app.sugardepth.scanner",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "app.sugardepth.com",
+              "pathPrefix": "/scan"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#06080D",
         "foregroundImage": "./assets/android-icon-foreground.png",
