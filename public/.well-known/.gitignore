@@ -1,0 +1,5 @@
+# Generated at build time by scripts/make-app-links.mjs from brand/app-links.json plus the
+# APPLE_TEAM_ID / IOS_BUNDLE_ID and ANDROID_PACKAGE / ANDROID_SHA256_CERT_FINGERPRINTS env values.
+# They are per-store-build artefacts, not source: never commit them.
+apple-app-site-association
+assetlinks.json

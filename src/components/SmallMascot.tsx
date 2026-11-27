@@ -1,6 +1,9 @@
 import { Linking, Platform, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
+import { isRunningInExpoGo } from 'expo';
+import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { links } from '../config';
+import { WEBSITE_FROM_APP } from '../config/appLinks';
 import { notify } from '../lib/confirm';
 import { CharacterView } from './Character';
 
@@ -31,7 +34,15 @@ export function SmallMascot({ still, layoutWidth }: { still: boolean; layoutWidt
   const insets = useSafeAreaInsets();
   const box = smallMascotBox(layoutWidth ?? width);
   const web = Platform.OS === 'web';
-  const open = () => Linking.openURL(links.website).catch(() => notify("Couldn't open link", links.website));
+  // Phones open the site in an in-app browser with ?from=app, so its "Scan a label" buttons come back
+  // into this app (reallabel://scan) instead of the web scanner. The tab closes on the way back.
+  //
+  // Expo Go cannot register reallabel://, so from-app mode would leave its Scan buttons pointing at a
+  // scheme nothing answers — worse than a normal visit. In Expo Go open the plain site instead, and the
+  // buttons stay ordinary https links to the web scanner. (Same reason nativeAuthRedirect() falls back
+  // to exp:// in Expo Go; see src/lib/authRedirect.ts.)
+  const url = isRunningInExpoGo() ? links.website : WEBSITE_FROM_APP;
+  const open = () => WebBrowser.openBrowserAsync(url).catch(() => notify("Couldn't open link", links.website));
   // react-native-web renders href/hrefAttrs as an anchor; they aren't in React Native's types.
   const anchor = web ? ({ href: links.website, hrefAttrs: { target: '_blank', rel: 'noopener' } } as object) : {};
   return (
