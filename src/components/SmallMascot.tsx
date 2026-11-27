@@ -23,11 +23,13 @@ export function useSmallMascotClearance() {
 /**
  * The small mascot in the top-left corner: a link to sugardepth.com (a new tab on the web, the browser on phones).
  * Shown on sign-in (animated) and on the camera and result screens (`still`: the first frame, so the camera stays smooth).
+ * `layoutWidth` overrides the window width when the caller draws inside a narrower column (the web sign-in
+ * screen caps itself at 440px), so the corner mascot keeps the phone size instead of the laptop one.
  */
-export function SmallMascot({ still }: { still: boolean }) {
+export function SmallMascot({ still, layoutWidth }: { still: boolean; layoutWidth?: number }) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const box = smallMascotBox(width);
+  const box = smallMascotBox(layoutWidth ?? width);
   const web = Platform.OS === 'web';
   const open = () => Linking.openURL(links.website).catch(() => notify("Couldn't open link", links.website));
   // react-native-web renders href/hrefAttrs as an anchor; they aren't in React Native's types.

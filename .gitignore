@@ -44,7 +44,9 @@ yarn-error.*
 supabase/functions/.env
 .env
 supabase/.env
-dist-web/
+# Web export output. `dist-web*/` also catches the throwaway dist-web2, dist-web3... folders used
+# when comparing builds; leaving them unignored made `tsc` type-check their bundles and crash.
+dist-web*/
 
 # Scan timing traces (metro.config.js)
 .scan-timing/
