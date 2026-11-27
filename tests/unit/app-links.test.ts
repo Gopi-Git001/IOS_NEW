@@ -57,3 +57,28 @@ test('the marketing site APP_URL literal matches the shared config', () => {
   assert.ok(found, 'APP_URL literal not found in sites/sugardepth/src/config.ts');
   assert.equal(found![1], SCAN_URL, 'sites/sugardepth APP_URL must equal brand/app-links.json origin + scanPath');
 });
+
+test('a repeat scan link is a new event, not the same one', () => {
+  // Regression: App.tsx used to watch a boolean, so the second tap from the mascot website (with a
+  // result on screen) was swallowed and left the old result up. The hook now returns a counter; this
+  // asserts the shape of that contract so a boolean cannot creep back in.
+  const source = readFileSync(new URL('../../src/lib/scanLink.ts', import.meta.url), 'utf8');
+  assert.match(source, /setCount\(\(n\) => n \+ 1\)/, 'each accepted link must increment the counter');
+  assert.doesNotMatch(source, /useState\(false\)/, 'the hook must not return a boolean');
+  // Both entry points must feed the same counter: launch URL and live links.
+  assert.equal((source.match(/setCount\(\(n\) => n \+ 1\)/g) ?? []).length, 2, 'launch URL and live links both count');
+});
+
+test('from-app mode is skipped in Expo Go, which cannot receive the app scheme', () => {
+  // The mascot opens sugardepth.com/?from=app, whose Scan buttons become reallabel://scan. Expo Go does
+  // not register that scheme, so in Expo Go it must open the plain site and leave the https links alone.
+  const source = readFileSync(new URL('../../src/components/SmallMascot.tsx', import.meta.url), 'utf8');
+  assert.match(source, /isRunningInExpoGo\(\)/, 'SmallMascot must check for Expo Go');
+  assert.match(source, /isRunningInExpoGo\(\) \? links\.website : WEBSITE_FROM_APP/, 'Expo Go falls back to the plain site');
+});
+
+test('the association-file generator reads .env and lets the environment win', () => {
+  const source = readFileSync(new URL('../../scripts/make-app-links.mjs', import.meta.url), 'utf8');
+  assert.match(source, /loadEnvFiles\(\)/, 'the generator must load dotenv files');
+  assert.match(source, /process\.env\[key\] !== undefined/, 'a value already in the environment must not be overridden');
+});

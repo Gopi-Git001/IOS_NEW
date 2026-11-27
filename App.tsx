@@ -226,16 +226,19 @@ export default function App() {
   }
 
   // Phones: a tap on "Scan a label" that reached the app (Universal Link, App Link or the custom
-  // scheme) also means "scan". The scan screen is where the app starts, so nothing else to move.
-  const scanLinkRequested = useScanLink();
+  // scheme) also means "scan". The scan screen is where the app starts, so nothing else to move — but
+  // the counter changes on every link, so a repeat tap from the mascot website resets the screen again.
+  const scanLinkCount = useScanLink();
   useEffect(() => {
-    if (scanLinkRequested) {
-      setScan(null);
-      setSheet(null);
-      setPrompt(false);
-      setSignInOpen(false);
-    }
-  }, [scanLinkRequested]);
+    if (scanLinkCount === 0) return;
+    // Invalidate any scan still in flight, so a reply for the old photo cannot replace the scanner.
+    scanId.current++;
+    capturing.current = false;
+    setScan(null);
+    setSheet(null);
+    setPrompt(false);
+    setSignInOpen(false);
+  }, [scanLinkCount]);
 
   // Keep the address bar in step with what is on screen: /scan while the scanner is showing, / otherwise.
   // While a sign-in started from /scan is in progress, the address stays on /scan so the redirect target

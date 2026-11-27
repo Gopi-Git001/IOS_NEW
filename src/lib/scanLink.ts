@@ -1,13 +1,17 @@
 // Incoming app links on phones: https://app.sugardepth.com/scan (Universal Links / App Links) and
 // reallabel://scan (the custom scheme the website uses in from-app mode). Both mean "open the scanner".
 //
-// The app has no router, so this just reports "the visitor asked for the scan screen" and App.tsx
-// reacts. The web equivalent lives in src/config/scanRoute.ts; the URL matching itself is shared, so
-// there is one definition of what counts as a scan link.
+// The app has no router, so this reports "a scan link arrived" and App.tsx reacts. It returns a
+// COUNTER, not a boolean: every accepted link is a new event, so tapping Scan from the mascot website
+// while a result or a sheet is open resets the screen again, instead of the second tap being ignored
+// because the flag was already true.
+//
+// The web equivalent lives in src/config/scanRoute.ts; the URL matching itself is shared, so there is
+// one definition of what counts as a scan link.
 import { useEffect, useState } from 'react';
 import { Linking, Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
-import { isScanLink } from '../lib/scanLinks';
+import { isScanLink } from './scanLinks';
 
 /** The URL the app was launched with, if it was launched by a link. */
 async function initialScanUrl(): Promise<string | null> {
@@ -21,36 +25,32 @@ async function initialScanUrl(): Promise<string | null> {
 }
 
 /**
- * True once an app link has asked for the scanner. Stays true: the scan screen is the app's home
- * screen, so arriving with a link and being sent to the camera anyway would be a surprise.
- * `onScanLink` runs on each link, so a second tap can close a browser that is still open.
+ * How many scan links have arrived, including the one the app was launched with (0 if none).
+ * App.tsx watches the number, so each link — including a repeat tap — resets to the scanner once.
  */
-export function useScanLink(onScanLink?: () => void): boolean {
-  const [requested, setRequested] = useState(false);
+export function useScanLink(): number {
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
     let active = true;
 
     void initialScanUrl().then((url) => {
-      if (active && url) setRequested(true);
+      if (active && url) setCount((n) => n + 1);
     });
 
     const subscription = Linking.addEventListener('url', ({ url }) => {
       if (!isScanLink(url)) return;
       // The website opens in the in-app browser; that session has to close before the app shows.
       if (Platform.OS === 'ios') WebBrowser.dismissBrowser().catch(() => {});
-      setRequested(true);
-      onScanLink?.();
+      setCount((n) => n + 1);
     });
 
     return () => {
       active = false;
       subscription.remove();
     };
-    // onScanLink is a fresh closure each render; re-subscribing on it would churn the listener.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return requested;
+  return count;
 }

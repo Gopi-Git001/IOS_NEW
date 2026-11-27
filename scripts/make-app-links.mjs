@@ -8,11 +8,42 @@
 //
 // Both are static files in public/, so Expo's web export copies them to the output root and Vercel
 // serves them as ordinary files: no redirect, no rewrite, no auth.
-import { mkdirSync, writeFileSync, existsSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync, rmSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+
+/**
+ * Load .env / .env.local into process.env without overriding anything already set, so a value from CI
+ * or Vercel always wins. Expo loads these files itself, but it runs as a separate process AFTER this
+ * generator, so a developer who put the identifiers in .env would otherwise get "skipped".
+ */
+function loadEnvFiles() {
+  for (const name of ['.env', '.env.local']) {
+    const file = new URL(`../${name}`, import.meta.url);
+    if (!existsSync(file)) continue;
+    for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq < 1) continue;
+      const key = trimmed.slice(0, eq).trim();
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) continue;
+      if (process.env[key] !== undefined) continue; // already set: leave it alone
+      let value = trimmed.slice(eq + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      process.env[key] = value;
+    }
+  }
+}
+
+loadEnvFiles();
+
 const shared = JSON.parse(readFileSync(new URL('../brand/app-links.json', import.meta.url), 'utf8'));
 
 const APP_WEB_ORIGIN = shared.appWebOrigin;
