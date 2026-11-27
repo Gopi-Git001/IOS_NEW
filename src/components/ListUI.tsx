@@ -2,7 +2,7 @@
 // Styled in Website Mint: mint paper with the 40 px grid, solid white cards and ink type.
 import { ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react-native';
 import { type ReactNode, useEffect, useRef } from 'react';
-import { Animated, Easing, Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Linking, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { notify } from '../lib/confirm';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -64,6 +64,20 @@ type RowProps = {
 /** 52 px row: icon, label (+ one-line detail), then a value, a toggle or a chevron. */
 export function Row({ icon: Icon, label, detail, value, danger, chevron, onPress, toggle }: RowProps) {
   const ink = danger ? mint.danger : mint.ink;
+  // react-native-web only fires onPress for Space on a native <button> or role="button"; this row is
+  // role="switch", so Space scrolled the page instead of toggling. Handle Space ourselves and swallow the
+  // key so the page does not scroll. Enter is left alone: react-native-web already treats it as a press,
+  // and intercepting it here would stop that. Phones keep their native behaviour untouched.
+  const onKeyDown =
+    Platform.OS === 'web' && toggle
+      ? (event: { key?: string; nativeEvent?: { key?: string }; preventDefault?: () => void; stopPropagation?: () => void }) => {
+          const key = event.key ?? event.nativeEvent?.key;
+          if (key !== ' ' && key !== 'Spacebar') return;
+          event.preventDefault?.();
+          event.stopPropagation?.();
+          toggle.onChange(!toggle.value);
+        }
+      : undefined;
   return (
     <Pressable
       onPress={toggle ? () => toggle.onChange(!toggle.value) : onPress}
@@ -71,6 +85,7 @@ export function Row({ icon: Icon, label, detail, value, danger, chevron, onPress
       accessibilityRole={toggle ? 'switch' : onPress ? 'button' : 'text'}
       accessibilityState={toggle ? { checked: toggle.value } : undefined}
       aria-checked={toggle ? toggle.value : undefined}
+      {...({ onKeyDown } as object)}
       style={({ pressed }) => [listStyles.row, pressed && listStyles.rowPressed]}
     >
       <Icon size={20} color={ink} strokeWidth={1.75} />

@@ -8,6 +8,7 @@
     "dist",
     "dist-web",
     "dist-web*",
+    "dist-*",
     "web-build",
     "docs",
     "sites",
