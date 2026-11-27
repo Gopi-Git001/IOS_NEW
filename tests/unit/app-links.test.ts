@@ -80,5 +80,11 @@ test('from-app mode is skipped in Expo Go, which cannot receive the app scheme',
 test('the association-file generator reads .env and lets the environment win', () => {
   const source = readFileSync(new URL('../../scripts/make-app-links.mjs', import.meta.url), 'utf8');
   assert.match(source, /loadEnvFiles\(\)/, 'the generator must load dotenv files');
-  assert.match(source, /process\.env\[key\] !== undefined/, 'a value already in the environment must not be overridden');
+  assert.match(source, /existing !== undefined && existing !== ''/, 'a value already in the environment must not be overridden');
+  // .env.local is the more specific file, so it must be read after .env and win.
+  assert.match(source, /for \(const name of \['\.env', '\.env\.local'\]\)/, '.env must be read before .env.local');
+  // Blank template entries must not mask a real value from the other file.
+  assert.match(source, /if \(!trimmed\) continue/, 'an empty entry must not count as configured');
+  // PowerShell writes a BOM; parseEnv would fold it into the first key name and silently drop it.
+  assert.match(source, /replace\(\/\^\\uFEFF\/, ''\)/, 'a UTF-8 BOM must be stripped before parsing');
 });

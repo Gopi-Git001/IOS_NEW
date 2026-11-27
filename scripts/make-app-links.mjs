@@ -10,36 +10,50 @@
 // serves them as ordinary files: no redirect, no rewrite, no auth.
 import { mkdirSync, writeFileSync, existsSync, rmSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
 /**
- * Load .env / .env.local into process.env without overriding anything already set, so a value from CI
- * or Vercel always wins. Expo loads these files itself, but it runs as a separate process AFTER this
- * generator, so a developer who put the identifiers in .env would otherwise get "skipped".
+ * Load .env / .env.local into process.env, in that order so .env.local wins, without overriding
+ * anything already set: a value from CI or Vercel always takes precedence over both files.
+ *
+ * Expo loads these files itself, but as a separate process AFTER this generator, so a developer who
+ * put the identifiers in .env would otherwise get "skipped". Node's util.parseEnv does the parsing, so
+ * quoted values and trailing `# comments` are handled the same way Expo handles them.
+ *
+ * Blank values are treated as unset. The template ships `APPLE_TEAM_ID=` (empty), and a copied .env
+ * would otherwise masquerade as "configured" and suppress a valid .env.local value.
  */
 function loadEnvFiles() {
+  let parseEnv;
+  try {
+    parseEnv = createRequire(import.meta.url)('node:util').parseEnv;
+  } catch {
+    return; // older Node without util.parseEnv: inherited env still works
+  }
+  if (typeof parseEnv !== 'function') return;
   for (const name of ['.env', '.env.local']) {
     const file = new URL(`../${name}`, import.meta.url);
     if (!existsSync(file)) continue;
-    for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) continue;
-      const eq = trimmed.indexOf('=');
-      if (eq < 1) continue;
-      const key = trimmed.slice(0, eq).trim();
-      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) continue;
-      if (process.env[key] !== undefined) continue; // already set: leave it alone
-      let value = trimmed.slice(eq + 1).trim();
-      if (
-        (value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))
-      ) {
-        value = value.slice(1, -1);
-      }
-      process.env[key] = value;
+    let parsed;
+    try {
+      // Strip a UTF-8 BOM: parseEnv would otherwise fold it into the first key name ("\uFEFFAPPLE_TEAM_ID"),
+      // which never matches and silently drops the value. PowerShell's Set-Content writes a BOM by default.
+      const text = readFileSync(file, 'utf8').replace(/^\uFEFF/, '');
+      parsed = parseEnv(text);
+    } catch {
+      continue; // unreadable or malformed: fall through to the environment
     }
-  }
+    for (const [rawKey, value] of Object.entries(parsed)) {
+      const key = rawKey.replace(/^\uFEFF/, '');
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) continue;
+      const existing = process.env[key];
+      if (existing !== undefined && existing !== '') continue; // real value already set: leave it
+      const trimmed = typeof value === 'string' ? value.trim() : value;
+      if (!trimmed) continue; // an empty entry in .env must not mask a later .env.local value
+      process.env[key] = trimmed;
+    }  }
 }
 
 loadEnvFiles();
