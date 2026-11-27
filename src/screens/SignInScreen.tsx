@@ -87,6 +87,9 @@ const MASCOT_BOX_ASPECT = 0.71;
 const MASCOT_GAP = 16;
 const FOOTER_GAP = 24;
 const MIN_CUBE = 60;
+/** Above this viewport width the web build centres a phone-width column instead of stretching. */
+const COLUMN_FROM = 600;
+const COLUMN_MAX = 440;
 
 /** Where the big name sits and how it is set. The mascot, button and note are placed later, under the measured name. */
 function layout(width: number, height: number, topInset: number) {
@@ -147,7 +150,12 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
   const reduced = useReducedMotion();
   const reducedNow = useRef(reduced);
   reducedNow.current = reduced;
-  const L = layout(width, height - insets.top - insets.bottom, insets.top);
+  // Browsers on a laptop would otherwise stretch the phone layout edge to edge, with a button wider
+  // than the screen is tall. Past COLUMN_FROM the screen becomes a centred phone-width column on the
+  // paper background; phones and tablets keep the full viewport. Native is untouched.
+  const column = Platform.OS === 'web' && width > COLUMN_FROM;
+  const width_ = column ? Math.min(COLUMN_MAX, width) : width;
+  const L = layout(width_, height - insets.top - insets.bottom, insets.top);
 
   // Measured on screen: one name line at its natural height (it holds the g/p descenders on every platform),
   // the bottom of the whole name, the button + note block, and the footer's top.
@@ -254,14 +262,15 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
   };
 
   return (
-    <View style={styles.root}>
+    <View style={styles.page}>
+      <View style={[styles.root, column && { width: COLUMN_MAX }]}>
       <PaperGrid />
       <Text accessibilityRole="header" style={styles.srOnly}>
         Sugar Depth sign in
       </Text>
 
       <Animated.View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { zIndex: 3, opacity: v.small }]}>
-        <SmallMascot still={reduced} />
+        <SmallMascot still={reduced} layoutWidth={width_} />
       </Animated.View>
 
       <View
@@ -341,7 +350,7 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
       <View
         testID="signin-mascot"
         pointerEvents="none"
-        style={[styles.bigMascot, { top: G.cubeTop, left: (width - G.cubeSize) / 2 }, !ready && styles.hidden]}
+        style={[styles.bigMascot, { top: G.cubeTop, left: (width_ - G.cubeSize) / 2 }, !ready && styles.hidden]}
       >
         <Animated.View
           pointerEvents="none"
@@ -372,6 +381,7 @@ export function SignInScreen({ onBack }: { onBack?: () => void }) {
         <Animated.View style={{ opacity: v.footer }}>
           <Footer ink />
         </Animated.View>
+      </View>
       </View>
     </View>
   );
@@ -427,7 +437,10 @@ export function GoogleButton({
 
 const styles = StyleSheet.create({
   // Mint paper fills the screen. PaperGrid draws the grid, fade and glow inside it, and nothing scrolls.
-  root: { flex: 1, backgroundColor: mint.paper, overflow: 'hidden' },
+  // Clip the ambient glows (they hang past the edges) so the page never scrolls.
+  // page: the whole viewport on a laptop, with the phone-width column centred on it.
+  page: { flex: 1, backgroundColor: mint.paper, alignItems: 'center' },
+  root: { flex: 1, width: '100%', backgroundColor: mint.paper, overflow: 'hidden' },
   srOnly: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
   // Ink wordmark: the app's heavy Libre Franklin at 800, with a mint highlighter band behind each word.
   nameGroup: { position: 'absolute', left: 0, right: 0 },

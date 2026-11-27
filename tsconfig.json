@@ -5,7 +5,11 @@
   },
   "exclude": [
     "node_modules",
+    "dist",
     "dist-web",
+    "dist-web*",
+    "dist-*",
+    "web-build",
     "docs",
     "sites",
     "supabase/functions",

@@ -36,6 +36,13 @@
         height: 100%;
         flex: 1;
       }
+      /* Keyboard focus must be visible. react-native-web draws no ring of its own, so give the
+         preference switches (role="switch" rows) a mint outline when reached with the keyboard.
+         :focus-visible keeps it off for mouse clicks. */
+      [role='switch']:focus-visible {
+        outline: 2px solid #13804b;
+        outline-offset: -2px;
+      }
     </style>
   </head>
 
